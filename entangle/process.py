@@ -1,10 +1,20 @@
+"""
+process.py - Module that provides native OS process implementation of function tasks
+"""
 import asyncio
 
 
 def process(function=None,
-            future=None,
             timeout=None,
             sleep=None):
+    """
+
+    :param function:
+    :param future:
+    :param timeout:
+    :param sleep:
+    :return:
+    """
     def decorator(func):
         def wrapper(f):
             return ProcessFuture(f,
@@ -21,21 +31,32 @@ def process(function=None,
 
 
 class ProcessFuture(object):
+    """
 
+    """
     def __init__(self, func, *args, **kwargs):
+        """
+
+        :param func:
+        :param args:
+        :param kwargs:
+        """
         self.func = func
 
     def __call__(self, *args, **kwargs):
+        """
+
+        :param args:
+        :param kwargs:
+        :return:
+        """
         from functools import partial
         from multiprocessing import Queue, Process
-        from threading import Thread
 
         def invoke(func, *args, **kwargs):
 
             @asyncio.coroutine
             def get_result(q, func):
-                import time
-                from multiprocessing import Queue
                 import queue
 
                 if hasattr(func, '__name__'):
@@ -80,7 +101,6 @@ class ProcessFuture(object):
                         process = Process(target=arg, kwargs={'queue': queue})
                         processes += [process]
                         process.start()
-                        # arg(queue=queue)
                     else:
                         print("Value:", name)
                         queue.put(arg)
