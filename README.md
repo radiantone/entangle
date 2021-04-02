@@ -34,15 +34,33 @@ def proxy():
     # lambda proxy
     pass
 
+@process
+def subtract(a, b):
+    return int(a) - int(b)
+
+@process
+def five():
+    return 5
+
+@process
+def num(n):
+    return n
+
 # 1,2,3 get passed to lambda function and result returned
 result = proxy(1,2,3)
 
-# parallel workflow resembles plain old python
-add = add(
-    one(),
-    two()
-)
+# parallel workflow is just "plain old python"
+result = add(
+            add(
+                num(6),
+                two() if False else one()
+            ),
+            subtract(
+                five(),
+                two()
+            )
+        )
 
-print(add())
+print(result())
 
 ```
