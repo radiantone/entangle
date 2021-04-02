@@ -16,6 +16,18 @@ Entangle is designed without a central scheduler or workflow manager. Rather, ea
 Each function decorator implements logic to parallelize and *gather* values from its argument dependencies. As each function is assigned a dedicated CPU, the workflow is thus an ensemble of parallel, independent micro-flows that resolve themselves and pass their values up the chain until the workflow completes.
 
 This offers an extreme *shared nothing* design that maximizes CPU usage in a multi-CPU environment.
+
+## Install
+
+From repo root
+
+```shell
+
+(venv) $ pip3 install pipenv
+(venv) $ pipenv install --dev
+(venv) $ pipenv run pytest
+
+```
 ## Example
 An example of how entangle will be used (still in development)
 ```python
