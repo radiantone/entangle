@@ -22,6 +22,18 @@ Arguments that satisfy the function are run in parallel in the same fashion. The
 
 ![arch](./arch.png)
 
+### Tradeoffs
+
+Every design approach is a balance of tradeoffs. Entangle favors CPU utilization and parallelism over resource managers, schedulers or other shared services.
+It favors simplicity over behavior, attempting to be minimal and un-opinionated. It tries to be *invisible* to the end user as much as possible. It strives for the basic principle that, *"if it looks like it should work, it should work."*
+
+### Use Cases
+
+Because of these tradeoffs, there are certain use cases that align with entangle and others that probably do not.
+
+If you have lots of CPUs, entangle could be for you! If you want easy python workflows that span local and remote cloud resources, entangle could be for you.
+If you want to write custom handlers that enrich or execute code in custom ways for your needs, entangle makes this easy for you.
+
 ## Install
 
 From repo root
