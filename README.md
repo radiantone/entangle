@@ -38,6 +38,8 @@ Because of these tradeoffs, there are certain use cases that align with entangle
 If you have lots of CPUs, entangle could be for you! If you want easy python workflows that span local and remote cloud resources, entangle could be for you.
 If you want to write custom handlers that enrich or execute code in custom ways for your needs, entangle makes this easy for you.
 
+Entangle benefits more with CPU intensive, longer running tasks than CPU light or shorter tasks.
+
 ## Install
 
 NOTE: At the moment entangle only works with python 3.7 or 3.8 due to how coroutines work in those versions.
