@@ -53,7 +53,7 @@ class ProcessFuture(object):
                         return result
                     except queue.Empty:
                         import time
-                        print("Sleeping...{}".format(name))
+                        #print("Sleeping...{}".format(name))
                         yield #time.sleep(1)
 
             #print("Invoking:", self.func)
