@@ -1,4 +1,4 @@
-The py_pkg Package
+The entangle Package
 ==================
 
 .. automodule:: entangle.process
