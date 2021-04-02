@@ -23,10 +23,19 @@ def add(a, b):
 def one():
     return 1
 
-@lmbda(url='url')
-@aws(keys=[])
+@thread
+@local
 def two():
     return 2
+
+@lmbda(url='url')
+@aws(keys=[])
+def proxy():
+    # lambda proxy
+    pass
+
+# 1,2,3 get passed to lmbda function and result returned
+invoke = proxy(1,2,3)
 
 add = add(
     one(),
