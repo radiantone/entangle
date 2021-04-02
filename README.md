@@ -1,4 +1,4 @@
-![logo](./logo.png)
+![logo](./images/logo.png)
 
 A python native parallel processing framework based on simple decorators.
 
@@ -22,7 +22,7 @@ Arguments that satisfy the function are run in parallel in the same fashion. The
 
 As a workflow executes, it fans out over CPUs. Each process acting as it's own scheduler to spawn new processes and resolve arguments, while also monitoring queues for incoming results asynchronously.
 This makes the workflow a truly emergent, dynamic computing construct vs a monolithic service managing all the pieces. Of course, this is not to say one approach is better, just that entangle takes a different approach based on its preferred tradeoffs.
-![arch](./arch.png)
+![arch](./images/arch.png)
 
 ### Tradeoffs
 
