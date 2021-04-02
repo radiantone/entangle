@@ -34,8 +34,8 @@ def proxy():
     # lambda proxy
     pass
 
-# 1,2,3 get passed to lmbda function and result returned
-invoke = proxy(1,2,3)
+# 1,2,3 get passed to lambda function and result returned
+result = proxy(1,2,3)
 
 add = add(
     one(),
