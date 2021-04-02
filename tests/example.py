@@ -36,7 +36,7 @@ def subtract(a, b):
 result = add(
             add(
                 num(6),
-                two()
+                two() if False else one()
             ),
             subtract(
                 five(),
