@@ -1,6 +1,21 @@
 # entangle
 A python native parallel processing framework based on simple decorators.
 
+## Overview
+
+Entangle is a new kind of parallel compute framework for large multi-core HPC environments. 
+It allows for simple workflow design using *plain old python* and special decorators that control the type of parallel compute needed.
+
+One key feature of entangle is fine-grained control over individual functions in a workflow. You could easily describe multiple functions running across multiple compute environments all interacting as if they were simple local python functions.
+No central scheduler or workflow manager is needed.
+
+## Architecture
+
+Entangle is designed without a central scheduler or workflow manager. Rather, each function is decorated with special descriptors that turn them into their own workflow managers.
+Each function decorator implements logic to parallelize and acquire values from its arguments. As each function is assigned a dedicate CPU the workflow is thus an ensemble of parallel, indepedent micro-workflows that resolve themselves and pass their values up the chain until the workflow completes.
+
+This offers an extreme *shared nothing* design that maximizes CPU usage in a multi-CPU environment.
+## Example
 An example of how entangle will be used (still in development)
 ```python
 
