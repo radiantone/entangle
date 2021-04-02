@@ -26,7 +26,7 @@ setup(
     url=about['__url__'],
     packages=['entangle'],
     include_package_data=True,
-    python_requires="=3.7.*",
+    python_requires="==3.7.*",
     install_requires=[],
     license=about['__license__'],
     zip_safe=False,
