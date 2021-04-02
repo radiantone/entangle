@@ -68,18 +68,16 @@ class ProcessFuture(object):
                 while True:
                     try:
                         yield #time.sleep(2)
-                        result = q.get_nowait()
+                        _result = q.get_nowait()
                         print("Got result for[{}] ".format(
-                            name), result)
-                        return result
+                            name), _result)
+                        return _result
                     except queue.Empty:
                         import time
                         #print("Sleeping...{}".format(name))
                         yield #time.sleep(1)
 
-            #print("Invoking:", self.func)
-
-            if (len(args) == 0):
+            if len(args) == 0:
                 #print("Fork Process:", self.func)
                 pass
             else:
@@ -106,9 +104,6 @@ class ProcessFuture(object):
                         queue.put(arg)
 
                     tasks += [get_result(queue, arg)]
-
-                # Wait on all coroutines for the args to complete
-                # print("Gathering tasks for: {}".format(self.func.__name__))
 
                 # Wait until all the processes report results
                 tasks = asyncio.gather(*tasks)
