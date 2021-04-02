@@ -12,7 +12,7 @@ No central scheduler or workflow manager is needed.
 ## Architecture
 
 Entangle is designed without a central scheduler or workflow manager. Rather, each function is decorated with special descriptors that turn them into their own workflow managers.
-Each function decorator implements logic to parallelize and acquire values from its arguments. As each function is assigned a dedicate CPU the workflow is thus an ensemble of parallel, indepedent micro-workflows that resolve themselves and pass their values up the chain until the workflow completes.
+Each function decorator implements logic to parallelize and *gather* values from its argument dependencies. As each function is assigned a dedicated CPU, the workflow is thus an ensemble of parallel, independent micro-flows that resolve themselves and pass their values up the chain until the workflow completes.
 
 This offers an extreme *shared nothing* design that maximizes CPU usage in a multi-CPU environment.
 ## Example
