@@ -88,9 +88,14 @@ class ProcessFuture(object):
                     tasks += [get_result(queue, arg)]
 
                 # Wait on all coroutines for the args to complete
-                #print("Gathering tasks for: {}".format(self.func.__name__))
+                # print("Gathering tasks for: {}".format(self.func.__name__))
+
+                # Wait until all the processes report results
                 tasks = asyncio.gather(*tasks)
+
+                # Ensure we have joined all spawned processes
                 [process.join() for process in processes]
+
                 args = loop.run_until_complete(tasks)
 
             if 'queue' in kwargs:
