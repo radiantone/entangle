@@ -46,7 +46,7 @@ class ProcessFuture(object):
 
                 while True:
                     try:
-                        yield time.sleep(2)
+                        yield #time.sleep(2)
                         result = q.get_nowait()
                         print("Got result for[{}] ".format(
                             name), result)
@@ -54,7 +54,7 @@ class ProcessFuture(object):
                     except queue.Empty:
                         import time
                         print("Sleeping...{}".format(name))
-                        yield time.sleep(1)
+                        yield #time.sleep(1)
 
             #print("Invoking:", self.func)
 
@@ -64,9 +64,9 @@ class ProcessFuture(object):
             else:
                 asyncio.set_event_loop(asyncio.new_event_loop())
                 loop = asyncio.get_event_loop()
-                future = loop.create_future()
 
                 tasks = []
+                processes = []
                 for arg in args:
                     if hasattr(arg, '__name__'):
                         name = arg.__name__
@@ -78,6 +78,7 @@ class ProcessFuture(object):
                     if type(arg) == partial:
                         print("Process:", arg.__name__)
                         process = Process(target=arg, kwargs={'queue': queue})
+                        processes += [process]
                         process.start()
                         # arg(queue=queue)
                     else:
@@ -89,6 +90,7 @@ class ProcessFuture(object):
                 # Wait on all coroutines for the args to complete
                 #print("Gathering tasks for: {}".format(self.func.__name__))
                 tasks = asyncio.gather(*tasks)
+                [process.join() for process in processes]
                 args = loop.run_until_complete(tasks)
 
             if 'queue' in kwargs:
