@@ -37,6 +37,7 @@ def proxy():
 # 1,2,3 get passed to lambda function and result returned
 result = proxy(1,2,3)
 
+# parallel workflow resembles plain old python
 add = add(
     one(),
     two()
