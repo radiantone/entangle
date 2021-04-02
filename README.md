@@ -40,6 +40,8 @@ If you want to write custom handlers that enrich or execute code in custom ways 
 
 ## Install
 
+NOTE: For the time, being only python 3.7 or 3.8 will work with entangle due to how coroutines work in those versions.
+
 From repo root
 
 ```shell
