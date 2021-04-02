@@ -3,37 +3,37 @@ tests.test_entangle.py
 ~~~~~~~~~~~~~~~~~~~~
 
 """
-from entangle.process import (app)
+from entangle.process import process
 
 
-@app
+@process
 def one():
     return 1
 
 
-@app
+@process
 def two():
     return 2
 
 
-@app
+@process
 def five():
     return 5
 
 
-@app
+@process
 def num(n):
     return n
 
 
-@app
+@process
 def add(a, b):
     v = int(a) + int(b)
     print("ADD: *"+str(v)+"*")
     return v
 
 
-@app
+@process
 def subtract(a, b):
     return int(a) - int(b)
 

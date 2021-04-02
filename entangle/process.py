@@ -1,7 +1,7 @@
 import asyncio
 
 
-def app(function=None,
+def process(function=None,
             future=None,
             timeout=None,
             sleep=None):
