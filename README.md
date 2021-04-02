@@ -19,6 +19,9 @@ This offers an extreme *shared nothing* design that maximizes CPU usage in a mul
 
 Each function (or task) is given a process and schedule to a CPU by the operating. Since python Processes are native bound OS processes. This allows us to use the benefits of the operating system scheduler which is optimized for the underlying hardware.
 Arguments that satisfy the function are run in parallel in the same fashion. The parent function then uses asyncio coroutines to monitor queues for the results from the processes. This keeps the CPU usage down while the dependent functions produce their results.
+
+![arch](./arch.png)
+
 ## Install
 
 From repo root
