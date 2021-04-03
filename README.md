@@ -26,7 +26,7 @@ This makes the workflow a truly emergent, dynamic computing construct vs a monol
 
 ### Tradeoffs
 
-Every design approach is a balance of tradeoffs. Entangle favors CPU utilization and parallelism over resource managers, schedulers or other shared services.
+Every design approach is a balance of tradeoffs. Entangle favors CPU utilization and *true* parallelism over resource managers, schedulers or other shared services.
 It favors simplicity over behavior, attempting to be minimal and un-opinionated. It tries to be *invisible* to the end user as much as possible. It strives for the basic principle that, *"if it looks like it should work, it should work."*
 
 Entangle leans on the OS scheduler to prioritize processes based on the behavior of those processes and underlying resource utilizations. It therefore does not provide its own redundant scheduler or task manager.
