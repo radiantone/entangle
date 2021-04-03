@@ -61,9 +61,9 @@ from entangle.process import process
 from entangle.thread import thread
 from entangle.task import task
 from entangle.local import local
-from entangle.aws import aws
-from entangle.aws.ec2 import ec2
-from entangle.aws.lmbda import lmbda
+from entangle.aws import ec2
+from entangle.aws import lmbda
+from entangle.http import rest
 
 @process(timeout=60)
 @local(cpus=4)
