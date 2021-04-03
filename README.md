@@ -93,7 +93,7 @@ from entangle.task import task
 from entangle.local import local
 from entangle.aws import ec2
 from entangle.aws import lmbda
-from entangle.http import rest
+from entangle.http import request
 
 @process(timeout=60)
 @local(cpus=4)
@@ -129,14 +129,15 @@ def five():
 def num(n):
     return n
 
-@rest(url='http://..../', method='POST')
-def rest(**kwargs):
+@request(url='http://..../', method='POST')
+def request(data):
+    # Manipulate http response data here
     pass
 
 # 1,2,3 get passed to lambda function and result returned
 result = proxy(1,2,3)
 # Pass key:value and get result from rest API
-result = rest({"key":"value" } )
+result = request({"key":"value" } )
 
 # parallel workflow is just "plain old python"
 result = add(
