@@ -31,6 +31,7 @@ It favors simplicity over behavior, attempting to be minimal and un-opinionated.
 
 Entangle leans on the OS scheduler to prioritize processes based on the behavior of those processes and underlying resource utilizations. It therefore does not provide its own redundant scheduler or task manager.
 
+Entangle prefers the non-API approach, where it looks like regular python expressions, over strict API's or invocation idioms. This makes it easier to pick up and use and plays well with 3rd party frameworks too.
 ### Use Cases
 
 Because of these tradeoffs, there are certain use cases that align with entangle and others that probably do not.
