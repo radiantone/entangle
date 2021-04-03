@@ -41,6 +41,30 @@ If you want to write custom handlers that enrich or execute code in custom ways 
 
 Entangle benefits more with CPU intensive, longer running tasks than shorter, less CPU intensive tasks.
 
+One focused use case for entangle is when you want to orchestrate across different compute nodes, remote APIs and other disparate endpoints in a single workflow.
+
+![workflow](./images/workflow.png)
+
+Each step of the workflow has different parameters, needs and protocols used to communicate with it.
+Such a workflow might simply look like:
+
+```python
+data = data_refinement(
+    get_source_data()
+)
+result = measure_vectors(
+    vector1(
+        data("vector1")
+    ),
+    vector2(
+        data("vector2")
+    ),
+    vector3(
+        data("vector3")
+    )
+)
+```
+
 ### Threads vs Processes
 
 In Python, threads do not execute in parallel to one another, it only gives the illusion of such. Python handles the context switching between threads and is limited by the GIL.
