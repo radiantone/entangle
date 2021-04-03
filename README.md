@@ -40,6 +40,34 @@ If you want to write custom handlers that enrich or execute code in custom ways 
 
 Entangle benefits more with CPU intensive, longer running tasks than CPU light or shorter tasks.
 
+## Declarative Infrastructure
+
+Entangle allows you to target specific infrastructure environments or needs using simple decorators.
+
+For example, to specify a process run on local hardware you can use the @local decorator
+
+```python
+@process
+@local
+def myfunc():
+    return
+```
+
+If you want to execute a function in AWS EC2 or fargate, you could write it as:
+
+```python
+@process
+@aws(keys=[])
+@ec2(ami='ami-12345')
+def myfunc():
+    return
+
+@process
+@aws(keys=[])
+@fargate(ram='2GB', cpu='Xeon')
+def myfunc():
+    return
+```
 ## Install
 
 NOTE: At the moment entangle only works with python 3.7 or 3.8 due to how coroutines work in those versions.
