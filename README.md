@@ -81,7 +81,7 @@ def one():
 def two():
     return 2
 
-@lmbda(url='url')
+@lmbda(function='name')
 @aws(keys=[])
 def proxy():
     # lambda proxy
