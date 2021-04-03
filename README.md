@@ -68,6 +68,8 @@ def myfunc():
 def myfunc():
     return
 ```
+
+If you have a custom on-prem environment you can write a simple decorator that deploys the task to that and use it alongside other infrastructure decorators.
 ## Install
 
 NOTE: At the moment entangle only works with python 3.7 or 3.8 due to how coroutines work in those versions.
