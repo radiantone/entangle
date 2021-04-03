@@ -10,7 +10,6 @@ def process(function=None,
     """
 
     :param function:
-    :param future:
     :param timeout:
     :param sleep:
     :return:
