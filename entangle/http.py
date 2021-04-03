@@ -1,7 +1,8 @@
 """
-process.py - Module that provides native OS process implementation of function tasks
+request.py - Module that provides http request tasks
 """
 from process import ProcessFuture
+import requests
 
 
 def request(function=None,
@@ -12,8 +13,9 @@ def request(function=None,
     """
 
     :param function:
-    :param future:
     :param timeout:
+    :param url:
+    :param method:
     :param sleep:
     :return:
     """
@@ -22,6 +24,7 @@ def request(function=None,
 
             # Build http request function here, get result
             # call func with result
+            # TBD
 
             return ProcessFuture(f,
                                  timeout=timeout,
