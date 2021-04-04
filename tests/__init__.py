@@ -2,5 +2,5 @@
 tests
 ~~~~~
 
-Test suite for the py_pkg package.
+Test suite for the py_pkg package..
 """
