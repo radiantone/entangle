@@ -39,10 +39,7 @@ def request(function=None,
 
             pfunc = partial(invoke_request, func)
             pfunc.__name__ = func.__name__
-            return ProcessFuture(pfunc,
-                                 timeout=timeout,
-                                 sleep=sleep,
-                                 future=True)
+            return pfunc
 
         return wrapper(func)
 

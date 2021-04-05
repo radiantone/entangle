@@ -2,8 +2,9 @@ from entangle.process import process
 from entangle.http import request
 
 
+@process
 @request(url='https://datausa.io/api/data', method='GET')
-def request(data):
+def mydata(data):
     import json
     data = json.loads(data)
     print('My function got the data! ', data)
@@ -23,7 +24,7 @@ def add(a, b):
 
 
 result = add(
-    request(drilldowns='Nation', measures='Population'),
+    mydata(drilldowns='Nation', measures='Population'),
     two()
 )
 
