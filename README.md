@@ -200,3 +200,10 @@ result = add(
 print(result())
 
 ```
+
+## Design Tool
+
+A prototype visual design tool for Entangle is shown below.
+
+
+![ui](./images/ui1.png)
