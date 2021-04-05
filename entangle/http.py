@@ -1,8 +1,9 @@
 """
 request.py - Module that provides http request tasks
 """
-from process import ProcessFuture
+from entangle.process import ProcessFuture
 import requests
+from functools import partial
 
 
 def request(function=None,
@@ -25,8 +26,20 @@ def request(function=None,
             # Build http request function here, get result
             # call func with result
             # TBD
+            def invoke_request(_func, **kwargs):
 
-            return ProcessFuture(f,
+                def make_request(url, method, data):
+
+                    if method == 'GET':
+                        response = requests.get(url=url, params=data)
+                        return response.content
+
+                response = make_request(url, method, kwargs)
+                return _func(response)
+
+            pfunc = partial(invoke_request, func)
+            pfunc.__name__ = func.__name__
+            return ProcessFuture(pfunc,
                                  timeout=timeout,
                                  sleep=sleep,
                                  future=True)
