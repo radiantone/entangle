@@ -159,15 +159,16 @@ def five():
 def num(n):
     return n
 
+@process
 @request(url='http://..../', method='POST')
 def request(data):
-    # Manipulate http response data here
-    pass
+    # Manipulate http response data here and return new result
+    return data
 
 # 1,2,3 get passed to lambda function and result returned
 result = proxy(1,2,3)
-# Pass key:value and get result from rest API
-result = request({"key":"value" } )
+# Pass key:value params and get result from your function
+result = request(key1=value, key2=value )
 
 # parallel workflow is just "plain old python"
 result = add(
