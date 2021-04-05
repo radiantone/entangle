@@ -10,6 +10,11 @@ It allows for simple workflow design using *plain old python* and special decora
 One key feature of entangle is fine-grained control over individual functions in a workflow. You could easily describe multiple functions running across multiple compute environments all interacting as if they were simple local python functions.
 No central scheduler or workflow manager is needed.
 
+### What does "Entangle" mean?
+
+The term is derived from a quantum physics phenomena called *[quantum entanglement](https://en.wikipedia.org/wiki/Quantum_entanglement#:~:text=Quantum%20entanglement%20is%20a%20physical,including%20when%20the%20particles%20are)* which involves the state of a pair or group of particles affecting one another *at a distance* instantaneously.
+
+In thi context, it is a metaphor for how tasks (particles) influence one another in the context of a connected microflow.
 ## Install
 
 NOTE: At the moment entangle only works with python 3.7 or 3.8 due to how coroutines work in those versions.
