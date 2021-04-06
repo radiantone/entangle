@@ -1,5 +1,6 @@
 from entangle.process import process
 from entangle.http import request
+from entangle.workflow import workflow
 
 
 @process
@@ -23,9 +24,22 @@ def add(a, b):
     return v
 
 
-result = add(
-    mydata(drilldowns='Nation', measures='Population'),
-    two()
-)
+@workflow
+def workflow1():
+    return add(
+        mydata(drilldowns='Nation', measures='Population'),
+        two()
+    )
+
+
+@workflow
+def workflow2(value):
+    return add(
+        value(),
+        two()
+    )
+
+
+result = workflow2(workflow1)
 
 print(result())

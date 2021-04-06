@@ -142,6 +142,36 @@ result = add(
 ```
 ![execution](./images/execution.png)
 
+## Workflow Composition
+
+One important quality of Entangle is the ability to compose workflows dynamically, which is to say to use *composition*.
+This allows you to write code that itself constructs workflows on the fly easily.
+
+```python
+@workflow
+def workflow1():
+    return add(
+        mydata(drilldowns='Nation', measures='Population'),
+        two()
+    )
+
+
+@workflow
+def workflow2(value):
+    return add(
+        value(),
+        two()
+    )
+
+
+result = workflow2(
+    workflow1
+)
+```
+
+The key to making this work is the *deferring of execution* trait of Entangle which we will discuss in a later post.
+But essentially it allows for separation of workflow *declaration* from *execution*. Doing this allows you to treat workflows as objects and pass them around anywhere a normal python function (or workflow) is expected. There is no difference.
+
 ## Example
 An example of how entangle will be used (still in development)
 ```python
