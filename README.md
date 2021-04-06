@@ -170,7 +170,7 @@ result = workflow2(
 ```
 
 The key to making this work is the *deferring of execution* trait of Entangle which we will discuss in a later post.
-But essentially it allows for separation of workflow *declaration* from *execution*. Doing this allows you to treat workflows as objects and pass them around anywhere a normal python function (or workflow) is expected. There is no difference.
+But essentially it allows for separation of workflow *declaration* from *execution*. Doing this allows you to treat workflows as objects and pass them around anywhere a normal python function (or workflow) is expected. Prior to execution.
 
 ## Example
 An example of how entangle will be used (still in development)
