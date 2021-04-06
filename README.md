@@ -110,7 +110,7 @@ Processes on the other hand, are not controlled by a GIL and can thus truly run 
 * Entangle does not yet perform fail over or retries
 * Entangle is not a batch process framework
 * Entangle is not map/reduce
-* Entangle is not a task manager
+* Entangle is not a centralized task manager
 
 ## Declarative Infrastructure
 
