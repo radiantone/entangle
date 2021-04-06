@@ -41,6 +41,7 @@ From repo root
 * Pluggable & Flexible
 * Composition
 * Shared-Nothing
+* Serverless
 
 ## Architecture
 
