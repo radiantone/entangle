@@ -177,8 +177,7 @@ def taskA():
     return
 ```
 ### Workflow Composition
-One important quality of Entangle is the ability to compose workflows dynamically, which is to say to use *composition*.
-This allows you to write code that itself constructs workflows on the fly easily.
+Composing workflows is just as simple. This allows you to write code that itself constructs workflows on the fly easily.
 
 ```python
 @workflow
