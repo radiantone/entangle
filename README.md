@@ -87,6 +87,15 @@ result = measure_vectors(
 
 In Python, threads do not execute in parallel to one another, it only gives the illusion of such. Python handles the context switching between threads and is limited by the GIL.
 Processes on the other hand, are not controlled by a GIL and can thus truly run in parallel. The host operating system governs the sheduling of processes and entangle is designed to exploit this benefit.
+
+### What Entangle is not
+
+* Entangle is not inherently distributed
+* Entangle does not yet perform fail over or retries
+* Entangle is not a batch process framework
+* Entangle is not map/reduce
+* Entangle is not a task manager
+
 ## Declarative Infrastructure
 
 Entangle allows you to target specific infrastructure environments or needs using simple decorators.
