@@ -28,6 +28,17 @@ From repo root
 (venv) $ pipenv run pytest
 
 ```
+
+## Design Goals
+
+* Small & Simple
+* Easy to Understand
+* non-API
+* Plain Old Python
+* True Parallelism
+* Pluggable & Flexible
+* Composition
+
 ## Architecture
 
 Entangle is designed without a central scheduler or workflow manager. Rather, each function is decorated with special descriptors that turn them into their own workflow managers.
