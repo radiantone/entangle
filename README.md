@@ -38,6 +38,7 @@ From repo root
 * True Parallelism
 * Pluggable & Flexible
 * Composition
+* Shared-Nothing
 
 ## Architecture
 
