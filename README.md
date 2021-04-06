@@ -177,7 +177,7 @@ def taskA():
     return
 ```
 ### Workflow Composition
-Composing workflows is just as simple. This allows you to write code that itself constructs workflows on the fly easily.
+Composing workflows is just as simple. You can write code that itself constructs workflows on the fly easily.
 
 ```python
 @workflow
