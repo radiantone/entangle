@@ -159,7 +159,7 @@ result = add(
 Entangle offers a couple different ways to use composition effectively: with *decorators* and with *workflows*.
 ### Decorator Composition
 
-Entangle allows you to compose your tasks by combining process and infrastructure decorators.
+You can compose your tasks by combining process and infrastructure decorators.
 
 Here we are composing a *process* and *local* infrastructure for our task to run.
 ```python
