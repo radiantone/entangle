@@ -1,6 +1,6 @@
 ![logo](./images/logo.png)
 
-A lightweight native python parallel processing framework based on simple decorators and call graphs.
+A lightweight (serverless) native python parallel processing framework based on simple decorators and call graphs.
 
 ## Overview
 
