@@ -166,7 +166,7 @@ Entangle offers a couple different ways to use composition effectively: with *de
 
 You can compose your tasks by combining process and infrastructure decorators.
 
-(Taken from above) Here we are declaring a *process* and *local* infrastructure for our task to run by composing two decorators together.
+Again, in the example below, we are declaring a *process* and *local* infrastructure for our task to run by composing two decorators together.
 ```python
 @process
 @local
