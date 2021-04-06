@@ -154,8 +154,29 @@ result = add(
 ```
 ![execution](./images/execution.png)
 
-## Workflow Composition
+## Composition
 
+Entangle offers a couple different ways to use composition effectively: with *decorators* and with *workflows*.
+### Decorator Composition
+
+Entangle allows you to compose your tasks by combining process and infrastructure decorators.
+
+Here we are composing a *process* and *local* infrastructure for our task to run.
+```python
+@process
+@local
+def taskA():
+    return
+```
+or, specifying that the task run as a process inside AWS fargate, unchanged.
+```python
+@process
+@aws(keys=[])
+@fargate(ram='2GB', cpu=4)
+def taskA():
+    return
+```
+### Workflow Composition
 One important quality of Entangle is the ability to compose workflows dynamically, which is to say to use *composition*.
 This allows you to write code that itself constructs workflows on the fly easily.
 
