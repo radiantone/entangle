@@ -2,6 +2,7 @@
 process.py - Module that provides native OS process implementation of function tasks
 """
 import asyncio
+import logging
 
 
 def process(function=None,
@@ -18,8 +19,7 @@ def process(function=None,
         def wrapper(f):
             return ProcessFuture(f,
                                  timeout=timeout,
-                                 sleep=sleep,
-                                 future=True)
+                                 sleep=sleep)
 
         return wrapper(func)
 
@@ -62,22 +62,20 @@ class ProcessFuture(object):
                     name = func.__name__
                 else:
                     name = func
-                #print("Waiting on result {}".format(name))
 
                 while True:
                     try:
                         yield #time.sleep(2)
                         _result = q.get_nowait()
-                        print("Got result for[{}] ".format(
+                        logging.info("Got result for[{}] ".format(
                             name), _result)
                         return _result
                     except queue.Empty:
                         import time
-                        #print("Sleeping...{}".format(name))
                         yield #time.sleep(1)
 
             if len(args) == 0:
-                #print("Fork Process:", self.func)
+                # Do nothing
                 pass
             else:
                 asyncio.set_event_loop(asyncio.new_event_loop())
@@ -94,12 +92,12 @@ class ProcessFuture(object):
                     queue = Queue()
 
                     if type(arg) == partial:
-                        print("Process:", arg.__name__)
+                        logging.info("Process:", arg.__name__)
                         process = Process(target=arg, kwargs={'queue': queue})
                         processes += [process]
                         process.start()
                     else:
-                        print("Value:", name)
+                        logging.info("Value:", name)
                         queue.put(arg)
 
                     tasks += [get_result(queue, arg)]
@@ -115,12 +113,11 @@ class ProcessFuture(object):
             if 'queue' in kwargs:
                 queue = kwargs['queue']
                 del kwargs['queue']
-                #print("Calling func with: ", args)
-                print("Calling {}".format(func.__name__))
+                logging.info("Calling {}".format(func.__name__))
                 result = func(*args, **kwargs)
                 queue.put(result)
             else:
-                #print("Calling func with: ", args)
+                logging.info("Calling func with: ", args)
                 result = func(*args, **kwargs)
 
             return result
