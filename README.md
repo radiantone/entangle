@@ -68,6 +68,8 @@ Entangle prefers the non-API approach, where it looks like regular python expres
 
 Because of these tradeoffs, there are certain use cases that align with entangle and others that probably do not.
 
+If you want top-down visibility & control of workflows and tasks, Entangle is probably not ready for you.
+
 If you have lots of CPUs, entangle could be for you! If you want easy python workflows that span local and remote cloud resources, entangle could be for you.
 If you want to write custom handlers that enrich or execute code in custom ways for your needs, entangle makes this easy for you.
 
