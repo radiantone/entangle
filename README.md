@@ -194,9 +194,9 @@ def workflow1():
 
 
 @workflow
-def workflow2(value):
+def workflow2(workflow):
     return add(
-        value(),
+        workflow(),
         two()
     )
 
