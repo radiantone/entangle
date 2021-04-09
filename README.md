@@ -85,6 +85,9 @@ Entangle benefits more with CPU intensive, longer running tasks than shorter, le
 
 One focused use case for entangle is when you want to orchestrate across different compute nodes, remote APIs and other disparate endpoints in a single workflow.
 
+Another use case is the need to run multiple parallel tasks that operate on matrix data using a GPU.
+Entangle makes this quite easy as seen in [GPU Example](#gpu-example) and [Shared Memory Example](#shared-memory-example)
+
 ![workflow](./images/workflow.png)
 
 Each step of the workflow has different parameters, needs and protocols used to communicate with it.
