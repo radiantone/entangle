@@ -195,6 +195,31 @@ def taskA():
 Composing workflows is just as simple. You can write code that itself constructs workflows on the fly easily.
 
 ```python
+from entangle.process import process
+from entangle.http import request
+from entangle.workflow import workflow
+
+
+@process
+@request(url='https://datausa.io/api/data', method='GET')
+def mydata(data):
+    import json
+    data = json.loads(data)
+    return int(data['data'][0]['Year'])
+
+
+@process
+def two():
+    return 2
+
+
+@process
+def add(a, b):
+    v = int(a) + int(b)
+    print("ADD: *"+str(v)+"*")
+    return v
+
+
 @workflow
 def workflow1():
     return add(
@@ -204,16 +229,17 @@ def workflow1():
 
 
 @workflow
-def workflow2(workflow):
+def workflow2(value):
     return add(
-        workflow(),
+        value(),
         two()
     )
 
 
-result = workflow2(
-    workflow1
-)
+result = workflow2(workflow1)
+
+print(result())
+
 ```
 
 The key to making this work is the *deferring of execution* trait of Entangle which we will discuss in a later post.
