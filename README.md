@@ -4,7 +4,11 @@ A lightweight (serverless) native python parallel processing framework based on 
 
 ## Quicklinks
 
+* [Declarative Infrastructure](#declarative-infrastructure)
+* [Workflow Composition](#workflow-composition)
+* [GPU Example](#gpu-example)
 * [Shared Memory Example](#shared-memory-example)
+
 ## Overview
 
 Entangle is a *different* kind of parallel compute framework for multi-CPU/GPU environments. 
