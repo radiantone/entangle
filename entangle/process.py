@@ -5,21 +5,39 @@ import asyncio
 import logging
 
 
+"""
+Add a shared state keyword that identifies a string name for a keyword value to be passed into the
+function as a dict containing the shared state among the processes.
+
+For exchange='shared_memory' the monitor object will set up sharedmemory manager in between processes
+to receive results and pass them along seamlessly.
+"""
+
+
 def process(function=None,
             timeout=None,
+            exchange='queue',
             sleep=None):
     """
 
+    :param exchange:
     :param function:
     :param timeout:
     :param sleep:
     :return:
     """
+
     def decorator(func):
         def wrapper(f):
-            return ProcessFuture(f,
-                                 timeout=timeout,
-                                 sleep=sleep)
+
+            if exchange == 'queue':
+                return ProcessMonitor(f,
+                                      timeout=timeout,
+                                      sleep=sleep)
+            if exchange == 'shared_memory':
+                return ProcessMonitorSharedMemory(f,
+                                                  timeout=timeout,
+                                                  sleep=sleep)
 
         return wrapper(func)
 
@@ -29,7 +47,19 @@ def process(function=None,
     return decorator
 
 
-class ProcessFuture(object):
+class ProcessMonitorSharedMemory(object):
+
+    def __init__(self, func, *args, **kwargs):
+        """
+
+        :param func:
+        :param args:
+        :param kwargs:
+        """
+        self.func = func
+
+
+class ProcessMonitor(object):
     """
 
     """
