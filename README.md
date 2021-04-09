@@ -209,7 +209,9 @@ result = workflow2(
 The key to making this work is the *deferring of execution* trait of Entangle which we will discuss in a later post.
 But essentially it allows for separation of workflow *declaration* from *execution*. Doing this allows you to treat workflows as objects and pass them around anywhere a normal python function (or workflow) is expected. Prior to execution.
 
-## GPU Example
+## Examples
+
+### GPU Example
 This example assumes you have installed `nvidia-cuda-toolkit` and associated python packages along with `numba`.
 
 In this example, two vectorized functions with different sized matrices are run in parallel, and their times are gathered.
@@ -276,7 +278,7 @@ Which outputs something like
 ```python
 [0.21504536108113825, 0.3445616390090436]
 ```
-## General Example
+### General Example
 An example of how entangle will be used (still in development)
 ```python
 
