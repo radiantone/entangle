@@ -17,7 +17,7 @@ It allows for simple workflow design using *plain old python* and special decora
 One key feature of entangle is fine-grained control over individual functions in a workflow. You could easily describe multiple functions running across multiple compute environments all interacting as if they were simple local python functions.
 No central scheduler or workflow manager is needed.
 
-Another unique quality is the use of composition to build dynamic, parallel workflows dynamically.
+Another unique quality is the use of composition to build parallel workflows dynamically.
 
 ### What does "Entangle" mean?
 
