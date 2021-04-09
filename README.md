@@ -216,8 +216,6 @@ In this example, two vectorized functions with different sized matrices are run 
 ```python
 import numpy as np
 from entangle.process import process
-from entangle.http import request
-from entangle.workflow import workflow
 from timeit import default_timer as timer
 from numba import vectorize
 
