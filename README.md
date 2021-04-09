@@ -2,6 +2,9 @@
 
 A lightweight (serverless) native python parallel processing framework based on simple decorators and call graphs.
 
+## Quicklinks
+
+* [Shared Memory Example](#shared-memory-example)
 ## Overview
 
 Entangle is a *different* kind of parallel compute framework for multi-CPU/GPU environments. 
@@ -279,7 +282,7 @@ Which outputs something like
 [0.21504536108113825, 0.3445616390090436]
 ```
 
-### [Shared Memory Example](#sharedmemory)
+### [Shared Memory Example](#shared-memory-example)
 
 The default return value conduit in Entangle is the Queue. Tasks return values are marshalled back through queues where they are gathered and provided as function parameters.
 This method is not desirable for very large data sets such as matrices in GPU computations. The below example shows how Entangle uses python 3.8's shared memory feature to implicitly share volatile memory across native parallel processes.
