@@ -210,7 +210,9 @@ The key to making this work is the *deferring of execution* trait of Entangle wh
 But essentially it allows for separation of workflow *declaration* from *execution*. Doing this allows you to treat workflows as objects and pass them around anywhere a normal python function (or workflow) is expected. Prior to execution.
 
 ## GPU Example
-This example assumes you have installed `nvidia-cuda-toolkit` and associated python packages along with `numba`
+This example assumes you have installed `nvidia-cuda-toolkit` and associated python packages along with `numba`.
+
+In this example, two vectorized functions with different sized matrices are run in parallel, and their times are gathered.
 ```python
 import numpy as np
 from entangle.process import process
