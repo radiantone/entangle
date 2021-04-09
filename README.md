@@ -383,6 +383,13 @@ Outputs
 Create Vectors Time:  0.8577492530457675
 Powers Time:  0.8135421359911561
 ```
+
+Now, you might be asking yourself, if one of the design goals was *shared-nothing* then why are we talking about *shared memory*?
+When we say shared nothing we refer to resources that have to be synchronized on when accessed by parallel processes, thereby creating bottlenecks in the execution.
+The shared memory example here is still full parallel and introduces no locking or synchronization for accessing the shared memory.
+Also, it is used in a pipeline fashion, whereby a given shared memory address is only updated by one process at a time. Multiple shared memory segments are created during the course of a workflow
+and you have full flexibility in how you created and use shared memory data structures.
+
 ### General Example
 An example of how entangle will be used (still in development)
 ```python
