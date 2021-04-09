@@ -33,6 +33,7 @@ class ProcessFuture(object):
     """
 
     """
+
     def __init__(self, func, *args, **kwargs):
         """
 
@@ -65,14 +66,14 @@ class ProcessFuture(object):
 
                 while True:
                     try:
-                        yield #time.sleep(2)
+                        yield  # time.sleep(2)
                         _result = q.get_nowait()
                         logging.info("Got result for[{}] ".format(
                             name), _result)
                         return _result
                     except queue.Empty:
                         import time
-                        yield #time.sleep(1)
+                        yield  # time.sleep(1)
 
             if len(args) == 0:
                 # Do nothing
@@ -123,6 +124,8 @@ class ProcessFuture(object):
             return result
 
         p = partial(invoke, self.func, *args, **kwargs)
-        p.__name__ = self.func.__name__
+        if hasattr(self.func, '__name__'):
+            p.__name__ = self.func.__name__
+        else:
+            p.__name__ = 'noname'
         return p
-
