@@ -4,7 +4,7 @@ A lightweight (serverless) native python parallel processing framework based on 
 
 ## Overview
 
-Entangle is a *different* kind of parallel compute framework for multi-CPU environments. 
+Entangle is a *different* kind of parallel compute framework for multi-CPU/GPU environments. 
 It allows for simple workflow design using *plain old python* and special decorators that control the type of parallel compute and infrastructure needed.
 
 One key feature of entangle is fine-grained control over individual functions in a workflow. You could easily describe multiple functions running across multiple compute environments all interacting as if they were simple local python functions.
