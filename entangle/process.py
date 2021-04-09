@@ -3,8 +3,37 @@ process.py - Module that provides native OS process implementation of function t
 """
 import asyncio
 import logging
+from multiprocessing.shared_memory import SharedMemory
+from multiprocessing.managers import SharedMemoryManager
+
+from multiprocessing import resource_tracker
+
+smm = SharedMemoryManager()
 
 
+def remove_shm_from_resource_tracker():
+    """Monkey-patch multiprocessing.resource_tracker so SharedMemory won't be tracked
+
+    More details at: https://bugs.python.org/issue38119
+    """
+
+    def fix_register(name, rtype):
+        if rtype == "shared_memory":
+            return
+        return resource_tracker._resource_tracker.register(self, name, rtype)
+    resource_tracker.register = fix_register
+
+    def fix_unregister(name, rtype):
+        if rtype == "shared_memory":
+            return
+        return resource_tracker._resource_tracker.unregister(self, name, rtype)
+    resource_tracker.unregister = fix_unregister
+
+    if "shared_memory" in resource_tracker._CLEANUP_FUNCS:
+        del resource_tracker._CLEANUP_FUNCS["shared_memory"]
+
+
+remove_shm_from_resource_tracker()
 """
 Add a shared state keyword that identifies a string name for a keyword value to be passed into the
 function as a dict containing the shared state among the processes.
@@ -14,9 +43,19 @@ to receive results and pass them along seamlessly.
 """
 
 
+def sharedmemory(func):
+    def decorator(*args, **kwargs):
+        sm = SharedMemory
+        kwargs['smm'] = smm
+        kwargs['sm'] = sm
+        return func(*args, **kwargs)
+
+    return decorator
+
+
 def process(function=None,
             timeout=None,
-            exchange='queue',
+            shared_memory=False,
             sleep=None):
     """
 
@@ -29,15 +68,10 @@ def process(function=None,
 
     def decorator(func):
         def wrapper(f):
-
-            if exchange == 'queue':
-                return ProcessMonitor(f,
-                                      timeout=timeout,
-                                      sleep=sleep)
-            if exchange == 'shared_memory':
-                return ProcessMonitorSharedMemory(f,
-                                                  timeout=timeout,
-                                                  sleep=sleep)
+            return ProcessMonitor(f,
+                                  timeout=timeout,
+                                  shared_memory=shared_memory,
+                                  sleep=sleep)
 
         return wrapper(func)
 
@@ -45,18 +79,6 @@ def process(function=None,
         return decorator(function)
 
     return decorator
-
-
-class ProcessMonitorSharedMemory(object):
-
-    def __init__(self, func, *args, **kwargs):
-        """
-
-        :param func:
-        :param args:
-        :param kwargs:
-        """
-        self.func = func
 
 
 class ProcessMonitor(object):
@@ -72,6 +94,7 @@ class ProcessMonitor(object):
         :param kwargs:
         """
         self.func = func
+        self.shared_memory = kwargs['shared_memory']
 
     def __call__(self, *args, **kwargs):
         """
@@ -105,53 +128,68 @@ class ProcessMonitor(object):
                         import time
                         yield  # time.sleep(1)
 
-            if len(args) == 0:
-                # Do nothing
-                pass
-            else:
-                asyncio.set_event_loop(asyncio.new_event_loop())
-                loop = asyncio.get_event_loop()
+            with smm:
+                if len(args) == 0:
+                    # Do nothing
+                    pass
+                else:
+                    asyncio.set_event_loop(asyncio.new_event_loop())
+                    loop = asyncio.get_event_loop()
 
-                tasks = []
-                processes = []
-                for arg in args:
-                    if hasattr(arg, '__name__'):
-                        name = arg.__name__
-                    else:
-                        name = arg
-                    # Create an async task that monitors the queue for that arg
-                    queue = Queue()
+                    tasks = []
+                    processes = []
 
-                    if type(arg) == partial:
-                        logging.info("Process:", arg.__name__)
-                        process = Process(target=arg, kwargs={'queue': queue})
-                        processes += [process]
-                        process.start()
-                    else:
-                        logging.info("Value:", name)
-                        queue.put(arg)
+                    for arg in args:
+                        if hasattr(arg, '__name__'):
+                            name = arg.__name__
+                        else:
+                            name = arg
+                        # Create an async task that monitors the queue for that arg
+                        queue = Queue()
 
-                    tasks += [get_result(queue, arg)]
+                        if type(arg) == partial:
+                            logging.info("Process:", arg.__name__)
+                            kargs = {}
+                            kargs['queue'] = queue
+                            if self.shared_memory:
+                                kargs['smm'] = smm
+                                kargs['sm'] = SharedMemory
 
-                # Wait until all the processes report results
-                tasks = asyncio.gather(*tasks)
+                            process = Process(
+                                target=arg, kwargs=kargs)
+                            processes += [process]
+                            process.start()
+                        else:
+                            logging.info("Value:", name)
+                            queue.put(arg)
 
-                # Ensure we have joined all spawned processes
-                [process.join() for process in processes]
+                        tasks += [get_result(queue, arg)]
 
-                args = loop.run_until_complete(tasks)
+                        # Wait until all the processes report results
+                        tasks = asyncio.gather(*tasks)
 
-            if 'queue' in kwargs:
-                queue = kwargs['queue']
-                del kwargs['queue']
-                logging.info("Calling {}".format(func.__name__))
-                result = func(*args, **kwargs)
-                queue.put(result)
-            else:
-                logging.info("Calling func with: ", args)
-                result = func(*args, **kwargs)
+                    # Ensure we have joined all spawned processes
+                    [process.join() for process in processes]
 
-            return result
+                    args = loop.run_until_complete(tasks)
+
+                if 'queue' in kwargs:
+                    queue = kwargs['queue']
+                    del kwargs['queue']
+                    if self.shared_memory:
+                        kwargs['smm'] = smm
+                        kwargs['sm'] = SharedMemory
+                    logging.info("Calling {}".format(func.__name__))
+                    result = func(*args, **kwargs)
+                    queue.put(result)
+                else:
+                    if self.shared_memory:
+                        kwargs['smm'] = smm
+                        kwargs['sm'] = SharedMemory
+                    logging.info("Calling func with: ", args)
+                    result = func(*args, **kwargs)
+
+                return result
 
         p = partial(invoke, self.func, *args, **kwargs)
         if hasattr(self.func, '__name__'):
