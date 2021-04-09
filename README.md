@@ -19,7 +19,7 @@ The term is derived from a quantum physics phenomena called *[quantum entangleme
 In this context, it is a metaphor for how tasks (particles) influence one another in the context of a connected microflow.
 ## Install
 
-NOTE: At the moment entangle only works with python 3.7 or 3.8 due to how coroutines work in those versions.
+NOTE: At the moment entangle only works with python 3.8 due to how coroutines work there and also shared memory features.
 
 From repo root
 
