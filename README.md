@@ -388,7 +388,7 @@ Now, you might be asking yourself, if one of the design goals was *shared-nothin
 When we say shared nothing we refer to resources that have to be synchronized on when accessed by parallel processes, thereby creating bottlenecks in the execution.
 The shared memory example here does not introduce any contention, rather, it is used in a pipeline fashion.
 In this approach, a given shared memory address is only updated by one process at a time (e.g. using it to return its data to the waiting process). Multiple shared memory segments can be created during the course of a workflow
-and you have full flexibility in how you creat and use shared memory data structures.
+for parallel running processes.
 
 ### General Example
 An example of how entangle will be used (still in development)
