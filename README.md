@@ -293,7 +293,7 @@ This method is not desirable for very large data sets such as matrices in GPU co
 
 ```python
 import numpy as np
-from entangle.process import process, sharedmemory
+from entangle.process import process
 from timeit import default_timer as timer
 from numba import vectorize
 
