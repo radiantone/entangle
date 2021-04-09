@@ -346,7 +346,13 @@ dp = dopow(
 )
 
 dp()
+```
 
+Outputs
+
+```bash
+Create Vectors Time:  0.8577492530457675
+Powers Time:  0.8135421359911561
 ```
 ### General Example
 An example of how entangle will be used (still in development)
