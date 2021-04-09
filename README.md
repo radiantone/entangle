@@ -307,6 +307,8 @@ def dopow(names, smm=None, sm=None):
     start = timer()
     shma = sm(_shma)
     shmb = sm(_shmb)
+    
+    # Get matrixes from shared memory
     np_shma = np.frombuffer(shma.buf, dtype=typea)
     np_shmb = np.frombuffer(shmb.buf, dtype=typeb)
 
@@ -328,7 +330,7 @@ def createvectors(smm=None, sm=None):
     a = b = np.array(np.random.sample(vec_size), dtype=np.float32)
     c = np.zeros(vec_size, dtype=np.float32)
 
-    # write matrices to shared memory
+    # create shared memory for matrices
     shma = smm.SharedMemory(a.nbytes)
     shmb = smm.SharedMemory(b.nbytes)
 
