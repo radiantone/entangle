@@ -291,6 +291,8 @@ Which outputs something like
 The default return value conduit in Entangle is the Queue. Tasks return values are marshalled back through queues where they are gathered and provided as function parameters.
 This method is not desirable for very large data sets such as matrices in GPU computations. The below example shows how Entangle uses python 3.8's shared memory feature to implicitly share volatile memory across native parallel processes.
 
+
+![sharedmemory](./images/memory.png)
 ```python
 import numpy as np
 from entangle.process import process
