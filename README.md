@@ -209,7 +209,74 @@ result = workflow2(
 The key to making this work is the *deferring of execution* trait of Entangle which we will discuss in a later post.
 But essentially it allows for separation of workflow *declaration* from *execution*. Doing this allows you to treat workflows as objects and pass them around anywhere a normal python function (or workflow) is expected. Prior to execution.
 
-## Example
+## GPU Example
+This example assumes you have installed `nvidia-cuda-toolkit` and associated python packages along with `numba`
+```python
+import numpy as np
+from entangle.process import process
+from entangle.http import request
+from entangle.workflow import workflow
+from timeit import default_timer as timer
+from numba import vectorize
+
+
+@process
+def dovectors1():
+
+    @vectorize(['float32(float32, float32)'], target='cuda')
+    def pow(a, b):
+        return a ** b
+
+    vec_size = 100
+
+    a = b = np.array(np.random.sample(vec_size), dtype=np.float32)
+    c = np.zeros(vec_size, dtype=np.float32)
+
+    start = timer()
+    pow(a, b)
+    duration = timer() - start
+    return duration
+
+
+@process
+def dovectors2():
+
+    @vectorize(['float32(float32, float32)'], target='cuda')
+    def pow(a, b):
+        return a ** b
+
+    vec_size = 100000000
+
+    a = b = np.array(np.random.sample(vec_size), dtype=np.float32)
+    c = np.zeros(vec_size, dtype=np.float32)
+
+    start = timer()
+    pow(a, b)
+    duration = timer() - start
+    return duration
+
+
+@process
+def durations(*args):
+
+    times = [arg for arg in args]
+
+    return times
+
+
+dp = durations(
+    dovectors1(),
+    dovectors2()
+)
+
+print(dp())
+
+```
+Which outputs something like
+```python
+[0.21504536108113825, 0.3445616390090436]
+```
+## General Example
 An example of how entangle will be used (still in development)
 ```python
 
