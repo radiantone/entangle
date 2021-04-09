@@ -136,7 +136,7 @@ class ProcessMonitor(object):
                     asyncio.set_event_loop(asyncio.new_event_loop())
                     loop = asyncio.get_event_loop()
 
-                    tasks = []
+                    _tasks = []
                     processes = []
 
                     for arg in args:
@@ -163,10 +163,10 @@ class ProcessMonitor(object):
                             logging.info("Value:", name)
                             queue.put(arg)
 
-                        tasks += [get_result(queue, arg)]
+                        _tasks += [get_result(queue, arg)]
 
                         # Wait until all the processes report results
-                        tasks = asyncio.gather(*tasks)
+                        tasks = asyncio.gather(*_tasks)
 
                     # Ensure we have joined all spawned processes
                     [process.join() for process in processes]
