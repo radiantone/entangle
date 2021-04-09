@@ -2,9 +2,11 @@ import numpy as np
 from timeit import default_timer as timer
 from numba import vectorize
 
+
 @vectorize(['float32(float32, float32)'], target='cuda')
 def pow(a, b):
     return a ** b
+
 
 def main():
     vec_size = 100000000
@@ -17,6 +19,7 @@ def main():
     duration = timer() - start
 
     print(duration)
+
 
 if __name__ == '__main__':
     main()
