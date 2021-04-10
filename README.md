@@ -52,7 +52,7 @@ From repo root
 * Pluggable & Flexible
 * Composition
 * Shared-Nothing
-* Serverless
+* Serverless & Threadless
 
 ## Architecture
 
