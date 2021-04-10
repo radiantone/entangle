@@ -6,8 +6,10 @@ A lightweight (serverless) native python parallel processing framework based on 
 
 * [Declarative Infrastructure](#declarative-infrastructure)
 * [Workflow Composition](#workflow-composition)
-* [GPU Example](#gpu-example)
-* [Shared Memory Example](#shared-memory-example)
+* Examples  
+    * [GPU Example](#gpu-example)
+    * [Shared Memory Example](#shared-memory-example)
+    * [AI Example](#ai-example)
 
 ## Overview
 
