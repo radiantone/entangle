@@ -37,7 +37,8 @@ remove_shm_from_resource_tracker()
 
 
 def process(function=None,
-            timeout=None,
+            timeout=0,
+            cache=False,
             shared_memory=False,
             sleep=0):
     """
@@ -79,6 +80,8 @@ class ProcessMonitor(object):
         self.func = func
         self.shared_memory = kwargs['shared_memory']
         self.sleep = kwargs['sleep']
+        self.cache = kwargs['cache']
+        self.timeout = kwargs['timeout']
 
     def __call__(self, *args, **kwargs):
         """
@@ -107,14 +110,19 @@ class ProcessMonitor(object):
                     try:
                         logging.debug("Sleeping {} seconds".format(sleep))
                         yield time.sleep(sleep)
+
                         _result = q.get_nowait()
+                        
                         logging.debug("Got result for[{}] ".format(
                             name), _result)
+
                         return _result
                     except queue.Empty:
-                        if pid:
-                            pass # Check for timeout here
                         import time
+
+                        if pid:
+                            pass  # Check for timeout here
+                        
                         logging.debug("Sleeping {} seconds".format(sleep))
                         yield  time.sleep(sleep)
 
@@ -140,8 +148,11 @@ class ProcessMonitor(object):
 
                         if type(arg) == partial:
                             logging.info("Process:", arg.__name__)
+
                             kargs = {}
                             kargs['queue'] = queue
+
+                            # if shared memory, set the handles
                             if self.shared_memory:
                                 kargs['smm'] = smm
                                 kargs['sm'] = SharedMemory
@@ -149,16 +160,15 @@ class ProcessMonitor(object):
                             process = Process(
                                 target=arg, kwargs=kargs)
                             processes += [process]
+
                             process.start()
                             pid = process.pid
                         else:
                             logging.info("Value:", name)
                             queue.put(arg)
-
-                        timeout = 0  # Future use
                         
                         # Create an async task that monitors the queue for that arg
-                        _tasks += [get_result(queue, arg, self.sleep, pid, timeout)]
+                        _tasks += [get_result(queue, arg, self.sleep, pid, self.timeout)]
 
                         # Wait until all the processes report results
                         tasks = asyncio.gather(*_tasks)
@@ -170,23 +180,33 @@ class ProcessMonitor(object):
 
                 if 'queue' in kwargs:
                     queue = kwargs['queue']
-                    del kwargs['queue']
+                    del kwargs['queue'] # get the queue and delete the argument
+
+                    # Pass in shared memory handles
                     if self.shared_memory:
                         kwargs['smm'] = smm
                         kwargs['sm'] = SharedMemory
+
                     logging.info("Calling {}".format(func.__name__))
                     result = func(*args, **kwargs)
+
+                     if self.cache:
+                         pass
+                        
                     queue.put(result)
                 else:
+                    # Pass in shared memory handles
                     if self.shared_memory:
                         kwargs['smm'] = smm
                         kwargs['sm'] = SharedMemory
+
                     logging.info("Calling func with: ", args)
                     result = func(*args, **kwargs)
 
                 return result
 
         p = partial(invoke, self.func, *args, **kwargs)
+        
         if hasattr(self.func, '__name__'):
             p.__name__ = self.func.__name__
         else:
