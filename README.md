@@ -193,7 +193,7 @@ def task():
 def taskB():
     return False
 ```
-When a process times out, a `ProcessTimeoutException` will be thrown by Entangle.
+When a process times out, a `ProcessTimeoutException` will be thrown by Entangle and the process will be terminated if it is still alive.
 
 ## Composition
 
