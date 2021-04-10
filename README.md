@@ -409,6 +409,8 @@ In the example above, you will notice two special keywords being passed into the
 `def createvectors(smm=None, sm=None):`
 
 `smm` is a handle to the `SharedMemoryManager` being used for this workflow and `sm` is a handle to the `SharedMemory` class needed to acquire the shared memory segments by name.
+If you set `shared_memory=True` then you *must* include these keyword arguments in your method or an error will occur.
+
 
 ---
 
