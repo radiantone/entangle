@@ -39,7 +39,7 @@ remove_shm_from_resource_tracker()
 def process(function=None,
             timeout=None,
             shared_memory=False,
-            sleep=None):
+            sleep=0):
     """
 
     :param function:
@@ -78,6 +78,7 @@ class ProcessMonitor(object):
         """
         self.func = func
         self.shared_memory = kwargs['shared_memory']
+        self.sleep = kwargs['sleep']
 
     def __call__(self, *args, **kwargs):
         """
@@ -92,24 +93,30 @@ class ProcessMonitor(object):
         def invoke(func, *args, **kwargs):
 
             @asyncio.coroutine
-            def get_result(q, func):
+            def get_result(q, func, sleep, pid, timeout):
                 import queue
+                import time
 
                 if hasattr(func, '__name__'):
                     name = func.__name__
                 else:
                     name = func
 
+                now = time.time()
                 while True:
                     try:
-                        yield  # time.sleep(2)
+                        logging.debug("Sleeping {} seconds".format(sleep))
+                        yield time.sleep(sleep)
                         _result = q.get_nowait()
-                        logging.info("Got result for[{}] ".format(
+                        logging.debug("Got result for[{}] ".format(
                             name), _result)
                         return _result
                     except queue.Empty:
+                        if pid:
+                            pass # Check for timeout here
                         import time
-                        yield  # time.sleep(1)
+                        logging.debug("Sleeping {} seconds".format(sleep))
+                        yield  time.sleep(sleep)
 
             with smm:
                 if len(args) == 0:
@@ -129,6 +136,7 @@ class ProcessMonitor(object):
                             name = arg
 
                         queue = Queue()
+                        pid = None
 
                         if type(arg) == partial:
                             logging.info("Process:", arg.__name__)
@@ -142,12 +150,15 @@ class ProcessMonitor(object):
                                 target=arg, kwargs=kargs)
                             processes += [process]
                             process.start()
+                            pid = process.pid
                         else:
                             logging.info("Value:", name)
                             queue.put(arg)
 
+                        timeout = 0  # Future use
+                        
                         # Create an async task that monitors the queue for that arg
-                        _tasks += [get_result(queue, arg)]
+                        _tasks += [get_result(queue, arg, self.sleep, pid, timeout)]
 
                         # Wait until all the processes report results
                         tasks = asyncio.gather(*_tasks)
