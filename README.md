@@ -273,6 +273,11 @@ But essentially it allows for separation of workflow *declaration* from *executi
 
 ## Examples
 
+* [GPU Example](#gpu-example)
+* [Shared Memory Example](#shared-memory-example)
+* [AI Example](#ai-example)
+* [General Example](#general-example)
+
 ### GPU Example
 This example assumes you have installed `nvidia-cuda-toolkit` and associated python packages along with `numba`.
 
@@ -429,6 +434,10 @@ The shared memory example here does not introduce any contention, rather, it is 
 In this approach, a given shared memory address is only updated by one process at a time (e.g. using it to return its data to the waiting process). Multiple shared memory segments can be created during the course of a workflow
 for parallel running processes.
 
+
+### AI Example
+
+TBD
 ### General Example
 An example of how entangle will be used (still in development)
 ```python
