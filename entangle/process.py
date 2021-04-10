@@ -37,7 +37,7 @@ remove_shm_from_resource_tracker()
 
 
 def process(function=None,
-            timeout=0,
+            timeout=None,
             cache=False,
             shared_memory=False,
             sleep=0):
@@ -55,6 +55,7 @@ def process(function=None,
             return ProcessMonitor(f,
                                   timeout=timeout,
                                   shared_memory=shared_memory,
+                                  cache=cache,
                                   sleep=sleep)
 
         return wrapper(func)
@@ -63,6 +64,14 @@ def process(function=None,
         return decorator(function)
 
     return decorator
+
+
+class ProcessTerminatedException(Exception):
+    pass
+
+
+class ProcessTimeoutException(Exception):
+    pass
 
 
 class ProcessMonitor(object):
@@ -94,9 +103,10 @@ class ProcessMonitor(object):
         from multiprocessing import Queue, Process
 
         def invoke(func, *args, **kwargs):
+            import time
 
             @asyncio.coroutine
-            def get_result(q, func, sleep, pid, timeout):
+            def get_result(q, func, sleep, now, process, timeout):
                 import queue
                 import time
 
@@ -105,26 +115,39 @@ class ProcessMonitor(object):
                 else:
                     name = func
 
-                now = time.time()
                 while True:
                     try:
                         logging.debug("Sleeping {} seconds".format(sleep))
+                        logging.debug("Sleeping {}".format(sleep))
+                        logging.debug("Timeout {} {}".format(
+                            timeout, round(time.time() - now)))
+
+                        if timeout is not None and (round(time.time() - now) > timeout):
+                            if process.is_alive():
+                                process.terminate()
+                                raise ProcessTimeoutException()
+
                         yield time.sleep(sleep)
 
                         _result = q.get_nowait()
-                        
+
                         logging.debug("Got result for[{}] ".format(
                             name), _result)
 
                         return _result
+
                     except queue.Empty:
                         import time
+                        if timeout and round(time.time() - now) > timeout:
+                            if process.is_alive():
+                                process.terminate()
+                                raise ProcessTimeoutException()
 
-                        if pid:
-                            pass  # Check for timeout here
-                        
+                        if process and not process.is_alive():
+                            raise ProcessTerminatedException()
+
                         logging.debug("Sleeping {} seconds".format(sleep))
-                        yield  time.sleep(sleep)
+                        yield time.sleep(sleep)
 
             with smm:
                 if len(args) == 0:
@@ -144,7 +167,7 @@ class ProcessMonitor(object):
                             name = arg
 
                         queue = Queue()
-                        pid = None
+                        process = None
 
                         if type(arg) == partial:
                             logging.info("Process:", arg.__name__)
@@ -162,25 +185,28 @@ class ProcessMonitor(object):
                             processes += [process]
 
                             process.start()
-                            pid = process.pid
                         else:
                             logging.info("Value:", name)
                             queue.put(arg)
-                        
+
+                        now = time.time()
                         # Create an async task that monitors the queue for that arg
-                        _tasks += [get_result(queue, arg, self.sleep, pid, self.timeout)]
+                        _tasks += [get_result(queue, arg,
+                                              self.sleep, now, process, self.timeout)]
 
                         # Wait until all the processes report results
                         tasks = asyncio.gather(*_tasks)
 
                     # Ensure we have joined all spawned processes
-                    [process.join() for process in processes]
 
                     args = loop.run_until_complete(tasks)
 
+                    [process.join() for process in processes]
+
                 if 'queue' in kwargs:
                     queue = kwargs['queue']
-                    del kwargs['queue'] # get the queue and delete the argument
+                    # get the queue and delete the argument
+                    del kwargs['queue']
 
                     # Pass in shared memory handles
                     if self.shared_memory:
@@ -190,9 +216,9 @@ class ProcessMonitor(object):
                     logging.info("Calling {}".format(func.__name__))
                     result = func(*args, **kwargs)
 
-                     if self.cache:
-                         pass
-                        
+                    if self.cache:
+                        pass
+
                     queue.put(result)
                 else:
                     # Pass in shared memory handles
@@ -206,7 +232,7 @@ class ProcessMonitor(object):
                 return result
 
         p = partial(invoke, self.func, *args, **kwargs)
-        
+
         if hasattr(self.func, '__name__'):
             p.__name__ = self.func.__name__
         else:
