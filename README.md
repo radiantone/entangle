@@ -169,6 +169,26 @@ result = add(
 ```
 ![execution](./images/execution.png)
 
+## Process Behavior
+
+Keyword parameters on the `@process` decorator allow you to control some meta-behavior of the process.
+
+### Timeout
+
+```python
+
+# Wait at most, 3 seconds for this task to complete
+@process(timeout=3)
+def task():
+    return True
+
+# Wait indefinitely for this task to complete
+@process
+def taskB():
+    return False
+```
+When a process times out, a `ProcessTimeoutException` will be thrown by Entangle.
+
 ## Composition
 
 Entangle offers a couple different ways to use composition effectively: with *decorators* and with *workflows*.
