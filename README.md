@@ -114,11 +114,6 @@ result = measure_vectors(
 )
 ```
 
-### Threads vs Processes
-
-In Python, threads do not execute in parallel to one another, it only gives the illusion of such. Python handles the context switching between threads and is limited by the GIL.
-Processes on the other hand, are not controlled by a GIL and can thus truly run in parallel. The host operating system governs the sheduling of processes and entangle is designed to exploit this benefit.
-
 ### What Entangle is not
 
 * Entangle is not inherently distributed
@@ -172,6 +167,13 @@ result = add(
 )
 ```
 ![execution](./images/execution.png)
+
+
+### Threads vs Processes
+
+In Python, threads do not execute in parallel to one another, it only gives the illusion of such. Python handles the context switching between threads and is limited by the GIL.
+Processes on the other hand, are not controlled by a GIL and can thus truly run in parallel. The host operating system governs the sheduling of processes and entangle is designed to exploit this benefit.
+
 
 ## Process Behavior
 
