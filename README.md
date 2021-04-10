@@ -404,6 +404,11 @@ Outputs
 Create Vectors Time:  0.8577492530457675
 Powers Time:  0.8135421359911561
 ```
+In the example above, you will notice two special keywords being passed into the functions, `def createvectors(smm=None, sm=None):`
+
+`smm` is a handle to the `SharedMemoryManager` being used for this workflow and `sm` is a handle to the `SharedMemory` class needed to acquire the shared memory segments by name.
+
+---
 
 Now, you might be asking yourself, if one of the design goals was *shared-nothing* then why are we talking about *shared memory*?
 When we say "shared" (in shared-nothing) we refer to resources that have to be synchronized or locked when accessed by parallel processes, thereby creating bottlenecks in the execution.
