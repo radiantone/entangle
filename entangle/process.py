@@ -1,5 +1,5 @@
 """
-process.py - Module that provides native OS process implementation of function tasks
+process.py - Module that provides native OS process implementation of function tasks with support for shared memory
 """
 import asyncio
 import logging
@@ -34,23 +34,6 @@ def remove_shm_from_resource_tracker():
 
 
 remove_shm_from_resource_tracker()
-"""
-Add a shared state keyword that identifies a string name for a keyword value to be passed into the
-function as a dict containing the shared state among the processes.
-
-For exchange='shared_memory' the monitor object will set up sharedmemory manager in between processes
-to receive results and pass them along seamlessly.
-"""
-
-
-def sharedmemory(func):
-    def decorator(*args, **kwargs):
-        sm = SharedMemory
-        kwargs['smm'] = smm
-        kwargs['sm'] = sm
-        return func(*args, **kwargs)
-
-    return decorator
 
 
 def process(function=None,
@@ -59,9 +42,9 @@ def process(function=None,
             sleep=None):
     """
 
-    :param exchange:
     :param function:
     :param timeout:
+    :param shared_memory:
     :param sleep:
     :return:
     """
@@ -83,7 +66,7 @@ def process(function=None,
 
 class ProcessMonitor(object):
     """
-
+    Primary monitor class for processes. Creates and monitors queues and processes to resolve argument tasks.
     """
 
     def __init__(self, func, *args, **kwargs):
@@ -144,7 +127,7 @@ class ProcessMonitor(object):
                             name = arg.__name__
                         else:
                             name = arg
-                        # Create an async task that monitors the queue for that arg
+
                         queue = Queue()
 
                         if type(arg) == partial:
@@ -163,6 +146,7 @@ class ProcessMonitor(object):
                             logging.info("Value:", name)
                             queue.put(arg)
 
+                        # Create an async task that monitors the queue for that arg
                         _tasks += [get_result(queue, arg)]
 
                         # Wait until all the processes report results
@@ -195,5 +179,5 @@ class ProcessMonitor(object):
         if hasattr(self.func, '__name__'):
             p.__name__ = self.func.__name__
         else:
-            p.__name__ = 'noname'
+            p.__name__ = 'process'
         return p
