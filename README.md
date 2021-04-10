@@ -330,7 +330,7 @@ from numba import vectorize
 
 
 @process(shared_memory=True)
-def dopow(names, sm=None):
+def dopow(names, smm=None, sm=None):
     (_shma, _shmb, shapea, shapeb, typea, typeb) = names
 
     start = timer()
@@ -351,7 +351,7 @@ def dopow(names, sm=None):
 
 
 @process(shared_memory=True)
-def createvectors(smm=None):
+def createvectors(smm=None, sm=None):
 
     vec_size = 100000000
 
