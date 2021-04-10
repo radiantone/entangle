@@ -24,6 +24,10 @@ Another unique quality is the use of composition to build parallel workflows dyn
 The term is derived from a quantum physics phenomena called *[quantum entanglement](https://en.wikipedia.org/wiki/Quantum_entanglement#:~:text=Quantum%20entanglement%20is%20a%20physical,including%20when%20the%20particles%20are)* which involves the state of a pair or group of particles affecting one another *at a distance* instantaneously.
 
 In this context, it is a metaphor for how tasks send data (particles) to one another in the context of a connected microflow.
+
+### Important Notes
+
+Please keep in mind that Entangle is *in development* and there are no releases as of yet. If you clone this repo and want to experiment be sure to update often as things break, improve, get fixed etc. quite frequently on the this branch for now.
 ## Install
 
 NOTE: At the moment entangle only works with python 3.8 due to how coroutines work there and also shared memory features.
