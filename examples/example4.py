@@ -2,6 +2,9 @@ import numpy as np
 from entangle.process import process
 from timeit import default_timer as timer
 from numba import vectorize
+import logging
+logging.basicConfig(
+    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 
 @process(shared_memory=True)

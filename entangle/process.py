@@ -145,7 +145,7 @@ class ProcessMonitor(object):
                         process = None
 
                         if type(arg) == partial:
-                            logging.info("Process:", arg.__name__)
+                            logging.info("Process: {}".format(arg.__name__))
 
                             kargs = {}
                             kargs['queue'] = queue
@@ -161,7 +161,7 @@ class ProcessMonitor(object):
 
                             process.start()
                         else:
-                            logging.info("Value:", name)
+                            logging.info("Value:".format(name))
                             queue.put(arg)
 
                         now = time.time()
@@ -201,7 +201,7 @@ class ProcessMonitor(object):
                         kwargs['smm'] = smm
                         kwargs['sm'] = SharedMemory
 
-                    logging.info("Calling func with: ", args)
+                    logging.info("Calling func with: {}".format(str(args)))
                     result = func(*args, **kwargs)
 
                 return result

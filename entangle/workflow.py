@@ -1,11 +1,15 @@
 """
 workflow.py - Module that provides workflow decorator
 """
+import logging
 
 
-def workflow(func):
+def workflow(func, **kwargs):
+
     def inner(*args, **kwargs):
-        workflow = func(*args, **kwargs)
+        _workflow = func(*args, **kwargs)
         # added QoS implementation here
-        return workflow
+        logging.debug("Inside the workflow")
+        return _workflow
+
     return inner
