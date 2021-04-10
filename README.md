@@ -410,6 +410,9 @@ Outputs
 Create Vectors Time:  0.8577492530457675
 Powers Time:  0.8135421359911561
 ```
+
+#### SharedMemoryManager & SharedMemory
+
 In the example above, you will notice two special keywords being passed into the functions, 
 
 `def createvectors(smm=None, sm=None):`
