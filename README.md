@@ -331,11 +331,12 @@ from numba import vectorize
 
 @process(shared_memory=True)
 def dopow(names, smm=None, sm=None):
-    (_shma, _shmb, shapea, shapeb, typea, typeb) = names
+    (namea, nameb, shapea, shapeb, typea, typeb) = names
 
     start = timer()
-    shma = sm(_shma)
-    shmb = sm(_shmb)
+    shma = sm(namea)
+    shmb = sm(nameb)
+
     
     # Get matrixes from shared memory
     np_shma = np.frombuffer(shma.buf, dtype=typea)
