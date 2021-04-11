@@ -89,10 +89,8 @@ If you want to write custom handlers that enrich or execute code in custom ways 
 
 Entangle benefits more with CPU intensive, longer running tasks than shorter, less CPU intensive tasks.
 
+#### Orchestation
 One focused use case for entangle is when you want to orchestrate across different compute nodes, remote APIs and other disparate endpoints in a single workflow, with inherent parallelism.
-
-Another use case is the need to run multiple parallel tasks that operate on matrix data using a GPU.
-Entangle makes this quite easy as seen in [GPU Example](#gpu-example) and [Shared Memory Example](#shared-memory-example)
 
 ![workflow](./images/workflow.png)
 
@@ -115,6 +113,13 @@ result = measure_vectors(
     )
 )
 ```
+
+#### GPU Processing
+Another use case is the need to run multiple parallel tasks that operate on matrix data using a GPU.
+Entangle makes this quite easy as seen in [GPU Example](#gpu-example) and [Shared Memory Example](#shared-memory-example)
+
+#### DevOps
+For devops use cases Entangle allows you to write simple, parallel workflow graphs using *plain old python*. This let's you write efficient parallel devops pipelines with ease.
 
 ### What Entangle is not
 
