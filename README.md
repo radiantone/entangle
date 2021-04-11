@@ -44,6 +44,15 @@ From repo root
 (venv) $ pipenv run pytest
 
 ```
+or
+```shell
+(venv) $ python setup.py install
+(venv) $ python setup.py clean
+```
+
+### Miniconda
+
+If you are planning to run or use GPU enabled code it is recommended to set up a `miniconda` virtualenv.
 
 ## Design Goals
 
