@@ -13,8 +13,12 @@ def dopow(names, smm=None, sm=None):
     (namea, nameb, shapea, shapeb, typea, typeb) = names
 
     start = timer()
+
+    # Get named shared memory segments
     shma = sm(namea)
     shmb = sm(nameb)
+
+    # Get prepopulated array buffers
     np_shma = np.frombuffer(shma.buf, dtype=typea)
     np_shmb = np.frombuffer(shmb.buf, dtype=typeb)
 
@@ -23,7 +27,9 @@ def dopow(names, smm=None, sm=None):
         return a ** b
 
     pow(np_shma, np_shmb)
+
     duration = timer() - start
+
     print("Powers Time: ", duration)
 
 
@@ -33,8 +39,9 @@ def createvectors(smm=None, sm=None):
     vec_size = 100000000
 
     start = timer()
+
+    # Create random array of values
     a = b = np.array(np.random.sample(vec_size), dtype=np.float32)
-    c = np.zeros(vec_size, dtype=np.float32)
 
     # write matrices to shared memory
     shma = smm.SharedMemory(a.nbytes)
@@ -44,6 +51,7 @@ def createvectors(smm=None, sm=None):
 
     duration = timer() - start
     print("Create Vectors Time: ", duration)
+
     return names
 
 
