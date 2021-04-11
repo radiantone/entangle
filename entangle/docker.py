@@ -11,6 +11,7 @@ client = docker.from_env()
 
 def docker(function=None,
            image=None,
+           packages=[],
            sleep=0):
     """
 
@@ -28,10 +29,17 @@ def docker(function=None,
             logging.info("Running container: {}".format(image))
             lines = re.sub('@', '#@', lines)
             name = f.__name__
-            logging.debug(
-                "python -c \"{}\n\nprint({}())\"".format(lines, name))
+
+            installpackages = []
+            for package in packages:
+                installpackages += ["pip install -q {}".format(package)]
+
+            code = "bash -c \"{}\npython <<HEREDOC {}\nprint({}())\"\nHEREDOC".format(
+                ";".join(installpackages), lines, name)
+
+            logging.debug(code)
             result = client.containers.run(
-                image, "python -c \"{}\nprint({}())\"".format(lines, name))
+                image, code)
             logging.debug(result)
             return result
 
