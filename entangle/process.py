@@ -27,7 +27,7 @@ def process(function=None,
 
     def decorator(func):
         def wrapper(f):
-            logging.debug("ProcessMonitor: ", f)
+            logging.debug("ProcessMonitor: {}".format(f))
             return ProcessMonitor(f,
                                   timeout=timeout,
                                   shared_memory=shared_memory,
