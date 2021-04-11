@@ -1,10 +1,11 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "ae252e3e9678c8b0b119d34264f4d1708f0c7ba36d514ac278a9f65136f4a9b1"
+            "sha256": "bc8b21ed22d621469a328fb5b257b8c9096c6c7baa5dce025c70e17887ed8b48"
         },
         "pipfile-spec": 6,
         "requires": {
+            "docker": "5.0.0",
             "python_version": "3.8"
         },
         "sources": [
