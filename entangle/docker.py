@@ -25,7 +25,7 @@ def docker(function=None,
             import re
 
             lines = inspect.getsource(f)
-            logging.debug("Running container: {}".format(image))
+            logging.info("Running container: {}".format(image))
             lines = re.sub('@', '#@', lines)
             name = f.__name__
             logging.debug(
@@ -35,7 +35,10 @@ def docker(function=None,
             logging.debug(result)
             return result
 
-        return partial(wrapper, func)
+        p = partial(wrapper, func)
+        p.__name__ = func.__name__
+
+        return p
 
     if function is not None:
         return decorator(function)

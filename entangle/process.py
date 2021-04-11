@@ -78,6 +78,8 @@ class ProcessMonitor(object):
         from functools import partial
         from multiprocessing import Queue, Process
 
+        logging.info("Process:invoke: {}".format(self.func.__name__))
+
         def invoke(func, *args, **kwargs):
             import time
 
@@ -214,4 +216,5 @@ class ProcessMonitor(object):
             p.__name__ = self.func.__name__
         else:
             p.__name__ = 'process'
+
         return p
