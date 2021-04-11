@@ -4,9 +4,19 @@ A lightweight (serverless) native python parallel processing framework based on 
 
 ## Quicklinks
 
+* [Overview](#overview)
+  * [What does "Entangle" mean?](#what-does-entangle-mean)
+  * [Important Notes](#important-notes)
+* [Install](#install)
+* [Design Goals](#design-goals)  
+* [Architecture](#architecture)
 * [Declarative Infrastructure](#declarative-infrastructure)
-* [Workflow Composition](#workflow-composition)
-* Examples  
+* [Execution](#execution)  
+* [Composition](#composition)  
+  * [Decorator Composition](#decorator-composition)
+  * [Workflow Composition](#workflow-composition)
+* [Containers](#containers)  
+* [Examples](#examples)
     * [GPU Example](#gpu-example)
     * [Shared Memory Example](#shared-memory-example)
     * [AI Example](#ai-example)
