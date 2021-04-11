@@ -90,7 +90,7 @@ If you want to write custom handlers that enrich or execute code in custom ways 
 
 Entangle benefits more with CPU intensive, longer running tasks than shorter, less CPU intensive tasks.
 
-#### Orchestation
+#### Orchestration
 One focused use case for entangle is when you want to orchestrate across different compute nodes, remote APIs and other disparate endpoints in a single workflow, with inherent parallelism.
 
 ![workflow](./images/workflow.png)
