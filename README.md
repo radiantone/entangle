@@ -187,7 +187,7 @@ def reduce_sum():
     import tensorflow as tf
     return tf.reduce_sum(tf.random.normal([1000, 1000]))
 ```
-
+![infrastructure](./images/infrastructure.png)
 If you have a custom on-prem environment you can write a simple decorator that deploys the task to that and use it alongside other infrastructure decorators.
 ## Execution
 
