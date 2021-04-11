@@ -284,6 +284,7 @@ But essentially it allows for separation of workflow *declaration* from *executi
 * [GPU Example](#gpu-example)
 * [Shared Memory Example](#shared-memory-example)
 * [AI Example](#ai-example)
+* [Docker Example](#docker-example)
 * [General Example](#general-example)
 
 ### GPU Example
