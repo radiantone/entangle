@@ -473,6 +473,8 @@ rs = reduce_sum()
 print(rs())
 
 ```
+
+![docker](./images/docker.png)
 ### General Example
 An example of how entangle will be used (still in development)
 ```python
