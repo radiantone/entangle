@@ -3,7 +3,7 @@ from entangle.process import process
 
 import logging
 logging.basicConfig(
-    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
 
 @process
