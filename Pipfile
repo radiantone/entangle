@@ -19,3 +19,4 @@ sphinx-rtd-theme = "*"
 
 [requires]
 python_version = "3.8"
+docker = "5.0.0"
