@@ -10,6 +10,7 @@ A lightweight (serverless) native python parallel processing framework based on 
     * [GPU Example](#gpu-example)
     * [Shared Memory Example](#shared-memory-example)
     * [AI Example](#ai-example)
+    * [Docker Example](#docker-example)
 
 ## Overview
 
@@ -445,6 +446,29 @@ for parallel running processes.
 ### AI Example
 
 TBD
+
+### Docker Example
+In this example we are running a process that spawns the decorated function inside a docker container and waits for the result.
+We compose this using the `@process` and `@docker` decorators to achieve the design. The function `reduce_sum` is run *inside* the docker container using image `tensorflow/tensorflow:latest-gpu` and the result is returned seamlessly to the workflow.
+```python
+from entangle.docker import docker
+from entangle.process import process
+
+import logging
+logging.basicConfig(
+    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+
+@process
+@docker(image="tensorflow/tensorflow:latest-gpu")
+def reduce_sum():
+    import tensorflow as tf
+    return tf.reduce_sum(tf.random.normal([1000, 1000]))
+
+rs = reduce_sum()
+print(rs())
+
+```
 ### General Example
 An example of how entangle will be used (still in development)
 ```python
