@@ -95,10 +95,6 @@ class ProcessMonitor(object):
 
                 while True:
                     try:
-                        logging.debug("Sleeping {} seconds".format(sleep))
-                        logging.debug("Sleeping {}".format(sleep))
-                        logging.debug("Timeout {} {}".format(
-                            timeout, round(time.time() - now)))
 
                         if timeout is not None and (round(time.time() - now) > timeout):
                             if process.is_alive():
@@ -109,8 +105,8 @@ class ProcessMonitor(object):
 
                         _result = q.get_nowait()
 
-                        logging.debug("Got result for[{}] ".format(
-                            name), _result)
+                        logging.debug("Got result for[{}] {}".format(
+                            name, str(_result)))
 
                         return _result
 
@@ -124,7 +120,6 @@ class ProcessMonitor(object):
                         if process and not process.is_alive():
                             raise ProcessTerminatedException()
 
-                        logging.debug("Sleeping {} seconds".format(sleep))
                         yield time.sleep(sleep)
 
             with smm:
