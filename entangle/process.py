@@ -27,6 +27,7 @@ def process(function=None,
 
     def decorator(func):
         def wrapper(f):
+            logging.debug("ProcessMonitor: ", f)
             return ProcessMonitor(f,
                                   timeout=timeout,
                                   shared_memory=shared_memory,
@@ -201,7 +202,8 @@ class ProcessMonitor(object):
                         kwargs['smm'] = smm
                         kwargs['sm'] = SharedMemory
 
-                    logging.info("Calling func with: {}".format(str(args)))
+                    logging.debug(
+                        "Calling function with: {}".format(str(args)))
                     result = func(*args, **kwargs)
 
                 return result
