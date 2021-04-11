@@ -117,10 +117,11 @@ result = measure_vectors(
 
 #### GPU Processing
 Another use case is the need to run multiple parallel tasks that operate on matrix data using a GPU.
-Entangle makes this quite easy as seen in [GPU Example](#gpu-example) and [Shared Memory Example](#shared-memory-example)
+Entangle makes this quite easy as seen in [GPU Example](#gpu-example), [Docker Example](#docker-example) and [Shared Memory Example](#shared-memory-example)
 
 #### DevOps
 For devops use cases Entangle allows you to write simple, parallel workflow graphs using *plain old python*. This let's you write efficient parallel devops pipelines with ease.
+
 
 ### What Entangle is not
 
@@ -157,6 +158,15 @@ def myfunc():
 @fargate(ram='2GB', cpu='Xeon')
 def myfunc():
     return
+```
+
+or using docker containers
+```python
+@process
+@docker(image="tensorflow/tensorflow:latest-gpu")
+def reduce_sum():
+    import tensorflow as tf
+    return tf.reduce_sum(tf.random.normal([1000, 1000]))
 ```
 
 If you have a custom on-prem environment you can write a simple decorator that deploys the task to that and use it alongside other infrastructure decorators.
