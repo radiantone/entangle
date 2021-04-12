@@ -217,6 +217,23 @@ Processes on the other hand, are not controlled by a GIL and can thus truly run 
 
 Keyword parameters on the `@process` decorator allow you to control some meta-behavior of the process.
 
+### Wait
+
+Wait indicates how long a function should wait before its arguments arrive. It is a sibling to *timeout* however it is different.
+```python
+@process(wait=20)
+def values(*args):
+    values = [arg for arg in args]
+
+    return values
+
+
+o = values(
+    one(),
+    train()
+)
+```
+In the above example, it is saying that the `values` function will wait up to 20 seconds for *both* `one()` and `train()` functions to complete and return values otherwise it will throw a `ProcessTimeoutException`.
 ### Timeout
 
 ```python
