@@ -131,18 +131,6 @@ class ProcessMonitor(object):
 
                         logging.debug("Got result for[{}] {}".format(
                             name, str(_result)))
-
-                        if process.shared_memory:
-                            # _result will be metadata with name of sharedmemory object
-                            # where the result is.
-                            '''
-                            shm = SharedMemory(_result['name'])
-                            buf = shm.buf
-
-                            p = pickle.loads(buf)
-                            shm.close()
-                            '''
-                            pass
                             
                         return _result
 
@@ -206,7 +194,7 @@ class ProcessMonitor(object):
 
                         # Create an async task that monitors the queue for that arg
                         _tasks += [get_result(queue, arg,
-                                              self.sleep, now, process, self.timeout)]
+                                              self.sleep, now, _process, self.timeout)]
 
                         # Wait until all the processes report results
                         tasks = asyncio.gather(*_tasks)
@@ -230,16 +218,6 @@ class ProcessMonitor(object):
                     logging.info("Calling {}".format(func.__name__))
                     result = func(*args, **kwargs)
 
-                    if self.shared_memory:
-                        '''
-                        result_pickle = pickle.dumps(result)
-                        # Create shared memory object
-                        shm = SharedMemory(create=True, size=len(result_pickle))
-                        buf = shm.buf
-                        # Store result in shared memory
-                        buf[:len(p)] = p
-                        result = {'name':shm.name}
-                        '''
                     if self.cache:
                         pass
 
