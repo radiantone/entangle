@@ -3,6 +3,7 @@ process.py - Module that provides native OS process implementation of function t
 """
 import asyncio
 import logging
+import multiprocessing
 from multiprocessing.shared_memory import SharedMemory
 from multiprocessing.managers import SharedMemoryManager
 
@@ -13,6 +14,7 @@ smm = SharedMemoryManager()
 
 def process(function=None,
             timeout=None,
+            wait=None,
             cache=False,
             shared_memory=False,
             sleep=0):
@@ -25,12 +27,15 @@ def process(function=None,
     :param sleep:
     :return:
     """
+    print("TIMEOUT: ", timeout)
 
     def decorator(func):
         def wrapper(f):
-            logging.debug("ProcessMonitor: {}".format(f))
+            logging.debug(
+                "ProcessMonitor: {} with wait {}".format(f, wait))
             return ProcessMonitor(f,
                                   timeout=timeout,
+                                  wait=wait,
                                   shared_memory=shared_memory,
                                   cache=cache,
                                   sleep=sleep)
@@ -74,6 +79,7 @@ class ProcessMonitor(object):
         self.sleep = kwargs['sleep']
         self.cache = kwargs['cache']
         self.timeout = kwargs['timeout']
+        self.wait = kwargs['wait']
 
     def __call__(self, *args, **kwargs):
         """
@@ -98,7 +104,7 @@ class ProcessMonitor(object):
             import time
 
             @asyncio.coroutine
-            def get_result(q, func, sleep, now, process, timeout):
+            def get_result(q, func, sleep, now, process, event, wait):
                 """
 
                 :param q:
@@ -118,28 +124,45 @@ class ProcessMonitor(object):
                     name = func
 
                 while True:
+                    logging.debug("Checking queue for result...")
                     try:
+                        logging.debug(
+                            "Waiting on event for {} with wait {}".format(name, self.wait))
 
-                        if timeout is not None and (round(time.time() - now) > timeout):
+                        if wait and wait > 0:
+                            logging.debug(
+                                "Wait event timeout in {} seconds.".format(wait))
+                            event.wait(wait)
+                        else:
+                            logging.debug("Waiting until complete.")
+                            event.wait()
+
+                        if not event.is_set():
                             if process.is_alive():
                                 process.terminate()
-                                raise ProcessTimeoutException()
+                            raise ProcessTimeoutException()
 
-                        yield time.sleep(sleep)
+                        logging.debug("Got event for {}".format(name))
+                        # if timeout is not None and (round(time.time() - now) > timeout):
+                        #    if process.is_alive():
+                        #        process.terminate()
+                        #    raise ProcessTimeoutException()
+
+                        yield  # time.sleep(sleep)
 
                         _result = q.get_nowait()
 
                         logging.debug("Got result for[{}] {}".format(
                             name, str(_result)))
-                            
+
                         return _result
 
                     except queue.Empty:
                         import time
-                        if timeout and round(time.time() - now) > timeout:
-                            if process.is_alive():
-                                process.terminate()
-                                raise ProcessTimeoutException()
+                        # if timeout and round(time.time() - now) > timeout:
+                        #    if process.is_alive():
+                        #        process.terminate()
+                        #        raise ProcessTimeoutException()
 
                         if process and not process.is_alive():
                             raise ProcessTerminatedException()
@@ -158,6 +181,9 @@ class ProcessMonitor(object):
                     processes = []
 
                     for arg in args:
+
+                        e = multiprocessing.Event()
+
                         if hasattr(arg, '__name__'):
                             name = arg.__name__
                         else:
@@ -169,7 +195,7 @@ class ProcessMonitor(object):
                         if type(arg) == partial:
                             logging.info("Process: {}".format(arg.__name__))
 
-                            kargs = {'queue': queue}
+                            kargs = {'queue': queue, 'event': e}
                             # If not shared memory
 
                             # if shared memory, set the handles
@@ -189,12 +215,14 @@ class ProcessMonitor(object):
                         else:
                             logging.info("Value:".format(name))
                             queue.put(arg)
+                            e.set()
 
                         now = time.time()
 
                         # Create an async task that monitors the queue for that arg
+                        # It will wait for event set from this child process
                         _tasks += [get_result(queue, arg,
-                                              self.sleep, now, _process, self.timeout)]
+                                              self.sleep, now, _process, e, self.wait)]
 
                         # Wait until all the processes report results
                         tasks = asyncio.gather(*_tasks)
@@ -210,18 +238,29 @@ class ProcessMonitor(object):
                     # get the queue and delete the argument
                     del kwargs['queue']
 
+                    event = None
+                    if 'event' in kwargs:
+                        event = kwargs['event']
+                        del kwargs['event']
+
                     # Pass in shared memory handles
                     if self.shared_memory:
                         kwargs['smm'] = smm
                         kwargs['sm'] = SharedMemory
 
                     logging.info("Calling {}".format(func.__name__))
+                    print(args)
                     result = func(*args, **kwargs)
 
                     if self.cache:
                         pass
 
                     queue.put(result)
+
+                    if event:
+                        logging.debug(
+                            "Setting event for {}".format(func.__name__))
+                        event.set()
                 else:
                     # Pass in shared memory handles
                     if self.shared_memory:

@@ -66,7 +66,8 @@ def train():
     return model.summary()
 
 
-@process
+# wait is how long I will wait on dependent values. timeout is how long I should take
+@process(wait=20)
 def values(*args):
     values = [arg for arg in args]
 
