@@ -12,6 +12,7 @@ client = docker.from_env()
 def docker(function=None,
            image=None,
            packages=[],
+           allow_growth=False,
            sleep=0):
     """
 
@@ -38,8 +39,14 @@ def docker(function=None,
                 ";".join(installpackages), lines, name)
 
             logging.debug(code)
+            env = {}
+
+            if allow_growth:
+                env['TF_FORCE_GPU_ALLOW_GROWTH'] = True
+
             result = client.containers.run(
-                image, code)
+                image, code, environment=env)
+                
             logging.debug(result)
             return result
 
