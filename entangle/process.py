@@ -20,6 +20,7 @@ def process(function=None,
 
     :param function:
     :param timeout:
+    :param cache:
     :param shared_memory:
     :param sleep:
     :return:
@@ -43,10 +44,16 @@ def process(function=None,
 
 
 class ProcessTerminatedException(Exception):
+    """
+
+    """
     pass
 
 
 class ProcessTimeoutException(Exception):
+    """
+
+    """
     pass
 
 
@@ -81,10 +88,27 @@ class ProcessMonitor(object):
         logging.info("Process:invoke: {}".format(self.func.__name__))
 
         def invoke(func, *args, **kwargs):
+            """
+
+            :param func:
+            :param args:
+            :param kwargs:
+            :return:
+            """
             import time
 
             @asyncio.coroutine
             def get_result(q, func, sleep, now, process, timeout):
+                """
+
+                :param q:
+                :param func:
+                :param sleep:
+                :param now:
+                :param process:
+                :param timeout:
+                :return:
+                """
                 import queue
                 import time
 
@@ -108,6 +132,18 @@ class ProcessMonitor(object):
                         logging.debug("Got result for[{}] {}".format(
                             name, str(_result)))
 
+                        if process.shared_memory:
+                            # _result will be metadata with name of sharedmemory object
+                            # where the result is.
+                            '''
+                            shm = SharedMemory(_result['name'])
+                            buf = shm.buf
+
+                            p = pickle.loads(buf)
+                            shm.close()
+                            '''
+                            pass
+                            
                         return _result
 
                     except queue.Empty:
@@ -140,29 +176,34 @@ class ProcessMonitor(object):
                             name = arg
 
                         queue = Queue()
-                        process = None
+                        _process = None
 
                         if type(arg) == partial:
                             logging.info("Process: {}".format(arg.__name__))
 
-                            kargs = {}
-                            kargs['queue'] = queue
+                            kargs = {'queue': queue}
+                            # If not shared memory
 
                             # if shared memory, set the handles
                             if self.shared_memory:
                                 kargs['smm'] = smm
                                 kargs['sm'] = SharedMemory
 
-                            process = Process(
+                            _process = Process(
                                 target=arg, kwargs=kargs)
-                            processes += [process]
 
-                            process.start()
+                            if self.shared_memory:
+                                _process.shared_memory = True
+
+                            processes += [_process]
+
+                            _process.start()
                         else:
                             logging.info("Value:".format(name))
                             queue.put(arg)
 
                         now = time.time()
+
                         # Create an async task that monitors the queue for that arg
                         _tasks += [get_result(queue, arg,
                                               self.sleep, now, process, self.timeout)]
@@ -189,6 +230,16 @@ class ProcessMonitor(object):
                     logging.info("Calling {}".format(func.__name__))
                     result = func(*args, **kwargs)
 
+                    if self.shared_memory:
+                        '''
+                        result_pickle = pickle.dumps(result)
+                        # Create shared memory object
+                        shm = SharedMemory(create=True, size=len(result_pickle))
+                        buf = shm.buf
+                        # Store result in shared memory
+                        buf[:len(p)] = p
+                        result = {'name':shm.name}
+                        '''
                     if self.cache:
                         pass
 
