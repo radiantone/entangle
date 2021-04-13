@@ -129,29 +129,19 @@ class ProcessMonitor(object):
                         logging.debug(
                             "Waiting on event for {} with wait {}".format(name, self.wait))
 
-                        if wait and wait > 0:
+                        if wait:
                             logging.debug(
                                 "Wait event timeout in {} seconds.".format(wait))
                             event.wait(wait)
+                            if not event.is_set():
+                                if process.is_alive():
+                                    process.terminate()
+                                raise ProcessTimeoutException()
                         else:
                             logging.debug("Waiting until complete.")
                             event.wait()
 
-                        #if process and not process.is_alive():
-                        #    raise ProcessTerminatedException()
-
-                        if not event.is_set():
-                            if process.is_alive():
-                                process.terminate()
-                            raise ProcessTimeoutException()
-
                         logging.debug("Got event for {}".format(name))
-                        # if timeout is not None and (round(time.time() - now) > timeout):
-                        #    if process.is_alive():
-                        #        process.terminate()
-                        #    raise ProcessTimeoutException()
-
-                          # time.sleep(sleep)
 
                         _result = q.get_nowait()
 
@@ -159,15 +149,11 @@ class ProcessMonitor(object):
                             name, str(_result)))
 
                         yield
-                        return _result
 
+                        return _result
 
                     except queue.Empty:
                         import time
-                        # if timeout and round(time.time() - now) > timeout:
-                        #    if process.is_alive():
-                        #        process.terminate()
-                        #        raise ProcessTimeoutException()
 
                         if process and not process.is_alive():
                             raise ProcessTerminatedException()
