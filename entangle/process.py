@@ -137,6 +137,9 @@ class ProcessMonitor(object):
                             logging.debug("Waiting until complete.")
                             event.wait()
 
+                        #if process and not process.is_alive():
+                        #    raise ProcessTerminatedException()
+
                         if not event.is_set():
                             if process.is_alive():
                                 process.terminate()
@@ -148,14 +151,16 @@ class ProcessMonitor(object):
                         #        process.terminate()
                         #    raise ProcessTimeoutException()
 
-                        yield  # time.sleep(sleep)
+                          # time.sleep(sleep)
 
                         _result = q.get_nowait()
 
                         logging.debug("Got result for[{}] {}".format(
                             name, str(_result)))
 
+                        yield
                         return _result
+
 
                     except queue.Empty:
                         import time
