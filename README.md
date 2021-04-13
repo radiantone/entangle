@@ -149,6 +149,7 @@ For devops use cases Entangle allows you to write simple, parallel workflow grap
 * Entangle is not a batch process framework
 * Entangle is not map/reduce
 * Entangle is not a centralized task manager
+* Entangle does not provision or manage resources
 
 ## Declarative Infrastructure
 
