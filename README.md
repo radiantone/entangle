@@ -584,6 +584,14 @@ print(rs())
 
 ```
 
+#### Tensorflow GPU Container
+
+The above example launches a GPU enabled docker on the `nvidia docker` platform. Tensorflow by default will consume the entire GPU for its processing, however if you want to run parallel GPU jobs that only consume GPU memory *as needed*, then you need to use:
+
+`@docker(image="tensorflow/tensorflow:latest-gpu", consume_gpu=False)`
+
+---
+
 ![docker](./images/docker.png)
 ### General Example
 An example of how entangle will be used (still in development)

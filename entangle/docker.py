@@ -12,7 +12,7 @@ client = docker.from_env()
 def docker(function=None,
            image=None,
            packages=[],
-           allow_growth=False,
+           consume_gpu=True,
            sleep=0):
     """
 
@@ -41,12 +41,12 @@ def docker(function=None,
             logging.debug(code)
             env = {}
 
-            if allow_growth:
+            if not consume_gpu:
                 env['TF_FORCE_GPU_ALLOW_GROWTH'] = True
 
             result = client.containers.run(
                 image, code, environment=env)
-                
+
             logging.debug(result)
             return result
 
