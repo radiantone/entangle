@@ -198,7 +198,7 @@ def reduce_sum():
 If you have a custom on-prem environment you can write a simple decorator that deploys the task to that and use it alongside other infrastructure decorators.
 ## Execution
 
-As we mentioned above, entangle will fan out during execution and occupy CPUs throughout the workflow. The OS will determine the priority of processes based on their resource needs at the time of execution.
+As we mentioned above, entangle workflows will fan out during execution and occupy CPUs throughout the workflow. The OS will determine the priority of processes based on their resource needs at the time of execution.
 Here is a simple workflow and diagram showing how the parallel execution unfolds.
 
 ```python
@@ -210,6 +210,9 @@ result = add(
    three()
 )
 ```
+
+This execution order applies to workflows in entange. If you use `@dataflow` decorator the execution follows that of a dataflow compute model. Refer to the section [Dataflows](#dataflows) for more information.
+
 ![execution](./images/execution.png)
 
 
