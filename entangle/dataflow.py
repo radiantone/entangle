@@ -69,7 +69,18 @@ class DataflowNode(object):
 
         if len(self.args) > 0 and type(self.args[0]) != DataflowNode:
             logging.debug("Calling partial")
-            result = self.partial()
+
+            if callable(self.args[0]) and self.args[0].__name__ == "<lambda>":
+                result = self.args[0](*args)
+                p = result(*args)
+                #p = partial(result.partial, *args)
+                result = args
+                p.__name__ = 'lambda'
+                p.thread = True
+                args  = [ p ]
+            else:
+                result = self.partial()
+
             logging.debug("Result {}".format(result))
 
             if self.callback:
@@ -78,8 +89,9 @@ class DataflowNode(object):
 
             for arg in args:
                 if type(arg) != DataflowNode:
-                    logging.debug("Sending {} to {}".format(
-                        result, arg.func.__name__))
+                    if type(arg) == partial:
+                        logging.debug("Sending {} to {}".format(
+                            result, arg.func.__name__))
 
             for arg in args:
                 logging.debug('   LAUNCHING: {} {}'.format(
@@ -100,7 +112,7 @@ class DataflowNode(object):
 
             if self.callback:
                 logging.debug('Calling callback {}'.format(self.func.__name__))
-                threadpool.submit(self.callback, self.func.func, result)
+                threadpool.submit(self.callback, self.func, result)
 
             logging.debug("Result {}".format(result))
             for arg in self.args:
