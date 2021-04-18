@@ -348,7 +348,7 @@ As wikipedia states[[8]](#references):
 
 > Dataflow is a software paradigm based on the idea of disconnecting computational actors into stages (pipelines) that can execute concurrently. Dataflow can also be called stream processing or reactive programming.[1]
 
-However, Merriam-Webster's simple definition illuminates a key trait of dataflows - "...*as data becomes available*"
+However, Merriam-Webster's simple definition[[9]](#references) illuminates a key trait of dataflows - "...*as data becomes available*"
 
 > : a computer architecture that utilizes multiple parallel processors to perform simultaneous operations as data becomes available
 
@@ -356,7 +356,7 @@ However, Merriam-Webster's simple definition illuminates a key trait of dataflow
 
 In many parallel data computations the arrival or readiness of some data might lag behind other data, perhaps coming from longer computations or farther away.
 True dataflow models allow the computation to proceed on a parallel path *as far as it can go* with the currently available data.
-This means dependent operations are not held up by control flow execution order in same cases and the overall computation is optimized.
+This means dependent operations are not held up by control flow execution order in some cases and the overall computation is optimized.
 
 ### Dataflows vs Workflows
 
@@ -368,11 +368,11 @@ Author, slikts [[5]](#references), descibes these differences very nicely (from 
 >
 > Concurrency control refers to the use of explicit mechanisms like locks to synchronize interdependent concurrent computations. Dataflow is also used to abstract over explicit concurrency control.
 ### Simple Example
-Let's start with a simple workflow example: Consider this simple computation
+Let's start with a workflow example: Consider this simple computation
 
 `A(B(),C())`
 
-In traditional *control flow* or what I call *lambda based* execution, the programming language's *dependency analysis* will determine the order of execution. In this example `B()` and `C()` are dependencies of `A()` and thus need to complete *before* `A()` can be executed. In other words, they are *inputs* to `A()`. Basic stuff.
+In traditional *control flow* or what I call *lambda based*[[10]](#references) execution, the programming language's *dependency analysis* will determine the order of execution. In this example `B()` and `C()` are dependencies of `A()` and thus need to complete *before* `A()` can be executed. In other words, they are *inputs* to `A()`. Basic stuff.
 
 This means the execution of each compute function is aware of the specific dependent functions in must resolve first.
 We call this *control depedency* [[2]](#references).
@@ -447,6 +447,7 @@ A dataflow DAG is a naturally and implicitly parallel - by its declarative struc
 7. An introduction to a formal theory of dependence analysis - https://link.springer.com/article/10.1007/BF00128174
 8. Dataflow - https://en.wikipedia.org/wiki/Dataflow
 9. Dataflow - https://www.merriam-webster.com/dictionary/dataflow
+10. Functional Programming/Lambda Calculus -https://www.tutorialspoint.com/functional_programming/functional_programming_lambda_calculus.htm
 
 ## Examples
 
