@@ -12,6 +12,8 @@ A lightweight (serverless) native python parallel processing framework based on 
 * [Architecture](#architecture)
 * [Declarative Infrastructure](#declarative-infrastructure)
 * [Execution](#execution)  
+* [Workflows](#workflows)  
+* [Process Behavior](#process-behavior)  
 * [Composition](#composition)  
   * [Decorator Composition](#decorator-composition)
   * [Workflow Composition](#workflow-composition)
@@ -223,6 +225,10 @@ In Python, threads do not execute in parallel to one another, it only gives the 
 Processes on the other hand, are not controlled by a GIL and can thus truly run in parallel. The host operating system governs the sheduling of processes and entangle is designed to exploit this benefit.
 
 
+## Workflows
+
+TBD
+
 ## Process Behavior
 
 Keyword parameters on the `@process` decorator allow you to control some meta-behavior of the process.
@@ -340,9 +346,6 @@ But essentially it allows for separation of workflow *declaration* from *executi
 
 TBD
 
-## Workflows
-
-TBD
 
 ## Dataflows 
 
