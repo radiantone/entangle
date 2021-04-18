@@ -16,6 +16,11 @@ A lightweight (serverless) native python parallel processing framework based on 
   * [Decorator Composition](#decorator-composition)
   * [Workflow Composition](#workflow-composition)
 * [Containers](#containers)  
+* [Dataflows](#dataflows)
+  * [Dataflow vs Workflows](#dataflows-vs-workflows)
+  * [DAG Dataflow](#dag-dataflow)
+  * [Results Comparison](#results-comparison)
+  * [Advantages of Strict Dataflow](#advantages-of-strict-dataflow)
 * [Examples](#examples)
     * [GPU Example](#gpu-example)
     * [Shared Memory Example](#shared-memory-example)
@@ -330,12 +335,123 @@ But essentially it allows for separation of workflow *declaration* from *executi
 ## Containers
 
 TBD
+
+## Dataflows 
+
+
+Entangle supports two kinds of execution flow, *dataflow*[[8]](#references) and *workflow* (or what is more traditionally called *control flow*). They both complete a DAG-based execution graph but in slightly different ways and with different advantages to the programmer.
+
+As wikipedia states[[8]](#references):
+
+> Dataflow is a software paradigm based on the idea of disconnecting computational actors into stages (pipelines) that can execute concurrently. Dataflow can also be called stream processing or reactive programming.[1]
+
+However, Merriam-Webster's simple definition illuminates a key trait of dataflows - "...*as data becomes available*"
+
+> : a computer architecture that utilizes multiple parallel processors to perform simultaneous operations as data becomes available
+
+### Data Readiness
+
+In many parallel data computations the arrival or readiness of some data might lag behind other data, perhaps coming from longer computations or farther away.
+True dataflow models allow the computation to proceed on a parallel path *as far as it can go* with the currently available data.
+This means dependent operations are not held up by control flow execution order in same cases and the overall computation is optimized.
+
+### Dataflows vs Workflows
+
+Author, slikts [[5]](#references), descibes these differences very nicely (from [[1]](#references)).
+
+> Control flow refers to the path the point of execution takes in a program, and sequential programming that focuses on explicit control flow using control structures like loops or conditionals is called imperative programming. In an imperative model, data may follow the control flow, but the main question is about the order of execution.
+>
+>Dataflow abstracts over explicit control flow by placing the emphasis on the routing and transformation of data and is part of the declarative programming paradigm. In a dataflow model, control follows data and computations are executed implicitly based on data availability.
+>
+> Concurrency control refers to the use of explicit mechanisms like locks to synchronize interdependent concurrent computations. Dataflow is also used to abstract over explicit concurrency control.
+### Simple Example
+Let's start with a simple workflow example: Consider this simple computation
+
+`A(B(),C())`
+
+In traditional *control flow* or what I call *lambda based* execution, the programming language's *dependency analysis* will determine the order of execution. In this example `B()` and `C()` are dependencies of `A()` and thus need to complete *before* `A()` can be executed. In other words, they are *inputs* to `A()`. Basic stuff.
+
+This means the execution of each compute function is aware of the specific dependent functions in must resolve first.
+We call this *control depedency* [[2]](#references).
+
+Let's say the dependency was reversed. Whereby, a value computed by `A()` was a dependency of *both* `B()` and `C()`. How would we write this in convential *control flow*?
+
+We might do something like this.
+
+```python
+B(A())
+C(A())
+```
+
+Breaking our previous single expression into multiple expressions. However, in this case, `A()` is being invoked twice, which could produce different values.
+So we might introduce a variable
+
+```python
+a = A()
+B = B(a)
+C = C(a)
+```
+
+Now we have 3 expressions that must run in a proper order. We have done some of the work by making a separate expression for our dependent value `a`. But for large dataflows this can be a bigger burden on the programmer to unravel all the dependencies and put them in proper order.
+
+What if the execution of an expression was not computed using the traditional *dependency analysis* most languages use today but instead was defined by stricter *dataflow* semantics?
+
+### DAG Dataflow
+In dataflow, a DAG represents the flow of values from compute nodes where each node computes its value once and the value is *emitted* or sent to directionally connected nodes in the DAG.
+
+
+![dataflow](./images/dataflow.png)
+
+This paradigm makes it easier to express our intentions of sharing values from `A()` by computing it once and sending the results to `B()` and `C()`. Neither `B()` nor `C()` explicitly depend on `A()`. The dataflow DAG provides the dependency structure for all the compute nodes.
+
+Now let's rewrite our expression if it were executed in strict *dataflow* order.
+
+```python
+A(
+   B(),
+   C()
+)
+```
+
+Here, the dataflow engine executing this expression understands the intention to compute `A()` first, then *in parallel* compute `B()` and `C()` with the *same* result computed only once from `A()`.
+
+### Results Comparison
+
+So what are the differences in the results from our *workflow* version and ou *dataflow* version? It should be clear that the workflow version takes as input 2 values (B(),C()) and produces 1 value, A().
+
+However, our dataflow version is different. It takes as input 1 value A() and produces two results, B() and C(), in parallel. So the computations are not different!
+
+### Advantages of Strict Dataflow
+
+As was pointed out in the intro to this section, dataflow provides declarative *data dependency* modelling for a computation. This is sometimes a more natural way of thinking about a problem for the human programmer.
+It allows a clean separation between the initial state of a dataflow and various desired outcomes that would be more difficult to model using *control flow* programming, as the programmer will have to use multiple imperative steps to introduce the proper execution order.
+
+Dataflow has improved efficiencies when it comes to data-centric computations as well because it only computes nodes once per DAG execution.
+This approach requires no *caching* or *variables* that might be required with imperative-based control flow.
+
+#### Naturally Parallel
+
+A dataflow DAG is a naturally and implicitly parallel - by its declarative structure. For CPU-bound, data centric tasks it is simple and easy to understand for this reason.
+
+### References
+
+1. Concurrency Glossary - https://slikts.github.io/concurrency-glossary/
+2. Dependency Graphs - https://en.wikipedia.org/wiki/Dependency_graph
+3. Dataflow Programming - https://en.wikipedia.org/wiki/Dataflow_programming
+4. Data-Flow vs Control-Flow for Extreme Level Computing - https://ieeexplore.ieee.org/document/6919190
+5. slikts - dabas@untu.ms
+6. Data dependency - https://en.wikipedia.org/wiki/Data_dependency
+7. An introduction to a formal theory of dependence analysis - https://link.springer.com/article/10.1007/BF00128174
+8. Dataflow - https://en.wikipedia.org/wiki/Dataflow
+9. Dataflow - https://www.merriam-webster.com/dictionary/dataflow
+
 ## Examples
 
 * [GPU Example](#gpu-example)
 * [Shared Memory Example](#shared-memory-example)
 * [AI Example](#ai-example)
 * [Docker Example](#docker-example)
+* [Dataflow Example](#dataflow-example)  
 * [General Example](#general-example)
 
 ### GPU Example
@@ -594,6 +710,86 @@ The above example launches a GPU enabled docker on the `nvidia docker` platform 
 ---
 
 ![docker](./images/docker.png)
+
+### Dataflow Example
+
+The example below demonstrates the dataflow capability of Entangle. This is a different compute paradigm from workflows. Please read th section on [Dataflows vs Workflows](#dataflows-vs-workflows) for complete explanation of the difference.
+
+```python
+import threading
+import time
+from entangle.dataflow import thread
+from entangle.dataflow import process
+from entangle.dataflow import dataflow
+
+import logging
+logging.basicConfig(filename='example.log',
+                    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+
+
+def triggered(func, result):
+    print("triggered: {} {}".format(func.__name__, result))
+
+
+@dataflow(callback=triggered)
+@thread
+def printx(x):
+    print('printx: {}'.format(threading.current_thread().name))
+    return("X: {}".format(x))
+
+
+@dataflow(callback=triggered)
+@thread
+def printy(y):
+    print('printy: {}'.format(threading.current_thread().name))
+    return("Y: {}".format(y))
+
+
+@dataflow(callback=triggered)
+@thread
+def printz(z):
+    print('printz: {}'.format(threading.current_thread().name))
+    return("Z: {}".format(z))
+
+
+@dataflow(callback=triggered)
+@thread
+def echo(e):
+    print('echo: {}'.format(threading.current_thread().name))
+    return "Echo! {}".format(e)
+
+
+@dataflow(executor='thread', callback=triggered, maxworkers=3)
+def emit(a, **kwargs):
+    print('emit: {}'.format(threading.current_thread().name))
+    return a+"!"
+
+
+results = []
+
+# Create the dataflow graph 
+flow = emit(
+    printx(
+        printz(
+            echo()
+        )
+    ),
+    printy(
+        printz()
+    ),
+    printy()
+)
+
+# Invoke the dataflow graph with initial input
+flow('emit')
+
+time.sleep(2)
+
+# Call flow again with different input value
+flow('HELLO')
+
+
+```
 ### General Example
 An example of how entangle will be used (still in development)
 ```python
