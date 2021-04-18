@@ -374,7 +374,7 @@ Let's start with a simple workflow example:
 
 In traditional *control flow* or what I call *lambda based*[[10]](#references) execution, the programming language's *dependency analysis* will determine the order of execution. In this example `B()` and `C()` are dependencies of `A()` and thus need to complete *before* `A()` can be executed. In other words, they are *inputs* to `A()`. Basic stuff.
 
-This means the execution of each compute function is aware of the specific dependent functions in must resolve first.
+This means the execution of each compute function is aware of the specific dependent functions it must resolve first.
 We call this *control depedency* [[2]](#references).
 
 Let's say the dependency was reversed. Whereby, a value computed by `A()` was a dependency of *both* `B()` and `C()`. How would we write this in convential *control flow*?
@@ -436,6 +436,9 @@ This approach requires no *caching* or *variables* that might be required with i
 
 A dataflow DAG is a naturally and implicitly parallel - by its declarative structure. For CPU-bound, data centric tasks it is simple and easy to understand for this reason.
 
+#### Detailed Example
+
+For a more detailed example of using `@dataflow` in entangle see the [Dataflow Example](#dataflow-example).
 ### References
 
 1. Concurrency Glossary - https://slikts.github.io/concurrency-glossary/
