@@ -48,6 +48,65 @@ def process(function=None,
     return decorator
 
 
+def pool(function=None,
+         timeout=None,
+         wait=None,
+         cache=False,
+         shared_memory=False,
+         sleep=0):
+    """
+    A process pool that executes the workflow callgraph inside out so it
+    can pool only the graph leaf nodes in a process pool executor.
+
+    :param function:
+    :param timeout:
+    :param cache:
+    :param shared_memory:
+    :param sleep:
+    :return:
+    """
+
+    def decorator(func):
+        def wrapper(f):
+
+            class poolmonitor():
+
+                def __init__(self, func, *args, **kwargs):
+
+                    self.func = func
+
+                def __call__(self, *args, **kwargs):
+                    from functools import partial
+                    # return partial here
+                    print("FUNC: {}".format(self.func.__name__))
+                    print("ARGS: {}".format(str(args)))
+
+                    if len(args) > 0:
+                        print("POOL: {}".format(str(args)))
+                        # Only send partial functions to the pol
+
+                    p = partial(self.func)
+                    p.__name__ = self.func.__name__
+                    p.pargs = args
+                    p.pkwargs = kwargs
+                    return p
+
+            pm = poolmonitor(f)
+
+            # Once we have the poolmonitor call graph, we need to traverse
+            # it and invert the calling sequence and ensure that argument
+            # results get gather before a new process function is given to the pool
+
+            return pm
+
+        return wrapper(func)
+
+    if function is not None:
+        return decorator(function)
+
+    return decorator
+
+
 class ProcessTerminatedException(Exception):
     """
 
@@ -59,6 +118,10 @@ class ProcessTimeoutException(Exception):
     """
 
     """
+    pass
+
+
+class PoolMonitor(object):
     pass
 
 
