@@ -1,8 +1,8 @@
 import threading
+import time
 from entangle.dataflow import thread
 from entangle.dataflow import process
 from entangle.dataflow import dataflow
-import time
 
 import logging
 logging.basicConfig(filename='example.log',
