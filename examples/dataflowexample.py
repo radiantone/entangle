@@ -1,44 +1,49 @@
-from entangle.dataflow import dataflow
-from entangle.dataflow import process
-from entangle.dataflow import thread
 import threading
+from entangle.dataflow import thread
+from entangle.dataflow import process
+from entangle.dataflow import dataflow
+import time
 
 import logging
-logging.basicConfig(
-    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+logging.basicConfig(filename='example.log',
+                    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 
-@dataflow
+def triggered(func, result):
+    print("triggered: {} {}".format(func.__name__, result))
+
+
+@dataflow(callback=triggered)
 @thread
 def printx(x):
-    print('printx: ', threading.current_thread().name)
+    print('printx: {}'.format(threading.current_thread().name))
     return("X: {}".format(x))
 
 
-@dataflow
+@dataflow(callback=triggered)
 @thread
 def printy(y):
-    print('printy: ', threading.current_thread().name)
+    print('printy: {}'.format(threading.current_thread().name))
     return("Y: {}".format(y))
 
 
-@dataflow
+@dataflow(callback=triggered)
 @thread
 def printz(z):
-    print('printz: ', threading.current_thread().name)
+    print('printz: {}'.format(threading.current_thread().name))
     return("Z: {}".format(z))
 
 
-@dataflow
+@dataflow(callback=triggered)
 @thread
 def echo(e):
-    print('echo: ', threading.current_thread().name)
+    print('echo: {}'.format(threading.current_thread().name))
     return "Echo! {}".format(e)
 
 
-@dataflow(executor='thread', maxworkers=1)
+@dataflow(executor='thread', callback=triggered, maxworkers=3)
 def emit(a, **kwargs):
-    print("Returning from emit")
+    print('emit: {}'.format(threading.current_thread().name))
     return a+"!"
 
 
@@ -60,7 +65,5 @@ result = emit(
     printy()
 )
 
-print(result)
 
-import time
 time.sleep(2)

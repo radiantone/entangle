@@ -6,13 +6,9 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import ProcessPoolExecutor
 
-global _executor
-_executor = None
-
 global processpool, threadpool
 processpool = None
 threadpool = None
-# Add logging to file
 
 
 def process(func, **kwargs):
@@ -22,6 +18,7 @@ def process(func, **kwargs):
         return _workflow
 
     inner.thread = False
+    inner.func = func
     return inner
 
 
@@ -33,6 +30,7 @@ def thread(func, **kwargs):
         return _workflow
 
     inner.thread = True
+    inner.func = func
     return inner
 
 
@@ -56,48 +54,64 @@ class DataflowNode(object):
         self.partial.__name__ = func.__name__
 
         self.result = kwargs['result'] if 'result' in kwargs else []
-        print(self.partial)
-        print("{} self.args".format(self.func.__name__), args)
+        self.callback = kwargs['callback'] if 'callback' in kwargs else None
+
+        logging.debug(self.partial)
+        logging.debug("{} self.args".format(self.args))
 
     def __call__(self, *args, **kwargs):
         from functools import partial
 
-        print("Inside dataflow: {} {}".format(self.func.__name__, *args))
-
-        '''
-        Get my return value
-        spawn process for each arg from process pool passing my value to them
-        '''
+        logging.debug("Inside dataflow: {} {}".format(
+            self.func.__name__, *args))
 
         if len(self.args) > 0 and type(self.args[0]) != DataflowNode:
-            print("Calling partial")
+            logging.debug("Calling partial")
             result = self.partial()
-            print("Result {}".format(result))
-            for arg in args:
-                if type(arg) != DataflowNode:
-                    print("Sending {} to {}".format(result, arg.func.__name__))
+            logging.debug("Result {}".format(result))
+
+            if self.callback:
+                logging.debug('Calling callback {}'.format(self.partial.__name__))
+                threadpool.submit(self.callback, self.partial.func, result)
 
             for arg in args:
-                print('   LAUNCHING: ', arg.func.__name__, result)
-                print('     Thread:', arg.thread)
-                print("Calling {}('{}')".format(arg.func.__name__, result))
+                if type(arg) != DataflowNode:
+                    logging.debug("Sending {} to {}".format(
+                        result, arg.func.__name__))
+
+            for arg in args:
+                logging.debug('   LAUNCHING: {} {}'.format(
+                    arg.func.__name__, result))
+                logging.debug('     Thread: {}'.format(arg.thread))
+                logging.debug("Calling {}('{}')".format(
+                    arg.func.__name__, result))
+
                 if arg.thread:
                     threadpool.submit(arg, result, **{'result': self.result})
                 else:
                     processpool.submit(arg, result, **{'result': self.result})
         else:
-            print("Calling with args {} {}".format(self.func.__name__, *args))
+            logging.debug("Calling with args {} {}".format(
+                self.func.__name__, *args))
+
             result = self.func(*args)
-            print("Result {}".format(result))
+
+            if self.callback:
+                logging.debug('Calling callback {}'.format(self.func.__name__))
+                threadpool.submit(self.callback, self.func.func, result)
+
+            logging.debug("Result {}".format(result))
             for arg in self.args:
                 if type(arg) == DataflowNode:
-                    print("Sending {} to {}".format(result, arg.func.__name__))
+                    logging.debug("Sending {} to {}".format(
+                        result, arg.func.__name__))
 
             for arg in self.args:
-                print('   ARG Type:', type(arg), arg.func)
-                print('     Thread:', arg.thread)
-                print('   LAUNCHING: ', arg.func.__name__, result)
-                print("Calling {}('{}')".format(arg.func.__name__, result))
+                logging.debug('   LAUNCHING: {} {}'.format(
+                    arg.func.__name__, result))
+                logging.debug('     Thread: {}'.format(arg.thread))
+                logging.debug("Calling {}('{}')".format(
+                    arg.func.__name__, result))
 
                 if arg.thread:
                     threadpool.submit(arg, result)
@@ -108,6 +122,7 @@ class DataflowNode(object):
 
 
 def dataflow(function=None,
+             callback=None,
              executor=ThreadPoolExecutor,
              maxworkers=3):
     global _executor, processpool, threadpool
@@ -116,33 +131,26 @@ def dataflow(function=None,
         from functools import partial
 
         def wrapper(f, *dargs, **dkwargs):
-            print("Calling decorator {}".format(f.__name__))
-            print("dargs {}".format(str(dargs)))
+            logging.debug("Calling decorator {}".format(f.__name__))
+            logging.debug("dargs {}".format(str(dargs)))
 
             def invoke(*args, **kwargs):
                 from functools import partial
-                print("invoke f ", f, args)
+                logging.debug("invoke f {} {}".format(f, args))
+                kwargs['callback'] = callback
                 return DataflowNode(f, *args, **kwargs)
 
             return invoke
 
-        def invokepm(pm, *pargs, **pkwargs):
-            return pm(*pargs, **pkwargs)
-
-        print('Type func: ', type(func))
-
         return wrapper(func)
 
-    exectype = ThreadPoolExecutor
+    try:
+        processpool = ProcessPoolExecutor(max_workers=maxworkers)
+        threadpool = ThreadPoolExecutor(max_workers=maxworkers)
 
-    if executor == 'process':
-        exectype = ProcessPoolExecutor
+        if function is not None:
+            return decorator(function)
 
-    #_executor = exectype(max_workers=maxworkers)
-    processpool = ProcessPoolExecutor(max_workers=maxworkers)
-    threadpool = ThreadPoolExecutor(max_workers=maxworkers)
-
-    if function is not None:
-        return decorator(function)
-
-    return decorator
+        return decorator
+    finally:
+        pass
