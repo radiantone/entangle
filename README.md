@@ -433,7 +433,15 @@ A(
 )
 ```
 
-Here, the dataflow engine executing this expression understands the intention to compute `A()` first, then *in parallel* compute `B()` and `C()` with the *same* result computed only once from `A()`.
+Here, the dataflow engine executing this expression understands the intention to compute `A()` first, then *in parallel* compute `B()` and `C()` with the *same* result computed only once from `A()` as their input.
+Written imperatively, this would equate to:
+
+```python
+a = A()
+B(a)
+C(a)
+```
+where `B(a)` and `C(a)` run in parallel.
 
 ### Results Comparison
 
