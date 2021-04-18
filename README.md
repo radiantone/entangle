@@ -435,7 +435,7 @@ This approach requires no *caching* or *variables* that might be required with i
 
 #### Naturally Parallel
 
-A dataflow DAG is a naturally and implicitly parallel - by its declarative structure. For CPU-bound, data centric tasks it is simple and easy to understand for this reason.
+A dataflow DAG is a naturally and implicitly parallel model - by its declarative structure. For CPU-bound, data centric tasks it is simple and easy to understand for this reason.
 
 #### Detailed Example
 
