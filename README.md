@@ -368,7 +368,7 @@ Author, slikts [[5]](#references), descibes these differences very nicely (from 
 >
 > Concurrency control refers to the use of explicit mechanisms like locks to synchronize interdependent concurrent computations. Dataflow is also used to abstract over explicit concurrency control.
 ### Simple Example
-Let's start with a workflow example: Consider this simple computation
+Let's start with a simple workflow example:
 
 `A(B(),C())`
 
