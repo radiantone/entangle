@@ -423,7 +423,7 @@ Here, the dataflow engine executing this expression understands the intention to
 
 So what are the differences in the results from our *workflow* version and our *dataflow* version? It should be clear that the workflow version takes as input 2 values (B(),C()) and produces 1 value, A().
 
-However, our dataflow version is different. It takes as input 1 value A() and produces two results, B() and C(), in parallel. So the computations are not different!
+However, our dataflow version is different. It takes as input 1 value A() and produces two results, B() and C(), in parallel. So the computations are different!
 
 ### Advantages of Strict Dataflow
 
