@@ -205,6 +205,9 @@ If you have a custom on-prem environment you can write a simple decorator that d
 Entangle uses the concept of *mixins* to associate infrastructure needs (where) with compute (what) and concurrency needs (how). 
 Thus, it allows you to mix and match combinations of these within a single workflow or dataflow.
 
+For example, you might need to get data from `AWS Lambda`, run `GPU Algorithm on that data inside a container` then send those results to 10 CPUs in a `compute cloud` for *parallel analysis*, then gather those results and send them to a `web service` on your network for storage or rendering.
+All these steps have different locations, infrastructure requirements, compute needs, processing times, and protocols.
+
 ## Execution
 
 As we mentioned above, entangle workflows will fan out during execution and occupy CPUs throughout the workflow. The OS will determine the priority of processes based on their resource needs at the time of execution.
