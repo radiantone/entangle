@@ -6,7 +6,7 @@ import time
 
 import logging
 logging.basicConfig(filename='example.log',
-                    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+                    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
 
 def triggered(func, result):
@@ -49,11 +49,8 @@ def emit(a, **kwargs):
 
 results = []
 
-# initial dataflow input
-emit = emit('emit', result=results)
-#printx = printx('PREPRINTX')
-
-result = emit(
+# Create the dataflow graph 
+flow = emit(
     printx(
         printz(
             echo()
@@ -65,5 +62,11 @@ result = emit(
     printy()
 )
 
+# Invoke the dataflow graph with initial input
+flow('emit')
 
 time.sleep(2)
+
+# Call flow again with different input value
+flow('HELLO')
+

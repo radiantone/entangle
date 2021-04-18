@@ -59,6 +59,8 @@ class DataflowNode(object):
         logging.debug(self.partial)
         logging.debug("{} self.args".format(self.args))
 
+        # Build dataflow DAG here
+
     def __call__(self, *args, **kwargs):
         from functools import partial
 
