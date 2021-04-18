@@ -199,6 +199,12 @@ def reduce_sum():
 ![infrastructure](./images/infrastructure.png)
 
 If you have a custom on-prem environment you can write a simple decorator that deploys the task to that and use it alongside other infrastructure decorators.
+
+### Where, What & How: Using Mixins
+
+Entangle uses the concept of *mixins* to associate infrastructure needs (where) with compute (what) and concurrency needs (how). 
+Thus, it allows you to mix and match combinations of these within a single workflow or dataflow.
+
 ## Execution
 
 As we mentioned above, entangle workflows will fan out during execution and occupy CPUs throughout the workflow. The OS will determine the priority of processes based on their resource needs at the time of execution.
