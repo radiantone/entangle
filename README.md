@@ -464,7 +464,7 @@ A dataflow DAG is a naturally and implicitly parallel model - by its declarative
 
 #### Detailed Example
 
-For a more detailed example of using `@dataflow` in entangle see the [Dataflow Example](#dataflow-example).
+For a more detailed example of using `@dataflow` in entangle see [Dataflow Examples](#dataflow-examples).
 ### References
 
 1. Concurrency Glossary - https://slikts.github.io/concurrency-glossary/
