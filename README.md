@@ -395,7 +395,7 @@ In traditional *control flow* or what I call *lambda based*[[10]](#references) e
 This means the execution of each compute function is aware of the specific dependent functions it must resolve first.
 We call this *control depedency* [[2]](#references).
 
-Let's say the dependency was reversed. Whereby, a value computed by `A()` was a dependency of *both* `B()` and `C()`. How would we write this in convential *control flow*?
+Let's say the dependency was reversed. Whereby, a value computed by `A()` was a dependency of *both* `B()` and `C()`. How would we write this in conventional *control flow*?
 
 We might do something like this.
 
