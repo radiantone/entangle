@@ -853,7 +853,6 @@ def printy(y):
 @dataflow(executor='thread', callback=triggered, maxworkers=3)
 def emit(a, **kwargs):
     print('emit: {}'.format(threading.current_thread().name))
-    print("a: ",a)
     return a+"!"
 
 # Create the dataflow graph 
@@ -861,7 +860,6 @@ def emit(a, **kwargs):
 # on the result receive from emit. This won't be known until the data is ready.
 flow = emit(
     lambda x: printx() if x == 'emit' else printy()
-    #printx()
 )
 
 # Invoke the dataflow graph with initial input
