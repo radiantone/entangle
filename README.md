@@ -833,8 +833,10 @@ Note that this is computed during the execution of the DAG, not at declaration t
 flow = emit(
     lambda x: printx() if x == 'emit' else printy()
 )
+
+flow('emit')
 ```
-Full example below
+Full example:
 ```python
 import threading
 import time
