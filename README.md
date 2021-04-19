@@ -836,6 +836,9 @@ flow = emit(
 
 flow('emit')
 ```
+
+![lambda](./images/lambda.png)
+
 Full example:
 ```python
 import threading
