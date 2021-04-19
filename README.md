@@ -834,13 +834,11 @@ from entangle.dataflow import dataflow
 def triggered(func, result):
     print("triggered: {} {}".format(func.__name__, result))
 
-
 @dataflow(callback=triggered)
 @thread
 def printx(x):
     print('printx: {}'.format(threading.current_thread().name))
     return("X: {}".format(x))
-
 
 @dataflow(callback=triggered)
 @thread
