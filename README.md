@@ -379,7 +379,7 @@ This means dependent operations are not held up by control flow execution order 
 
 ### Dataflows vs Workflows
 
-Author, slikts [[5]](#references), descibes these differences very nicely (from [[1]](#references)).
+Author, slikts [[1]](#references), descibes these differences very nicely (from [[1]](#references)).
 
 > Control flow refers to the path the point of execution takes in a program, and sequential programming that focuses on explicit control flow using control structures like loops or conditionals is called imperative programming. In an imperative model, data may follow the control flow, but the main question is about the order of execution.
 >
@@ -472,7 +472,7 @@ For a more detailed example of using `@dataflow` in entangle see [Dataflow Examp
 2. Dependency Graphs - https://en.wikipedia.org/wiki/Dependency_graph
 3. Dataflow Programming - https://en.wikipedia.org/wiki/Dataflow_programming
 4. Data-Flow vs Control-Flow for Extreme Level Computing - https://ieeexplore.ieee.org/document/6919190
-5. slikts - dabas@untu.ms
+5. Advances in Dataflow Programming Languages - https://futureofcoding.org/notes/dataflow/advances-in-dataflow-programming-langauges.html
 6. Data dependency - https://en.wikipedia.org/wiki/Data_dependency
 7. An introduction to a formal theory of dependence analysis - https://link.springer.com/article/10.1007/BF00128174
 8. Dataflow - https://en.wikipedia.org/wiki/Dataflow
