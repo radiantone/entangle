@@ -831,7 +831,6 @@ Entangle makes this relatively easy. The example below embeds a lambda expressio
 import threading
 import time
 from entangle.dataflow import thread
-from entangle.dataflow import process
 from entangle.dataflow import dataflow
 
 def triggered(func, result):
@@ -872,6 +871,20 @@ time.sleep(2)
 
 # Call flow again with different input value
 flow('HELLO')
+```
+
+Which outputs:
+
+```python
+printx: MainThread
+triggered: inner X: emit
+triggered: emit ('emit',)
+printx: ThreadPoolExecutor-2_0
+triggered: inner X: ('emit',)
+printy: MainThread
+triggered: inner Y: HELLO
+triggered: emit ('HELLO',)
+printy: ThreadPoolExecutor-2_1
 ```
 
 ### General Example
