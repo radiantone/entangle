@@ -825,7 +825,7 @@ flow('HELLO')
 #### Data-Driven Branching
 
 It's useful to have a data flow that routes to different paths depending on input data.
-Entangle makes this relatively easy. The example below embeds a lambda expression directly in the dataflow expression that chooses either `printx()` or `printy()` as the next compute node depending on what the input value is.
+Entangle makes this relatively easy. The example below embeds a lambda expression directly in the dataflow structure that chooses either `printx()` or `printy()` as the next compute node depending on what the input value is.
 
 ```python
 import threading
