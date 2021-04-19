@@ -16,7 +16,6 @@ def triggered(func, result):
 @dataflow(callback=triggered)
 @thread
 def printx(x):
-    print('printx')
     print('printx: {}'.format(threading.current_thread().name))
     return("X: {}".format(x))
 
@@ -24,24 +23,8 @@ def printx(x):
 @dataflow(callback=triggered)
 @thread
 def printy(y):
-    print('printy')
     print('printy: {}'.format(threading.current_thread().name))
     return("Y: {}".format(y))
-
-
-@dataflow(callback=triggered)
-@thread
-def printz(z):
-    print('printz: {}'.format(threading.current_thread().name))
-    return("Z: {}".format(z))
-
-
-@dataflow(callback=triggered)
-@thread
-def echo(e):
-    print('echo: {}'.format(threading.current_thread().name))
-    return "Echo! {}".format(e)
-
 
 @dataflow(executor='thread', callback=triggered, maxworkers=3)
 def emit(a, **kwargs):
