@@ -27,6 +27,7 @@ A lightweight (serverless) native python parallel processing framework based on 
     * [GPU Example](#gpu-example)
     * [Shared Memory Example](#shared-memory-example)
     * [AI Example](#ai-example)
+    * [Dataflow Examples](#dataflow-examples)  
     * [Docker Example](#docker-example)
 
 ## Overview
@@ -483,7 +484,7 @@ For a more detailed example of using `@dataflow` in entangle see the [Dataflow E
 * [Shared Memory Example](#shared-memory-example)
 * [AI Example](#ai-example)
 * [Docker Example](#docker-example)
-* [Dataflow Example](#dataflow-example)  
+* [Dataflow Examples](#dataflow-examples)  
 * [General Example](#general-example)
 
 ### GPU Example
@@ -743,7 +744,7 @@ The above example launches a GPU enabled docker on the `nvidia docker` platform 
 
 ![docker](./images/docker.png)
 
-### Dataflow Example
+### Dataflow Examples
 
 The example below demonstrates the dataflow capability of Entangle. This is a different compute paradigm from workflows. Please read th section on [Dataflows vs Workflows](#dataflows-vs-workflows) for complete explanation of the difference.
 
