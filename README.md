@@ -84,7 +84,7 @@ If you are planning to run or use GPU enabled code it is recommended to set up a
 * Composition
 * Shared-Nothing
 * Serverless & Threadless
-* Dataflow & Control Flow Executions
+* True Dataflow Support
 
 ## Architecture
 
