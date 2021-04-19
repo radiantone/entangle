@@ -799,9 +799,6 @@ def emit(a, **kwargs):
     print('emit: {}'.format(threading.current_thread().name))
     return a+"!"
 
-
-results = []
-
 # Create the dataflow graph 
 flow = emit(
     printx(
