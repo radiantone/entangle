@@ -4,11 +4,6 @@ from entangle.dataflow import thread
 from entangle.dataflow import process
 from entangle.dataflow import dataflow
 
-import logging
-logging.basicConfig(filename='example.log',
-                    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
-
-
 def triggered(func, result):
     print("triggered: {} {}".format(func.__name__, result))
 
@@ -31,9 +26,6 @@ def emit(a, **kwargs):
     print('emit: {}'.format(threading.current_thread().name))
     print("a: ",a)
     return a+"!"
-
-
-results = []
 
 # Create the dataflow graph 
 # Defer whether we will forward to printx() or printy() depending
