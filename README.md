@@ -27,7 +27,8 @@ A lightweight (serverless) native python parallel processing framework based on 
     * [GPU Example](#gpu-example)
     * [Shared Memory Example](#shared-memory-example)
     * [AI Example](#ai-example)
-    * [Dataflow Examples](#dataflow-examples)  
+    * [Dataflow Examples](#dataflow-examples)
+      * [Data-Driven Branching](#data-driven-branching)
     * [Docker Example](#docker-example)
 
 ## Overview
@@ -485,6 +486,7 @@ For a more detailed example of using `@dataflow` in entangle see [Dataflow Examp
 * [AI Example](#ai-example)
 * [Docker Example](#docker-example)
 * [Dataflow Examples](#dataflow-examples)  
+  * [Data-Driven Branching](#data-driven-branching)
 * [General Example](#general-example)
 
 ### GPU Example
