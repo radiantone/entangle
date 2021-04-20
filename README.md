@@ -445,7 +445,7 @@ C(a)
 ```
 where `B(a)` and `C(a)` run in parallel, however the imperative approach does not provide enough information for an execution engine to know that `B()` and `C()` should operate in parallel.
 
-IMPORTANT! The dataflow syntax provides the necessary graph structure for a dataflow engine to know explicitly which functions can operate in parallel.
+**IMPORTANT!** The dataflow syntax provides the necessary graph structure for a dataflow engine to know explicitly which functions can operate in parallel.
 
 ### Results Comparison
 
