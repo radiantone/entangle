@@ -456,7 +456,7 @@ However, our dataflow version is different. It takes as input 1 value A() and pr
 ### Advantages of Strict Dataflow
 
 As was pointed out in the intro to this section, dataflow provides declarative *data dependency* modelling for a computation. This is sometimes a more natural way of thinking about a problem for the human programmer.
-It allows a clean separation between the initial state of a dataflow and various desired outcomes that would be more difficult to model using *control flow* programming, as the programmer will have to use multiple imperative steps to introduce the proper execution order.
+It allows a clean separation between the initial state of a dataflow and various desired outcomes that would be more difficult to model using *control flow* programming, as the programmer will have to use multiple imperative steps to introduce the proper execution order and indicating which computations are parallel is unclear from linear ordering.
 
 Dataflow has improved efficiencies when it comes to data-centric computations as well because it only computes nodes once per DAG execution.
 This approach requires no *caching* or *variables* that might be required with imperative-based control flow.
