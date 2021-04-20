@@ -825,7 +825,7 @@ flow('HELLO')
 #### Data-Driven Branching
 
 It's useful to have a data flow that routes to different paths depending on input data.
-Entangle makes this relatively easy. The example below embeds a lambda expression directly in the dataflow structure that chooses either `printx()` or `printy()` as the next compute node depending on what the input value is.
+Entangle makes this relatively easy. The example below embeds a lambda expression directly in the dataflow structure that chooses either `printx()` or `printy()` as the next compute node depending on what the input value is - *after emit has generated the value*.
 
 In the snippet below `emit` first produces a value based on some input, the result is emitted to either `printx()` or `printy()` depending on the value of the result.
 Note that this is computed during the execution of the DAG, not at declaration time.
