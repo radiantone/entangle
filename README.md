@@ -377,6 +377,8 @@ In many parallel data computations the arrival or readiness of some data might l
 True dataflow models allow the computation to proceed on a parallel path *as far as it can go* with the currently available data.
 This means dependent operations are not held up by control flow execution order in some cases and the overall computation is optimized.
 
+![dataflow](./images/dataflow2.png)
+
 ### Dataflows vs Workflows
 
 Author, slikts [[1]](#references), descibes these differences very nicely (from [[1]](#references)).
