@@ -16,7 +16,7 @@ def triggered(func, result):
 @thread
 def printx(x):
     print('printx: {}'.format(threading.current_thread().name))
-    return("  X: {}".format(x))
+    return("   X: {}".format(x))
 
 
 @dataflow(callback=triggered)
@@ -38,10 +38,16 @@ def emit(a, **kwargs):
     print('emit: {}'.format(threading.current_thread().name))
     return a+"!"
 
+
 flow = emit(
-    lambda x: [printx(
-        printz()
-    ) for _ in range(0, 10)]
+    lambda x: list(map(lambda f: f(x), [
+        lambda y: [printx(
+            printz()
+        ) for _ in range(0, 10)],
+        printy(
+            printz()
+        )
+    ]))[0]
 )
 
 flow('emit')
