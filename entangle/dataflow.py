@@ -64,20 +64,28 @@ class DataflowNode(object):
     def __call__(self, *args, **kwargs):
         from functools import partial
 
-        logging.debug("Inside dataflow: {} {}".format(
-            self.func.__name__, *args))
+        logging.debug("Inside dataflow: {} ".format(
+            self.func.__name__))
 
         if len(self.args) > 0 and type(self.args[0]) != DataflowNode:
             logging.debug("Calling partial")
 
             if callable(self.args[0]) and self.args[0].__name__ == "<lambda>":
                 result = self.args[0](*args)
-                p = result(*args)
-                #p = partial(result.partial, *args)
-                result = args
-                p.__name__ = 'lambda'
-                p.thread = True
-                args  = [ p ]
+                # TODO: What to do if result is a list of functions?
+                if type(result) is list:
+                    for r in result:
+                        r.__name__ = 'lambda'
+                        df = DataflowNode(r,*args)
+                        df(*args)
+                    return
+                else:
+                    p = result(*args)
+                    #p = partial(result.partial, *args)
+                    result = args
+                    p.__name__ = 'lambda'
+                    p.thread = True
+                    args  = [ p ]
             else:
                 result = self.partial()
 
@@ -94,13 +102,15 @@ class DataflowNode(object):
                             result, arg.func.__name__))
 
             for arg in args:
-                logging.debug('   LAUNCHING: {} {}'.format(
-                    arg.func.__name__, result))
-                logging.debug('     Thread: {}'.format(arg.thread))
-                logging.debug("Calling {}('{}')".format(
-                    arg.func.__name__, result))
 
-                if arg.thread:
+                if hasattr(arg,'func'):
+                    logging.debug('   LAUNCHING: {} {}'.format(
+                        arg.func.__name__, result))
+                    logging.debug('     Thread: {}'.format(arg.thread))
+                    logging.debug("Calling {}('{}')".format(
+                        arg.func.__name__, result))
+
+                if hasattr(arg,'thread') and arg.thread:
                     threadpool.submit(arg, result, **{'result': self.result})
                 else:
                     processpool.submit(arg, result, **{'result': self.result})

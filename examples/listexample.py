@@ -7,6 +7,7 @@ import logging
 logging.basicConfig(
     format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
+
 def triggered(func, result):
     print("triggered: {} {}".format(func.__name__, result))
 
@@ -30,28 +31,20 @@ def printy(y):
 def printz(z):
     print('printz: {}'.format(threading.current_thread().name))
     return ("Z: {}".format(z))
-    
+
 
 @dataflow(executor='thread', callback=triggered, maxworkers=3)
 def emit(a, **kwargs):
     print('emit: {}'.format(threading.current_thread().name))
     return a+"!"
 
-# Create the dataflow graph 
-# Defer whether we will forward to printx() or printy() depending
-# on the result receive from emit. This won't be known until the data is ready.
 flow = emit(
-    lambda x: printx(
+    lambda x: [printx(
         printz()
-    )
-    if x == 'emit' else
-    printy()
+    ) for _ in range(0, 10)]
 )
 
-# Invoke the dataflow graph with initial input
 flow('emit')
 
+
 time.sleep(2)
-print("----------------------------")
-# Call flow again with different input value
-flow('HELLO')
