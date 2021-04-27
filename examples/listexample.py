@@ -33,18 +33,27 @@ def printz(z):
     return ("     Z: {}".format(z))
 
 
-@dataflow(executor='thread', callback=triggered, maxworkers=3)
+@dataflow(executor='thread', callback=triggered, maxworkers=5)
 def emit(a, **kwargs):
     print('emit: {}'.format(threading.current_thread().name))
     return a+"!"
 
 flow = emit(
-    lambda x: [printx(
-        printz()
-    ) for _ in range(0, 10)]
+    lambda x: [printy(
+        printz(
+            printx()
+        )
+        ) for _ in range(0, 10)]
 )
 
 flow('emit')
 
 
 time.sleep(2)
+'''
+lambda x: [printx(
+            printz(
+                lambda x: printx() if x != 'Z:   X: emit!' else
+                printy()
+            )
+''' 

@@ -1,4 +1,5 @@
 from entangle.process import process
+from entangle.containers import singularity
 
 import logging
 logging.basicConfig(
