@@ -7,6 +7,8 @@ import logging
 def workflow(func, **kwargs):
 
     def inner(*args, **kwargs):
+
+        logging.debug("workflow args: {} {}".format(str(*args), str(**kwargs)))
         _workflow = func(*args, **kwargs)
         # added QoS implementation here
         logging.debug("Inside the workflow")
