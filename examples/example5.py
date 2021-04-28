@@ -5,11 +5,12 @@ from entangle.scheduler import scheduler
 
 import logging
 logging.basicConfig(
-    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
 
 @thread
 @request(url='https://datausa.io/api/data', method='GET')
+@scheduler(cpus=10, sclass='entangle.scheduler.DefaultScheduler')
 def mydata(data):
     import json
     data = json.loads(data)
@@ -18,11 +19,13 @@ def mydata(data):
 
 
 @thread
+@scheduler(cpus=10, sclass='entangle.scheduler.DefaultScheduler')
 def two():
     return 2
 
 
 @thread
+@scheduler(cpus=10, sclass='entangle.scheduler.DefaultScheduler')
 def add(a, b):
     v = int(a) + int(b)
     print("ADD: *"+str(v)+"*")
@@ -30,6 +33,7 @@ def add(a, b):
 
 
 @workflow
+@scheduler(cpus=10, sclass='entangle.scheduler.DefaultScheduler')
 def workflow1():
     return add(
         mydata(drilldowns='Nation', measures='Population'),
@@ -38,7 +42,7 @@ def workflow1():
 
 
 @workflow
-@scheduler
+@scheduler(cpus=10, sclass='entangle.scheduler.DefaultScheduler')
 def workflow2(value):
     return add(
         value(),
