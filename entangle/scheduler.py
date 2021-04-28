@@ -29,19 +29,42 @@ The nodes will detect the scheduler queue and adjust their behavior accordingly.
 """
 
 import logging
-
+import six
 from functools import partial
 
+
+def import_string(dotted_path):
+    """
+    Import a dotted module path and return the attribute/class designated by the
+    last name in the path. Raise ImportError if the import failed.
+    """
+    from importlib import import_module
+
+    try:
+        module_path, class_name = dotted_path.rsplit('.', 1)
+    except ValueError:
+        msg = "%s doesn't look like a module path" % dotted_path
+        six.reraise(ImportError, ImportError(msg), sys.exc_info()[2])
+
+    module = import_module(module_path)
+
+    try:
+        return getattr(module, class_name)
+    except AttributeError:
+        msg = 'Module "%s" does not define a "%s" attribute/class' % (
+            module_path, class_name)
+        six.reraise(ImportError, ImportError(msg), sys.exc_info()[2])
 
 class DefaultScheduler(object):
 
     def register(self, f):
 
         def schedule(f, *args):
-            print("DefaultScheduler: before: ",*args)
+            logging.debug("DefaultScheduler: args {}".format(str(args)))
+            logging.debug("DefaultScheduler: before:")
             result = f(*args)
-            print("DefaultScheduler: after")
-            print("DefaultScheduler: return {}".format(result))
+            logging.debug("DefaultScheduler: after")
+            logging.debug("DefaultScheduler: return {}".format(result))
             return result
 
         return partial(schedule, f)
@@ -52,8 +75,10 @@ def scheduler(function=None,
               cpus=12,
               algorithm='first_available',
               max_time=60*60):
+    import importlib
 
-    scheduler = sclass()
+    scheduler = import_string(sclass)()
+
     """
 
     :param function:
@@ -64,13 +89,15 @@ def scheduler(function=None,
     def decorator(func):
 
         def wrapper(f, *args, **kwargs):
-
-            print("scheduler: Calling function:", f)
+            import time
+            logging.debug("scheduler: Calling function: {}".format(str(f)))
+            logging.debug("Waiting 2 seconds...")
+            time.sleep(2)
             return f(*args)
 
-        print("scheduler: Registering function:",func)
+        logging.debug("scheduler: Registering function: {}".format(str(func)))
         sfunc = scheduler.register(func)
-        print("scheduler: Returning function:", sfunc)
+        logging.debug("scheduler: Returning function: {}".format(str(sfunc)))
         p = partial(wrapper, sfunc)
 
         """
