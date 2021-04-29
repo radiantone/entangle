@@ -11,9 +11,9 @@ logging.basicConfig(
 scheduler_config = {'cpus': 10, 'sclass': 'entangle.scheduler.DefaultScheduler'}
 
 
+@scheduler(**scheduler_config)
 @thread
 @request(url='https://datausa.io/api/data', method='GET')
-@scheduler(**scheduler_config)
 def mydata(data, **kwargs):
     import json
     data = json.loads(data)
@@ -21,22 +21,22 @@ def mydata(data, **kwargs):
     return int(data['data'][0]['Year'])
 
 
-@thread
 @scheduler(**scheduler_config)
+@thread
 def two():
     return 2
 
 
-@thread
 @scheduler(**scheduler_config)
+@thread
 def add(a, b):
     v = int(a) + int(b)
     print("ADD: *"+str(v)+"*")
     return v
 
 
-@workflow
 @scheduler(**scheduler_config)
+@workflow
 def workflow1():
     return add(
         mydata(drilldowns='Nation', measures='Population'),
@@ -44,8 +44,8 @@ def workflow1():
     )
 
 
-@workflow
 @scheduler(**scheduler_config)
+@workflow
 def workflow2(value):
     return add(
         value(),

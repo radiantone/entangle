@@ -7,8 +7,6 @@ import multiprocessing
 from multiprocessing.shared_memory import SharedMemory
 from multiprocessing.managers import SharedMemoryManager
 
-from multiprocessing import resource_tracker
-
 smm = SharedMemoryManager()
 
 

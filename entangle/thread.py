@@ -1,5 +1,5 @@
 """
-process.py - Module that provides native OS process implementation of function tasks with support for shared memory
+thread.py - Module that provides native OS thread implementation of function tasks with support for shared memory
 """
 import asyncio
 import logging
@@ -7,17 +7,15 @@ import multiprocessing
 from multiprocessing.shared_memory import SharedMemory
 from multiprocessing.managers import SharedMemoryManager
 
-from multiprocessing import resource_tracker
-
 smm = SharedMemoryManager()
 
 
 def thread(function=None,
-           timeout=None,
-           wait=None,
-           cache=False,
-           shared_memory=False,
-           sleep=0):
+            timeout=None,
+            wait=None,
+            cache=False,
+            shared_memory=False,
+            sleep=0):
     """
 
     :param function:
@@ -27,18 +25,77 @@ def thread(function=None,
     :param sleep:
     :return:
     """
-    print("TIMEOUT: ", timeout)
+    logging.debug("TIMEOUT: {}".format(timeout))
 
     def decorator(func):
         def wrapper(f):
             logging.debug(
                 "ThreadMonitor: {} with wait {}".format(f, wait))
             return ThreadMonitor(f,
-                                 timeout=timeout,
-                                 wait=wait,
-                                 shared_memory=shared_memory,
-                                 cache=cache,
-                                 sleep=sleep)
+                                  timeout=timeout,
+                                  wait=wait,
+                                  shared_memory=shared_memory,
+                                  cache=cache,
+                                  sleep=sleep)
+
+        return wrapper(func)
+
+    if function is not None:
+        return decorator(function)
+
+    return decorator
+
+
+def pool(function=None,
+         timeout=None,
+         wait=None,
+         cache=False,
+         shared_memory=False,
+         sleep=0):
+    """
+    A thread pool that executes the workflow callgraph inside out so it
+    can pool only the graph leaf nodes in a thread pool executor.
+
+    :param function:
+    :param timeout:
+    :param cache:
+    :param shared_memory:
+    :param sleep:
+    :return:
+    """
+
+    def decorator(func):
+        def wrapper(f):
+
+            class poolmonitor():
+
+                def __init__(self, func, *args, **kwargs):
+
+                    self.func = func
+
+                def __call__(self, *args, **kwargs):
+                    from functools import partial
+                    # return partial here
+                    logging.debug("FUNC: {}".format(self.func.__name__))
+                    logging.debug("ARGS: {}".format(str(args)))
+
+                    if len(args) > 0:
+                        logging.debug("POOL: {}".format(str(args)))
+                        # Only send partial functions to the pol
+
+                    p = partial(self.func)
+                    p.__name__ = self.func.__name__
+                    p.pargs = args
+                    p.pkwargs = kwargs
+                    return p
+
+            pm = poolmonitor(f)
+
+            # Once we have the poolmonitor call graph, we need to traverse
+            # it and invert the calling sequence and ensure that argument
+            # results get gather before a new thread function is given to the pool
+
+            return pm
 
         return wrapper(func)
 
@@ -68,7 +125,7 @@ class PoolMonitor(object):
 
 class ThreadMonitor(object):
     """
-    Primary monitor class for processes. Creates and monitors queues and processes to resolve argument tasks.
+    Primary monitor class for threades. Creates and monitors queues and threades to resolve argument tasks.
     """
 
     def __init__(self, func, *args, **kwargs):
@@ -97,7 +154,15 @@ class ThreadMonitor(object):
         from threading import Thread
 
         logging.info("Thread:invoke: {}".format(self.func.__name__))
-        print("Thread kwargs:", *kwargs)
+
+        def assign_cpu(func, cpu, **kwargs):
+            import os
+
+            pid = os.getpid()
+            cpu_mask = [int(cpu)]
+            os.sched_setaffinity(pid, cpu_mask)
+
+            func(**kwargs)
 
         def invoke(func, *args, **kwargs):
             """
@@ -108,16 +173,17 @@ class ThreadMonitor(object):
             :return:
             """
             import time
+            import os
 
             @asyncio.coroutine
-            def get_result(q, func, sleep, now, process, event, wait):
+            def get_result(q, func, sleep, now, thread, event, wait):
                 """
 
                 :param q:
                 :param func:
                 :param sleep:
                 :param now:
-                :param process:
+                :param thread:
                 :param timeout:
                 :return:
                 """
@@ -140,8 +206,8 @@ class ThreadMonitor(object):
                                 "Wait event timeout in {} seconds.".format(wait))
                             event.wait(wait)
                             if not event.is_set():
-                                if process.is_alive():
-                                    process.terminate()
+                                if thread.is_alive():
+                                    thread.terminate()
                                 raise ThreadTimeoutException()
                         else:
                             logging.debug("Waiting until complete.")
@@ -161,10 +227,21 @@ class ThreadMonitor(object):
                     except queue.Empty:
                         import time
 
-                        if process and not process.is_alive():
+                        if thread and not thread.is_alive():
                             raise ThreadTerminatedException()
 
                         yield time.sleep(sleep)
+
+            scheduler = None
+            cpu = None
+
+            if 'cpu' in kwargs:
+                cpu = kwargs['cpu']
+                del kwargs['cpu']
+
+                if 'scheduler' in kwargs:
+                    scheduler = kwargs['scheduler']
+                    del kwargs['scheduler']
 
             with smm:
                 if len(args) == 0:
@@ -175,7 +252,7 @@ class ThreadMonitor(object):
                     loop = asyncio.get_event_loop()
 
                     _tasks = []
-                    processes = []
+                    threades = []
 
                     for arg in args:
 
@@ -187,7 +264,10 @@ class ThreadMonitor(object):
                             name = arg
 
                         queue = Queue()
-                        _process = None
+
+                        # Need to pull a cpu off scheduler queue here
+
+                        _thread = None
 
                         if type(arg) == partial:
                             logging.info("Thread: {}".format(arg.__name__))
@@ -200,15 +280,25 @@ class ThreadMonitor(object):
                                 kargs['smm'] = smm
                                 kargs['sm'] = SharedMemory
 
-                            _process = Thread(
-                                target=arg, kwargs=kargs)
+                            if cpu:
+                                arg_cpu = scheduler.get()
+                                logging.debug('ARG CPU SET TO: {}'.format(arg_cpu[1]))
+                                _thread = Thread(
+                                    target=assign_cpu, args=(
+                                        arg, arg_cpu[1],), kwargs=kargs
+                                )
+                                _thread.cookie = arg_cpu
+                            else:
+                                logging.debug('NO CPU SET')
+                                _thread = Thread(
+                                    target=arg, kwargs=kargs)
 
                             if self.shared_memory:
-                                _process.shared_memory = True
+                                _thread.shared_memory = True
 
-                            processes += [_process]
+                            threades += [_thread]
 
-                            _process.start()
+                            _thread.start()
                         else:
                             logging.info("Value:".format(name))
                             queue.put(arg)
@@ -217,21 +307,30 @@ class ThreadMonitor(object):
                         now = time.time()
 
                         # Create an async task that monitors the queue for that arg
-                        # It will wait for event set from this child process
+                        # It will wait for event set from this child thread
                         _tasks += [get_result(queue, arg,
-                                              self.sleep, now, _process, e, self.wait)]
+                                              self.sleep, now, _thread, e, self.wait)]
 
-                        # Wait until all the processes report results
+                        # Wait until all the threades report results
                         tasks = asyncio.gather(*_tasks)
 
-                    # Ensure we have joined all spawned processes
+                    # Ensure we have joined all spawned threades
 
                     args = loop.run_until_complete(tasks)
 
-                    [process.join() for process in processes]
+                    [thread.join() for thread in threades]
 
-                if 'cpu' in kwargs:
-                        del kwargs['cpu']
+                    # Put CPU cookie back on scheduler queue
+                    if scheduler:
+                        for thread in threades:
+                            logging.debug(
+                                "Putting CPU: {}  back on scheduler queue.".format(thread.cookie))
+                            scheduler.put((0, thread.cookie, 'Y'))
+
+                if cpu:
+                    pid = os.getpid()
+                    cpu_mask = [int(cpu)]
+                    os.sched_setaffinity(pid, cpu_mask)
 
                 if 'queue' in kwargs:
                     queue = kwargs['queue']
@@ -249,8 +348,23 @@ class ThreadMonitor(object):
                         kwargs['sm'] = SharedMemory
 
                     logging.info("Calling {}".format(func.__name__))
+                    logging.debug(args)
+
+                    if not cpu and 'cpu' in kwargs:
+                        cpu = kwargs['cpu']
+                        del kwargs['cpu']
+
+                    if not scheduler and  'scheduler' in kwargs:
+                        scheduler = kwargs['scheduler']
+                        del kwargs['scheduler']
 
                     result = func(*args, **kwargs)
+
+                    # Put own cpu back on queue
+                    if scheduler and cpu:
+                        logging.debug(
+                            "Putting CPU: {}  back on scheduler queue.".format(cpu))
+                        scheduler.put((0, cpu, 'Y'))
 
                     if self.cache:
                         pass
@@ -269,7 +383,13 @@ class ThreadMonitor(object):
 
                     logging.debug(
                         "Calling function with: {}".format(str(args)))
+
                     result = func(*args, **kwargs)
+
+                    if scheduler and cpu:
+                        logging.debug(
+                            "Putting CPU: {}  back on scheduler queue.".format(cpu))
+                        scheduler.put((0, cpu, 'Y'))
 
                 return result
 
@@ -278,6 +398,6 @@ class ThreadMonitor(object):
         if hasattr(self.func, '__name__'):
             p.__name__ = self.func.__name__
         else:
-            p.__name__ = 'process'
+            p.__name__ = 'thread'
 
         return p
