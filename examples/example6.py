@@ -23,13 +23,13 @@ def mydata(data, **kwargs):
 
 @thread
 @scheduler(**scheduler_config)
-def two(**kwargs):
+def two():
     return 2
 
 
 @thread
 @scheduler(**scheduler_config)
-def add(a, b, **kwargs):
+def add(a, b):
     v = int(a) + int(b)
     print("ADD: *"+str(v)+"*")
     return v
@@ -37,7 +37,7 @@ def add(a, b, **kwargs):
 
 @workflow
 @scheduler(**scheduler_config)
-def workflow1(**kwargs):
+def workflow1():
     return add(
         mydata(drilldowns='Nation', measures='Population'),
         two()
@@ -46,7 +46,7 @@ def workflow1(**kwargs):
 
 @workflow
 @scheduler(**scheduler_config)
-def workflow2(value, **kwargs):
+def workflow2(value):
     return add(
         value(),
         two()

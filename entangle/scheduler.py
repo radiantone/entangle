@@ -52,7 +52,12 @@ from functools import partial
 from entangle.process import ProcessMonitor
 from entangle.thread import ThreadMonitor
 
+from multiprocessing import Queue
+from multiprocessing import Condition
+
 CPUS = []
+
+queue = Queue()
 
 cmd = "/usr/bin/lscpu -p=socket,cpu,online"
 stream = os.popen(cmd)
@@ -64,8 +69,9 @@ for line in output:
     if cpu[2] == 'Y':
         CPUS += [cpu]
         # Put CPU cookie on queue
+        queue.put(cpu)
 
-print('CPUS:', CPUS)
+logging.debug('CPUS: {}'.format(CPUS))
 
 
 def import_string(dotted_path):
@@ -93,30 +99,45 @@ def import_string(dotted_path):
 
 class DefaultScheduler(object):
 
-    def register(self, f):
+    def register(self, f, cpus=12):
 
         def schedule(f, *args):
+            import types
+
             logging.debug("DefaultScheduler: args {}".format(str(args)))
             logging.debug("DefaultScheduler: before:")
 
             logging.debug("DefaultScheduler: thread {}".format(
                 threading.current_thread().name))
-            # Somewhere in here is where this schedular does its self-organzing
-            # with the other schedulers using a queue and/or shared memory
-            # when this schedule is permitted to run
-            # it runs the f(*args) below
-            # Right now, it just executes right away
-            #
-            # It might be that here is where the scheduler pushes its request
-            # on to the queue, or it waits on the queue for a message with CPU
-            # when it gets one, that is the CPU it attaches to.
 
-            print('CPUS:', CPUS)
+            logging.debug("Waiting on CPU")
+            cpu_pending = True
 
-            # Wait on queue for CPU cookie.
-            # Get cookie and send it to the function so the ProcessMonitor can
-            # assign the process to it
-            result = f(*args,cpu=0)
+            while cpu_pending:
+                cpu = queue.get()
+                logging.debug("GRABBED CPU: {} {}".format(cpu, cpus))
+                if int(cpu[1]) > int(cpus):
+                    logging.debug("GRABBED CPU not within allocation: {} {}".format(cpu,cpus))
+                    queue.put(cpu)
+                else:
+                    break
+
+            logging.debug("GOT CPU: {}".format(cpu))
+            logging.debug(f)
+            kwargs = {}
+
+            if type(f) is not types.FunctionType:
+                kwargs = {'cpu':cpu[1], 'scheduler':queue}
+
+            if cpu:
+                pid = os.getpid()
+                cpu_mask = [int(cpu[1])]
+                logging.debug("Setting cpu_mask {}".format(cpu_mask))
+                os.sched_setaffinity(pid, cpu_mask)
+
+            result = f(*args,**kwargs)
+            logging.debug("Putting cpu {} back on scheduler queue".format(cpu))
+            queue.put(cpu)
             logging.debug("DefaultScheduler: after")
             logging.debug("DefaultScheduler: return {}".format(result))
             return result
@@ -130,8 +151,11 @@ def scheduler(function=None,
               algorithm='first_available',
               max_time=60*60):
     import importlib
+    from functools import partial
 
     scheduler = import_string(sclass)()
+
+    logging.debug("scheduler: Requesting {} cpus".format(cpus))
 
     """
 
@@ -140,7 +164,7 @@ def scheduler(function=None,
     :param sleep:
     :return:
     """
-    def decorator(func):
+    def decorator(func, cpus=12):
 
         def wrapper(f, *args, **kwargs):
             import time
@@ -149,8 +173,9 @@ def scheduler(function=None,
             # time.sleep(2)
             return f(*args)
 
+        logging.debug("scheduler: decorator {} cpus".format(cpus))
         logging.debug("scheduler: Registering function: {}".format(str(func)))
-        sfunc = scheduler.register(func)
+        sfunc = scheduler.register(func, cpus=cpus)
         logging.debug("scheduler: Returning function: {}".format(str(sfunc)))
         p = partial(wrapper, sfunc)
 
@@ -168,6 +193,6 @@ def scheduler(function=None,
         return p
 
     if function is not None:
-        return decorator(function)
+        return decorator(function, cpus=cpus)
 
-    return decorator
+    return partial(decorator, **{'cpus':cpus})

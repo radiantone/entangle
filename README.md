@@ -23,6 +23,7 @@ A lightweight (serverless) native python parallel processing framework based on 
   * [DAG Dataflow](#dag-dataflow)
   * [Results Comparison](#results-comparison)
   * [Advantages of Strict Dataflow](#advantages-of-strict-dataflow)
+* [Schedulers](#schedulers)  
 * [Examples](#examples)
     * [GPU Example](#gpu-example)
     * [Shared Memory Example](#shared-memory-example)
@@ -483,6 +484,34 @@ For a more detailed example of using `@dataflow` in entangle see [Dataflow Examp
 9. Dataflow - https://www.merriam-webster.com/dictionary/dataflow
 10. Functional Programming/Lambda Calculus -https://www.tutorialspoint.com/functional_programming/functional_programming_lambda_calculus.htm
 
+## Schedulers
+
+Entangle supports a composition based mechanism for attaching schedulers to workflows and functions.
+The scheduler class will control access to CPU resources based on its contraints. For example, if you want to run a workflow with potentially 20 parallel tasks, but only want to allocate 4 CPUs to execute the workflow, the scheduler class can ensure entangle doesn't spawn more processes than requested.
+Schedulers wrap individual functions and pull CPU "cookies" off a scheduler queue. When a cookie is placed on the queue by a process it means that CPU is available for use.
+
+Parallel processes thus use the queue mechanism to *self-organize* around the allocated CPUs by requesting cookies, running their behaviors and returning the cookie to the queue when complete.
+This approach requires no centralized scheduler server as the workfow processes all use the same multiprocessing.Queue to retrieve CPU cookies.
+
+*diagram*
+
+### Pluggable Schedulers
+
+Entangle allows you to provide your own scheduler class using the decorator.
+
+```python
+@scheduler(cpus=4,sclass='my.package.MyScheduler'}
+def myfunc():
+    return
+```
+Currently, the scheduler class need only implement one method.
+
+`def register(self, f, cpus=12):`
+
+and return a `function` or `partial` that wraps the provided function with scheduler behavior.
+
+See the [Scheduler Example](#scheduler-example)  below.
+
 ## Examples
 
 * [GPU Example](#gpu-example)
@@ -491,6 +520,7 @@ For a more detailed example of using `@dataflow` in entangle see [Dataflow Examp
 * [Docker Example](#docker-example)
 * [Dataflow Examples](#dataflow-examples)  
   * [Data-Driven Branching](#data-driven-branching)
+* [Scheduler Example](#scheduler-example)  
 * [General Example](#general-example)
 
 ### GPU Example
@@ -899,7 +929,52 @@ triggered: inner Y: HELLO
 triggered: emit ('HELLO',)
 printy: ThreadPoolExecutor-2_1
 ```
+### Scheduler Example
 
+```python
+import logging
+
+logging.basicConfig(filename='scheduler.log',
+                    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+
+from entangle.process import process
+from entangle.http import request
+from entangle.workflow import workflow
+from entangle.scheduler import scheduler
+
+scheduler_config = {'cpus': 2,
+                    'sclass': 'entangle.scheduler.DefaultScheduler'}
+
+@scheduler(**scheduler_config)
+@process
+def two():
+    return 2
+
+@scheduler(**scheduler_config)
+@process
+def three():
+    return 3
+
+@scheduler(**scheduler_config)
+@process
+def add(a, b):
+    print("add: {} {}".format(a,b))
+    v = int(a) + int(b)
+    print("ADD: *"+str(v)+"*")
+    return v
+
+@scheduler(**scheduler_config)
+@workflow
+def workflow2():
+    return add(
+        three(),
+        two()
+    )
+
+result = workflow2()
+
+print(result())
+```
 ### General Example
 An example of how entangle will be used (still in development)
 ```python

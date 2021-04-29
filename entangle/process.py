@@ -27,7 +27,7 @@ def process(function=None,
     :param sleep:
     :return:
     """
-    print("TIMEOUT: ", timeout)
+    logging.debug("TIMEOUT: {}".format(timeout))
 
     def decorator(func):
         def wrapper(f):
@@ -78,11 +78,11 @@ def pool(function=None,
                 def __call__(self, *args, **kwargs):
                     from functools import partial
                     # return partial here
-                    print("FUNC: {}".format(self.func.__name__))
-                    print("ARGS: {}".format(str(args)))
+                    logging.debug("FUNC: {}".format(self.func.__name__))
+                    logging.debug("ARGS: {}".format(str(args)))
 
                     if len(args) > 0:
-                        print("POOL: {}".format(str(args)))
+                        logging.debug("POOL: {}".format(str(args)))
                         # Only send partial functions to the pol
 
                     p = partial(self.func)
@@ -160,8 +160,7 @@ class ProcessMonitor(object):
             import os
 
             pid = os.getpid()
-            cpu_mask = [cpu]
-
+            cpu_mask = [int(cpu)]
             os.sched_setaffinity(pid, cpu_mask)
 
             func(**kwargs)
@@ -175,6 +174,7 @@ class ProcessMonitor(object):
             :return:
             """
             import time
+            import os
 
             @asyncio.coroutine
             def get_result(q, func, sleep, now, process, event, wait):
@@ -216,7 +216,7 @@ class ProcessMonitor(object):
 
                         logging.debug("Got event for {}".format(name))
 
-                        _result = q.get_nowait()
+                        _result = q.get()
 
                         logging.debug("Got result for[{}] {}".format(
                             name, str(_result)))
@@ -232,6 +232,17 @@ class ProcessMonitor(object):
                             raise ProcessTerminatedException()
 
                         yield time.sleep(sleep)
+
+            scheduler = None
+            cpu = None
+
+            if 'cpu' in kwargs:
+                cpu = kwargs['cpu']
+                del kwargs['cpu']
+
+                if 'scheduler' in kwargs:
+                    scheduler = kwargs['scheduler']
+                    del kwargs['scheduler']
 
             with smm:
                 if len(args) == 0:
@@ -254,6 +265,9 @@ class ProcessMonitor(object):
                             name = arg
 
                         queue = Queue()
+
+                        # Need to pull a cpu off scheduler queue here
+
                         _process = None
 
                         if type(arg) == partial:
@@ -267,15 +281,16 @@ class ProcessMonitor(object):
                                 kargs['smm'] = smm
                                 kargs['sm'] = SharedMemory
 
-                            if 'cpu' in kwargs:
-                                cpu = kwargs['cpu']
-                                print('CPU SET TO: ', cpu)
-                                del kwargs['cpu']
+                            if cpu:
+                                arg_cpu = scheduler.get()
+                                logging.debug('ARG CPU SET TO: {}'.format(arg_cpu[1]))
                                 _process = Process(
-                                    target=assign_cpu, args=(arg,cpu,), kwargs=kargs
+                                    target=assign_cpu, args=(
+                                        arg, arg_cpu[1],), kwargs=kargs
                                 )
+                                _process.cookie = arg_cpu
                             else:
-                                print('NO CPU SET')
+                                logging.debug('NO CPU SET')
                                 _process = Process(
                                     target=arg, kwargs=kargs)
 
@@ -283,7 +298,6 @@ class ProcessMonitor(object):
                                 _process.shared_memory = True
 
                             processes += [_process]
-                            # Set process cpu affinity here
 
                             _process.start()
                         else:
@@ -307,6 +321,18 @@ class ProcessMonitor(object):
 
                     [process.join() for process in processes]
 
+                    # Put CPU cookie back on scheduler queue
+                    if scheduler:
+                        for process in processes:
+                            logging.debug(
+                                "Putting CPU: {}  back on scheduler queue.".format(process.cookie))
+                            scheduler.put((0, process.cookie, 'Y'))
+
+                if cpu:
+                    pid = os.getpid()
+                    cpu_mask = [int(cpu)]
+                    os.sched_setaffinity(pid, cpu_mask)
+
                 if 'queue' in kwargs:
                     queue = kwargs['queue']
                     # get the queue and delete the argument
@@ -323,10 +349,23 @@ class ProcessMonitor(object):
                         kwargs['sm'] = SharedMemory
 
                     logging.info("Calling {}".format(func.__name__))
-                    print(args)
-                    if 'cpu' in kwargs:
+                    logging.debug(args)
+
+                    if not cpu and 'cpu' in kwargs:
+                        cpu = kwargs['cpu']
                         del kwargs['cpu']
+
+                    if not scheduler and  'scheduler' in kwargs:
+                        scheduler = kwargs['scheduler']
+                        del kwargs['scheduler']
+
                     result = func(*args, **kwargs)
+
+                    # Put own cpu back on queue
+                    if scheduler and cpu:
+                        logging.debug(
+                            "Putting CPU: {}  back on scheduler queue.".format(cpu))
+                        scheduler.put((0, cpu, 'Y'))
 
                     if self.cache:
                         pass
@@ -345,7 +384,13 @@ class ProcessMonitor(object):
 
                     logging.debug(
                         "Calling function with: {}".format(str(args)))
+
                     result = func(*args, **kwargs)
+
+                    if scheduler and cpu:
+                        logging.debug(
+                            "Putting CPU: {}  back on scheduler queue.".format(cpu))
+                        scheduler.put((0, cpu, 'Y'))
 
                 return result
 
