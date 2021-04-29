@@ -154,13 +154,12 @@ For devops use cases Entangle allows you to write simple, parallel workflow grap
 
 
 ### What Entangle is not
-
+Here are some things entangle is not, *out-of-the-box*. This isn't to say entangle can't do these things. In fact, entangle is designed to be a low level framework for implementing these kinds of things.
 * Entangle is not inherently distributed
 * Entangle does not yet perform fail over or retries
 * Entangle is not a batch process framework
 * Entangle is not map/reduce
 * Entangle is not a centralized task manager
-* Entangle does not provision or manage resources
 
 ## Declarative Infrastructure
 
