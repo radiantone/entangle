@@ -13,11 +13,11 @@ smm = SharedMemoryManager()
 
 
 def thread(function=None,
-            timeout=None,
-            wait=None,
-            cache=False,
-            shared_memory=False,
-            sleep=0):
+           timeout=None,
+           wait=None,
+           cache=False,
+           shared_memory=False,
+           sleep=0):
     """
 
     :param function:
@@ -34,11 +34,11 @@ def thread(function=None,
             logging.debug(
                 "ThreadMonitor: {} with wait {}".format(f, wait))
             return ThreadMonitor(f,
-                                  timeout=timeout,
-                                  wait=wait,
-                                  shared_memory=shared_memory,
-                                  cache=cache,
-                                  sleep=sleep)
+                                 timeout=timeout,
+                                 wait=wait,
+                                 shared_memory=shared_memory,
+                                 cache=cache,
+                                 sleep=sleep)
 
         return wrapper(func)
 
@@ -97,7 +97,8 @@ class ThreadMonitor(object):
         from threading import Thread
 
         logging.info("Thread:invoke: {}".format(self.func.__name__))
-        print("Thread kwargs:",*kwargs)
+        print("Thread kwargs:", *kwargs)
+
         def invoke(func, *args, **kwargs):
             """
 
@@ -229,6 +230,9 @@ class ThreadMonitor(object):
 
                     [process.join() for process in processes]
 
+                if 'cpu' in kwargs:
+                        del kwargs['cpu']
+                        
                 if 'queue' in kwargs:
                     queue = kwargs['queue']
                     # get the queue and delete the argument
@@ -245,7 +249,7 @@ class ThreadMonitor(object):
                         kwargs['sm'] = SharedMemory
 
                     logging.info("Calling {}".format(func.__name__))
-                    print(args)
+
                     result = func(*args, **kwargs)
 
                     if self.cache:

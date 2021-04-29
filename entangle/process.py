@@ -156,6 +156,16 @@ class ProcessMonitor(object):
 
         logging.info("Process:invoke: {}".format(self.func.__name__))
 
+        def assign_cpu(func, cpu, **kwargs):
+            import os
+
+            pid = os.getpid()
+            cpu_mask = [cpu]
+
+            os.sched_setaffinity(pid, cpu_mask)
+
+            func(**kwargs)
+
         def invoke(func, *args, **kwargs):
             """
 
@@ -257,13 +267,23 @@ class ProcessMonitor(object):
                                 kargs['smm'] = smm
                                 kargs['sm'] = SharedMemory
 
-                            _process = Process(
-                                target=arg, kwargs=kargs)
+                            if 'cpu' in kwargs:
+                                cpu = kwargs['cpu']
+                                print('CPU SET TO: ', cpu)
+                                del kwargs['cpu']
+                                _process = Process(
+                                    target=assign_cpu, args=(arg,cpu,), kwargs=kargs
+                                )
+                            else:
+                                print('NO CPU SET')
+                                _process = Process(
+                                    target=arg, kwargs=kargs)
 
                             if self.shared_memory:
                                 _process.shared_memory = True
 
                             processes += [_process]
+                            # Set process cpu affinity here
 
                             _process.start()
                         else:
@@ -304,6 +324,8 @@ class ProcessMonitor(object):
 
                     logging.info("Calling {}".format(func.__name__))
                     print(args)
+                    if 'cpu' in kwargs:
+                        del kwargs['cpu']
                     result = func(*args, **kwargs)
 
                     if self.cache:

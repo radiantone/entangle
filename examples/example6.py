@@ -1,4 +1,4 @@
-from entangle.process import process
+from entangle.thread import thread
 from entangle.http import request
 from entangle.workflow import workflow
 from entangle.scheduler import scheduler
@@ -8,33 +8,36 @@ logging.basicConfig(
     format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
 
-@process
+scheduler_config = {'cpus': 10, 'sclass': 'entangle.scheduler.DefaultScheduler'}
+
+
+@thread
 @request(url='https://datausa.io/api/data', method='GET')
-@scheduler(cpus=10, sclass='entangle.scheduler.DefaultScheduler')
-def mydata(data):
+@scheduler(**scheduler_config)
+def mydata(data, **kwargs):
     import json
     data = json.loads(data)
-    print('My function got the data! ', data)
+    print('*********************My function got the data! ', data)
     return int(data['data'][0]['Year'])
 
 
-@process
-@scheduler(cpus=10, sclass='entangle.scheduler.DefaultScheduler')
-def two():
+@thread
+@scheduler(**scheduler_config)
+def two(**kwargs):
     return 2
 
 
-@process
-@scheduler(cpus=10, sclass='entangle.scheduler.DefaultScheduler')
-def add(a, b):
+@thread
+@scheduler(**scheduler_config)
+def add(a, b, **kwargs):
     v = int(a) + int(b)
     print("ADD: *"+str(v)+"*")
     return v
 
 
 @workflow
-@scheduler(cpus=10, sclass='entangle.scheduler.DefaultScheduler')
-def workflow1():
+@scheduler(**scheduler_config)
+def workflow1(**kwargs):
     return add(
         mydata(drilldowns='Nation', measures='Population'),
         two()
@@ -42,8 +45,8 @@ def workflow1():
 
 
 @workflow
-@scheduler(cpus=10, sclass='entangle.scheduler.DefaultScheduler')
-def workflow2(value):
+@scheduler(**scheduler_config)
+def workflow2(value, **kwargs):
     return add(
         value(),
         two()
