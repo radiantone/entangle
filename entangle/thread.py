@@ -149,7 +149,7 @@ class ThreadMonitor(object):
 
                         logging.debug("Got event for {}".format(name))
 
-                        _result = q.get_nowait()
+                        _result = q.get()
 
                         logging.debug("Got result for[{}] {}".format(
                             name, str(_result)))
@@ -232,7 +232,7 @@ class ThreadMonitor(object):
 
                 if 'cpu' in kwargs:
                         del kwargs['cpu']
-                        
+
                 if 'queue' in kwargs:
                     queue = kwargs['queue']
                     # get the queue and delete the argument
