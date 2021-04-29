@@ -101,7 +101,7 @@ class DefaultScheduler(object):
 
     def register(self, f, cpus=12):
 
-        def schedule(f, *args):
+        def schedule(f, *args, **kwargs):
             import types
 
             logging.debug("DefaultScheduler: args {}".format(str(args)))
@@ -124,10 +124,10 @@ class DefaultScheduler(object):
 
             logging.debug("GOT CPU: {}".format(cpu))
             logging.debug(f)
-            kwargs = {}
 
             if type(f) is not types.FunctionType:
-                kwargs = {'cpu':cpu[1], 'scheduler':queue}
+                kwargs['cpu'] = cpu[1]
+                kwargs['scheduler'] = queue
 
             if cpu:
                 pid = os.getpid()
@@ -171,7 +171,7 @@ def scheduler(function=None,
             logging.debug("scheduler: Calling function: {}".format(str(f)))
             logging.debug("Waiting 2 seconds...")
             # time.sleep(2)
-            return f(*args)
+            return f(*args, **kwargs)
 
         logging.debug("scheduler: decorator {} cpus".format(cpus))
         logging.debug("scheduler: Registering function: {}".format(str(func)))
