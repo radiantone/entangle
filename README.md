@@ -509,7 +509,9 @@ Currently, the scheduler class need only implement one method.
 
 and return a `function` or `partial` that wraps the provided function with scheduler behavior.
 
-See the [Scheduler Example](#scheduler-example)  below.
+To see the implementation of `DefaultScheduler` click [here](https://github.com/radiantone/entangle/blob/main/entangle/scheduler.py).
+
+For a workflow example using scheduler see [Scheduler Example](#scheduler-example)  below.
 
 ## Examples
 
