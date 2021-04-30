@@ -115,11 +115,11 @@ class DefaultScheduler(object):
 
             while cpu_pending:
                 cpu = queue.get()
-                logging.debug("GRABBED CPU: {} {}".format(cpu, cpus))
-                if int(cpu[1]) > int(cpus):
-                    logging.debug("GRABBED CPU not within allocation: {} {}".format(cpu,cpus))
+                if int(cpu[1]) >= int(cpus):
+                    logging.debug("     CPU not within allocation: {} {}".format(cpu,cpus))
                     queue.put(cpu)
                 else:
+                    logging.debug("GRABBED CPU: {} {}".format(cpu, cpus))
                     break
 
             logging.debug("GOT CPU: {}".format(cpu))

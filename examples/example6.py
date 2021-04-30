@@ -1,12 +1,11 @@
-from entangle.thread import thread
-from entangle.http import request
-from entangle.workflow import workflow
-from entangle.scheduler import scheduler
-
 import logging
 logging.basicConfig(
     format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
+from entangle.thread import thread
+from entangle.http import request
+from entangle.workflow import workflow
+from entangle.scheduler import scheduler
 
 scheduler_config = {'cpus': 10, 'sclass': 'entangle.scheduler.DefaultScheduler'}
 
