@@ -492,7 +492,7 @@ Schedulers wrap individual functions and pull CPU "cookies" off a scheduler queu
 Parallel processes thus use the queue mechanism to *self-organize* around the allocated CPUs by requesting cookies, running their behaviors and returning the cookie to the queue when complete.
 This approach requires no centralized scheduler server as the workfow processes all use the same multiprocessing.Queue to retrieve CPU cookies.
 
-*diagram*
+![scheduler](./images/scheduler.png)
 
 ### Pluggable Schedulers
 
