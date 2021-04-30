@@ -1,12 +1,19 @@
+import logging
+
+logging.basicConfig(filename='scheduler.log',
+                    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 import numpy as np
 from entangle.process import process
+from entangle.scheduler import scheduler
 from timeit import default_timer as timer
 from numba import vectorize
-import logging
-logging.basicConfig(
-    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 
+scheduler_config = {'cpus': 3,
+                    'sclass': 'entangle.scheduler.DefaultScheduler'}
+
+
+#@scheduler(**scheduler_config)
 @process
 def dovectors1():
 
@@ -25,6 +32,7 @@ def dovectors1():
     return duration
 
 
+#@scheduler(**scheduler_config)
 @process
 def dovectors2():
 
@@ -43,6 +51,7 @@ def dovectors2():
     return duration
 
 
+#@scheduler(**scheduler_config)
 @process
 def durations(*args):
 

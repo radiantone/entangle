@@ -39,14 +39,14 @@ def subtract(a, b):
 
 
 result = add(
-    add(
-        num(6),
-        two() if False else one()
-    ),
-    subtract(
-        five(),
-        two()
-    )
+            add(
+                num(6),
+                two() if False else one()
+            ),
+            subtract(
+                five(),
+                two()
+            )
 )
 
 print(result())

@@ -8,7 +8,7 @@ from entangle.http import request
 from entangle.workflow import workflow
 from entangle.scheduler import scheduler
 
-scheduler_config = {'cpus': 12,
+scheduler_config = {'cpus': 2,
                     'sclass': 'entangle.scheduler.DefaultScheduler'}
 
 

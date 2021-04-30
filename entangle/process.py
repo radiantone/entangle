@@ -281,6 +281,8 @@ class ProcessMonitor(object):
 
                             if cpu:
                                 arg_cpu = scheduler.get()
+
+                                # TODO: Fix. This bypasses the scheduler logic of capping the CPU #'s. 
                                 logging.debug('ARG CPU SET TO: {}'.format(arg_cpu[1]))
                                 _process = Process(
                                     target=assign_cpu, args=(

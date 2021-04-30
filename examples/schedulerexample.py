@@ -8,7 +8,7 @@ logging.basicConfig(
     format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
 
-scheduler_config = {'cpus': 10,
+scheduler_config = {'cpus': 3,
                     'sclass': 'entangle.scheduler.DefaultScheduler'}
 
 
