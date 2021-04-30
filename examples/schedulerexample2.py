@@ -9,7 +9,7 @@ from entangle.workflow import workflow
 from entangle.scheduler import scheduler
 
 scheduler_config = {'cpus': 2,
-                    'sclass': 'entangle.scheduler.DefaultScheduler'}
+                    'impl': 'entangle.scheduler.DefaultScheduler'}
 
 
 @scheduler(**scheduler_config)

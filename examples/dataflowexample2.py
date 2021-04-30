@@ -14,7 +14,7 @@ def triggered(func, result):
 
 
 scheduler_config = {'cpus': 2,
-                    'sclass': 'entangle.scheduler.DefaultScheduler'}
+                    'impl': 'entangle.scheduler.DefaultScheduler'}
 
 
 @scheduler(**scheduler_config)

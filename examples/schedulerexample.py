@@ -9,7 +9,7 @@ logging.basicConfig(
 
 
 scheduler_config = {'cpus': 3,
-                    'sclass': 'entangle.scheduler.DefaultScheduler'}
+                    'impl': 'entangle.scheduler.DefaultScheduler'}
 
 
 @scheduler(**scheduler_config)

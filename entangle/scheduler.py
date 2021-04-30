@@ -146,14 +146,14 @@ class DefaultScheduler(object):
 
 
 def scheduler(function=None,
-              sclass=DefaultScheduler,
+              impl=DefaultScheduler,
               cpus=12,
               algorithm='first_available',
               max_time=60*60):
     import importlib
     from functools import partial
 
-    scheduler = import_string(sclass)()
+    scheduler = import_string(impl)()
 
     logging.debug("scheduler: Requesting {} cpus".format(cpus))
 
@@ -180,7 +180,7 @@ def scheduler(function=None,
         p = partial(wrapper, sfunc)
 
         """
-        The decorator here delegates to sclass to wrap the function in a scheduler function
+        The decorator here delegates to impl to wrap the function in a scheduler function
         that performs the necessary request, wait handling with the scheduler
 
         """

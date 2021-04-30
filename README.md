@@ -503,7 +503,7 @@ This approach requires no centralized scheduler server as the workfow processes 
 Entangle allows you to provide your own scheduler class using the decorator.
 
 ```python
-@scheduler(cpus=4,sclass='my.package.MyScheduler'}
+@scheduler(cpus=4,impl='my.package.MyScheduler'}
 def myfunc():
     return
 ```
@@ -948,7 +948,7 @@ from entangle.workflow import workflow
 from entangle.scheduler import scheduler
 
 scheduler_config = {'cpus': 2,
-                    'sclass': 'entangle.scheduler.DefaultScheduler'}
+                    'impl': 'entangle.scheduler.DefaultScheduler'}
 
 @scheduler(**scheduler_config)
 @process

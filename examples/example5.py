@@ -8,7 +8,11 @@ from entangle.http import request
 from entangle.workflow import workflow
 from entangle.scheduler import scheduler
 
-@scheduler(cpus=10, sclass='entangle.scheduler.DefaultScheduler')
+scheduler_config = {'cpus': 3,
+                    'impl': 'entangle.scheduler.DefaultScheduler'}
+
+
+@scheduler(**scheduler_config)
 @thread
 @request(url='https://datausa.io/api/data', method='GET')
 def mydata(data):
@@ -18,13 +22,13 @@ def mydata(data):
     return int(data['data'][0]['Year'])
 
 
-@scheduler(cpus=10, sclass='entangle.scheduler.DefaultScheduler')
+@scheduler(**scheduler_config)
 @thread
 def two():
     return 2
 
 
-@scheduler(cpus=10, sclass='entangle.scheduler.DefaultScheduler')
+@scheduler(**scheduler_config)
 @thread
 def add(a, b):
     v = int(a) + int(b)
@@ -32,7 +36,7 @@ def add(a, b):
     return v
 
 
-@scheduler(cpus=10, sclass='entangle.scheduler.DefaultScheduler')
+@scheduler(**scheduler_config)
 @workflow
 def workflow1():
     return add(
@@ -41,7 +45,7 @@ def workflow1():
     )
 
 
-@scheduler(cpus=10, sclass='entangle.scheduler.DefaultScheduler')
+@scheduler(**scheduler_config)
 @workflow
 def workflow2(value):
     return add(
