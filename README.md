@@ -31,6 +31,7 @@ A lightweight (serverless) native python parallel processing framework based on 
     * [Dataflow Examples](#dataflow-examples)
       * [Data-Driven Branching](#data-driven-branching)
     * [Docker Example](#docker-example)
+    * [Scheduler Example](#scheduler-example)
 
 ## Overview
 
