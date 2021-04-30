@@ -238,7 +238,10 @@ Processes on the other hand, are not controlled by a GIL and can thus truly run 
 
 ## Workflows
 
-TBD
+A workflow in Entangle is just a fancy term for a call graph of function processes. The example above in [Execution](#execution) is a simple workflow.
+Workflows execute in *natural dependency ordering* that you'd expect from any python function call. The inner most dependencies are invoked first so they can return their values to parent functions.
+
+Note that this paradigm is pretty much the way most imperative languages operate today, but it does differ from *dataflows* which we talk about down below [Dataflows](#dataflows).
 
 ## Process Behavior
 
