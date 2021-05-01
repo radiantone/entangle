@@ -491,7 +491,7 @@ For a more detailed example of using `@dataflow` in entangle see [Dataflow Examp
 
 Entangle supports a composition based mechanism for attaching schedulers to workflows and functions.
 The scheduler class will control access to CPU resources based on its constraints. For example, if you want to run a workflow with potentially 20 parallel tasks, but only want to allocate 4 CPUs to execute the workflow, the scheduler class can ensure entangle doesn't spawn more processes than requested.
-Schedulers wrap individual functions and pull CPU "cookies" off a scheduler queue to hand off to processes. Each cookie contains a CPU identifier that the process thend binds to. When a cookie is placed on the queue by a process it means that CPU (id) is available for use.
+Schedulers wrap individual functions and pull CPU "cookies" off a scheduler queue to hand off to processes. Each cookie contains a CPU identifier that the process then binds to. When a cookie is placed on the queue by a process it means that CPU (id) is available for use.
 
 Parallel processes thus use the queue mechanism to *self-organize* around the allocated CPUs by requesting cookies, assigning their CPU affinity to that cpu id, running their behaviors and returning the cookie to the queue when complete.
 This approach requires no centralized scheduler server as the workfow processes all use the same multiprocessing.Queue to retrieve CPU cookies.
