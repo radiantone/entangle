@@ -1,11 +1,12 @@
-from entangle.containers import docker
-from entangle.process import process
-
 import logging
 logging.basicConfig(
     format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
-@process
+from entangle.containers import docker
+from entangle.process import process
+
+
+@process()
 @docker(image="tensorflow/tensorflow:latest-gpu", packages=['tensorflow_datasets'])
 def train():
     import tensorflow as tf

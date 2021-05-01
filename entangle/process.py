@@ -175,7 +175,7 @@ class ProcessMonitor(object):
             import os
 
             @asyncio.coroutine
-            def get_result(q, func, sleep, now, process, event, wait):
+            def get_result(q, func, sleep, now, process, event, wait, timeout):
                 """
 
                 :param q:
@@ -188,6 +188,7 @@ class ProcessMonitor(object):
                 """
                 import queue
                 import time
+                from multiprocessing import TimeoutError
 
                 if hasattr(func, '__name__'):
                     name = func.__name__
@@ -214,7 +215,14 @@ class ProcessMonitor(object):
 
                         logging.debug("Got event for {}".format(name))
 
-                        _result = q.get()
+                        logging.debug("Timeout is {}".format(timeout))
+                        if timeout:
+                            logging.debug(
+                                "Pre get(timeout={})".format(timeout))
+                            _result = q.get(timeout=timeout)
+                            logging.debug("Post get(timeout={})".format(timeout))
+                        else:
+                            _result = q.get()
 
                         logging.debug("Got result for[{}] {}".format(
                             name, str(_result)))
@@ -222,7 +230,9 @@ class ProcessMonitor(object):
                         yield
 
                         return _result
-
+                    except TimeoutError:
+                        logging.debug("Timeout exception")
+                        raise ProcessTimeoutException()
                     except queue.Empty:
                         import time
 
@@ -282,8 +292,9 @@ class ProcessMonitor(object):
                             if cpu:
                                 arg_cpu = scheduler.get()
 
-                                # TODO: Fix. This bypasses the scheduler logic of capping the CPU #'s. 
-                                logging.debug('ARG CPU SET TO: {}'.format(arg_cpu[1]))
+                                # TODO: Fix. This bypasses the scheduler logic of capping the CPU #'s.
+                                logging.debug(
+                                    'ARG CPU SET TO: {}'.format(arg_cpu[1]))
                                 _process = Process(
                                     target=assign_cpu, args=(
                                         arg, arg_cpu[1],), kwargs=kargs
@@ -310,7 +321,7 @@ class ProcessMonitor(object):
                         # Create an async task that monitors the queue for that arg
                         # It will wait for event set from this child process
                         _tasks += [get_result(queue, arg,
-                                              self.sleep, now, _process, e, self.wait)]
+                                              self.sleep, now, _process, e, self.wait, self.timeout)]
 
                         # Wait until all the processes report results
                         tasks = asyncio.gather(*_tasks)
@@ -355,7 +366,7 @@ class ProcessMonitor(object):
                         cpu = kwargs['cpu']
                         del kwargs['cpu']
 
-                    if not scheduler and  'scheduler' in kwargs:
+                    if not scheduler and 'scheduler' in kwargs:
                         scheduler = kwargs['scheduler']
                         del kwargs['scheduler']
 
@@ -385,7 +396,29 @@ class ProcessMonitor(object):
                     logging.debug(
                         "Calling function with: {}".format(str(args)))
 
-                    result = func(*args, **kwargs)
+                    # Wrap with Process and queue with timeout
+                    #logging.debug("Executing function {} in MainThread".format(func))
+                    #result = func(*args, **kwargs)
+                    mq = Queue()
+
+                    def func_wrapper(f, q):
+                        result = f()
+                        q.put(result)
+
+                    p = partial(func, *args, **kwargs)
+                    p = multiprocessing.Process(target=func_wrapper, args=(p, mq, ))
+                    p.start()
+
+                    # Wait for 10 seconds or until process finishes
+                    logging.debug("Executing function {} with timeout {}".format(func, self.timeout))
+                    p.join(self.timeout)
+                    result = mq.get()
+
+                    # If thread is still active
+                    if p.is_alive():
+                        p.terminate()
+                        p.join()
+                        raise ProcessTimeoutException()
 
                     if scheduler and cpu:
                         logging.debug(
