@@ -32,6 +32,8 @@ A lightweight (serverless) native python parallel processing framework based on 
       * [Data-Driven Branching](#data-driven-branching)
     * [Docker Example](#docker-example)
     * [Scheduler Example](#scheduler-example)
+* [Logging](#logging)
+* [Design Tool](#design-tool)  
 
 ## Overview
 
@@ -1052,7 +1054,44 @@ result = add(
 print(result())
 
 ```
+## Logging
 
+Logging in Entangle is intended to be convenient and provide some useful out-of-the-box defaults that "just work".
+
+There are 3 default loggers you can import.
+
+```python
+from entangle.logging.info import logging
+from entangle.logging.debug import logging
+from entangle.logging.file import logging
+```
+And the details of each are:
+
+*info*
+```python
+import logging
+
+logging.basicConfig(
+    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+```
+
+*debug*
+```python
+import logging
+
+logging.basicConfig(
+    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+```
+
+*file*
+```python
+import logging
+
+logging.basicConfig(filename='entangle.log',
+                    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+```
+
+You can of course provide your own logging configuration, but be sure to include it at the top of your file so the various entangle modules pick it up.
 ## Design Tool
 
 A prototype visual design tool for Entangle is shown below.
