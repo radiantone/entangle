@@ -1,9 +1,6 @@
-import logging
-logging.basicConfig(filename='scheduler.log',
-                    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
-
 import threading
 import time
+from entangle.logging.file import logging
 from entangle.dataflow import process
 from entangle.dataflow import dataflow
 from entangle.scheduler import scheduler

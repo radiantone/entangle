@@ -1,8 +1,4 @@
-import logging
-
-logging.basicConfig(
-    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
-
+from entangle.logging import logging
 from entangle.thread import thread
 from entangle.http import request
 from entangle.workflow import workflow

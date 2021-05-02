@@ -1,8 +1,5 @@
-import logging
-logging.basicConfig(
-    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
-
 import numpy as np
+from entangle.logging import logging
 from entangle.process import process
 from timeit import default_timer as timer
 from numba import vectorize

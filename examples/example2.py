@@ -1,9 +1,7 @@
+from entangle.logging import logging
 from entangle.process import process
 from entangle.http import request
 from entangle.workflow import workflow
-import logging
-logging.basicConfig(
-    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 
 @process

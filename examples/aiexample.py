@@ -1,7 +1,4 @@
-import logging
-logging.basicConfig(
-    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
-
+from entangle.logging import logging
 from entangle.containers import docker
 from entangle.process import process
 

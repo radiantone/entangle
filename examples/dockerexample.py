@@ -1,10 +1,7 @@
+from entangle.logging import logging
 from entangle.containers import docker
 from entangle.process import process
 from entangle.workflow import workflow
-
-import logging
-logging.basicConfig(
-    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
 
 @process

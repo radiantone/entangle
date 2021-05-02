@@ -1,11 +1,9 @@
 import threading
 import time
+from entangle.logging import logging
 from entangle.dataflow import thread
 from entangle.dataflow import process
 from entangle.dataflow import dataflow
-import logging
-logging.basicConfig(
-    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 def triggered(func, result):
     print("triggered: {} {}".format(func.__name__, result))

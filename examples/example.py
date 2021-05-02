@@ -1,9 +1,6 @@
+from entangle.logging import logging
 from entangle.process import process
 from entangle.containers import singularity
-
-import logging
-logging.basicConfig(
-    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
 
 @process

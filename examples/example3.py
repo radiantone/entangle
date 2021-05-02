@@ -1,8 +1,5 @@
-import logging
-
-logging.basicConfig(filename='scheduler.log',
-                    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 import numpy as np
+from entangle.logging.file import logging
 from entangle.process import process
 from entangle.scheduler import scheduler
 from timeit import default_timer as timer
