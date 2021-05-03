@@ -1,5 +1,5 @@
 import numpy as np
-from entangle.logging import logging
+from entangle.logging.debug import logging
 from entangle.process import process
 from timeit import default_timer as timer
 from numba import vectorize

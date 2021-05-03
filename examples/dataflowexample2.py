@@ -1,10 +1,10 @@
-import threading
-import time
 from entangle.logging.file import logging
 from entangle.dataflow import process
 from entangle.dataflow import dataflow
 from entangle.scheduler import scheduler
 
+import threading
+import time
 
 def triggered(func, result):
     print("triggered: {} {}".format(func.__name__, result))

@@ -1,4 +1,4 @@
-from entangle.logging import logging
+from entangle.logging.debug import logging
 from entangle.thread import thread
 from entangle.http import request
 from entangle.workflow import workflow

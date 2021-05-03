@@ -1,4 +1,4 @@
-from entangle.logging import logging
+from entangle.logging.debug import logging
 from entangle.containers import docker
 from entangle.process import process
 from entangle.workflow import workflow

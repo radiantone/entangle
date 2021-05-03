@@ -1,9 +1,8 @@
-import numpy as np
-from entangle.logging import logging
+from entangle.logging.debug import logging
 from entangle.process import process
 from timeit import default_timer as timer
 from numba import vectorize
-
+import numpy as np
 
 @process(timeout=0.5, shared_memory=True)
 def dopow(names, smm=None, sm=None):

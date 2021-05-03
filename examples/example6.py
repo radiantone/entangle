@@ -1,4 +1,4 @@
-from entangle.logging import logging
+from entangle.logging.debug import logging
 from entangle.scheduler import scheduler
 from entangle.workflow import workflow
 from entangle.http import request
