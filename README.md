@@ -81,7 +81,7 @@ If you are planning to run or use GPU enabled code it is recommended to set up a
 
 * Small & Simple
 * Easy to Understand
-* non-API
+* API-less
 * Plain Old Python
 * True Parallelism
 * Pluggable & Flexible
