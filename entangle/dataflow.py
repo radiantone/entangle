@@ -80,12 +80,8 @@ class DataflowNode(object):
                         df(*args)
                     return
                 else:
-                    p = result(*args)
-                    #p = partial(result.partial, *args)
-                    result = args
-                    p.__name__ = 'lambda'
-                    p.thread = True
-                    args  = [ p ]
+                    result(*args)
+                    return
             else:
                 result = self.partial()
 

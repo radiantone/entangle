@@ -1,6 +1,6 @@
 import threading
 import time
-from entangle.logging import logging
+from entangle.logging.info import logging
 from entangle.dataflow import thread
 from entangle.dataflow import process
 from entangle.dataflow import dataflow
@@ -12,7 +12,7 @@ def triggered(func, result):
 @dataflow(callback=triggered)
 @thread
 def printx(x):
-    print('printx: {}'.format(threading.current_thread().name))
+    print('   printx: {} {}'.format(x, threading.current_thread().name))
     return("X: {}".format(x))
 
 
@@ -28,14 +28,15 @@ def printy(y):
 def printz(z):
     print('printz: {}'.format(threading.current_thread().name))
     return ("Z: {}".format(z))
-    
+
 
 @dataflow(executor='thread', callback=triggered, maxworkers=3)
 def emit(a, **kwargs):
     print('emit: {}'.format(threading.current_thread().name))
     return a+"!"
 
-# Create the dataflow graph 
+
+# Create the dataflow graph
 # Defer whether we will forward to printx() or printy() depending
 # on the result receive from emit. This won't be known until the data is ready.
 flow = emit(

@@ -925,16 +925,14 @@ flow('HELLO')
 
 Which outputs:
 
-```python
-printx: MainThread
+```text
+   printx: emit MainThread
 triggered: inner X: emit
-triggered: emit ('emit',)
-printx: ThreadPoolExecutor-2_0
-triggered: inner X: ('emit',)
+printz: ThreadPoolExecutor-3_0
+triggered: inner Z: X: emit
+----------------------------
 printy: MainThread
 triggered: inner Y: HELLO
-triggered: emit ('HELLO',)
-printy: ThreadPoolExecutor-2_1
 ```
 ### Scheduler Example
 
