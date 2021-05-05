@@ -66,15 +66,18 @@ From repo root
 
 $ virtualenv --python=python3.8 venv
 $ source venv/bin/activate
-(venv) $ pip3 install -r requirements.txt
+(venv) $ pip install -r requirements.txt
+(venv) $ python -m entangle.examples.example
 
 ```
 
 *miniconda3*
 1. Install [miniconda3](#https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html) with python3.8 for linux
 ```shell
+$ conda init
 $ pip install -r requirements.txt
-$ conda create --name <env> --file conda.list
+$ python -m entangle.examples.example
+
 ```
 ### Testing
 
