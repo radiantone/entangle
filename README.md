@@ -543,6 +543,23 @@ For a workflow example using scheduler see [Scheduler Example](#scheduler-exampl
 * [Scheduler Example](#scheduler-example)  
 * [General Example](#general-example)
 
+There are a variety of example workflows and dataflows you can run. In addition to the sample code provided below you can run these using the following commands.
+> NOTE: You probably will have to do `python setup.py install` from within the repo in order to run these.
+```shell
+$ python -m entangle.examples.example
+$ python -m entangle.examples.example2
+$ python -m entangle.examples.example3
+$ python -m entangle.examples.example4
+$ python -m entangle.examples.example5
+$ python -m entangle.examples.example6
+$ python -m entangle.examples.lambdaexample
+$ python -m entangle.examples.listexample
+$ python -m entangle.examples.listexample2
+$ python -m entangle.examples.schedulerexample
+$ python -m entangle.examples.schedulerexample2
+$ python -m entangle.examples.sshschedulerexample
+$ python -m entangle.examples.timeoutexample
+```
 ### GPU Example
 This example assumes you have installed `nvidia-cuda-toolkit` and associated python packages along with `numba`.
 
