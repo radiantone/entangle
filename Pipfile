@@ -3,11 +3,12 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
 numpy = "*"
 requests = "*"
 twine = "*"
+numba = "*"
+pytest = "*"
 
 [dev-packages]
 "flake8" = "*"
@@ -16,6 +17,7 @@ ipython = "*"
 mypy = "*"
 sphinx = "*"
 sphinx-rtd-theme = "*"
+numba = "*"
 
 [requires]
 python_version = "3.8"
