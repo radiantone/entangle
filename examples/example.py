@@ -1,6 +1,5 @@
 from entangle.logging.debug import logging
 from entangle.process import process
-from entangle.containers import singularity
 
 
 @process
