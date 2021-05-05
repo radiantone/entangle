@@ -236,7 +236,8 @@ class ProcessMonitor(object):
                             logging.debug(
                                 "Pre get(timeout={})".format(timeout))
                             _result = q.get(timeout=timeout)
-                            logging.debug("Post get(timeout={})".format(timeout))
+                            logging.debug(
+                                "Post get(timeout={})".format(timeout))
                         else:
                             _result = q.get()
 
@@ -268,7 +269,7 @@ class ProcessMonitor(object):
                     scheduler = kwargs['scheduler']
                     del kwargs['scheduler']
 
-            #with smm:
+            # with smm:
             if len(args) == 0:
                 # Do nothing
                 pass
@@ -309,13 +310,14 @@ class ProcessMonitor(object):
                             arg_cpu = scheduler.get()
 
                             # TODO: Fix. This bypasses the scheduler logic of capping the CPU #'s.
+                            print("PARG CPU:", arg_cpu)
                             logging.debug(
                                 'ARG CPU SET TO: {}'.format(arg_cpu[1]))
                             _process = Process(
                                 target=assign_cpu, args=(
                                     arg, arg_cpu[1],), kwargs=kargs
                             )
-                            _process.cookie = arg_cpu
+                            _process.cookie = arg_cpu[1]
                         else:
                             logging.debug('NO CPU SET')
                             _process = Process(
@@ -337,7 +339,7 @@ class ProcessMonitor(object):
                     # Create an async task that monitors the queue for that arg
                     # It will wait for event set from this child process
                     _tasks += [get_result(queue, arg,
-                                            self.sleep, now, _process, e, self.wait, self.timeout)]
+                                          self.sleep, now, _process, e, self.wait, self.timeout)]
 
                     # Wait until all the processes report results
                     tasks = asyncio.gather(*_tasks)
@@ -353,7 +355,8 @@ class ProcessMonitor(object):
                     for process in processes:
                         logging.debug(
                             "Putting CPU: {}  back on scheduler queue.".format(process.cookie))
-                        scheduler.put((0, process.cookie, 'Y'))
+                        print("PROCESS COOKIE2:", process.cookie)
+                        scheduler.put(('0', process.cookie, 'Y'))
 
             if cpu:
                 pid = os.getpid()
@@ -392,7 +395,9 @@ class ProcessMonitor(object):
                 if scheduler and cpu:
                     logging.debug(
                         "Putting CPU: {}  back on scheduler queue.".format(cpu))
-                    scheduler.put((0, cpu, 'Y'))
+
+                    print("PROCESS1 COOKIE:", cpu)
+                    scheduler.put(['0', cpu, 'N'])
 
                 if self.cache:
                     pass
@@ -422,11 +427,13 @@ class ProcessMonitor(object):
                     q.put(result)
 
                 p = partial(func, *args, **kwargs)
-                p = multiprocessing.Process(target=func_wrapper, args=(p, mq, ))
+                p = multiprocessing.Process(
+                    target=func_wrapper, args=(p, mq, ))
                 p.start()
 
                 # Wait for 10 seconds or until process finishes
-                logging.debug("Executing function {} with timeout {}".format(func, self.timeout))
+                logging.debug(
+                    "Executing function {} with timeout {}".format(func, self.timeout))
                 p.join(self.timeout)
                 result = mq.get()
 
@@ -439,7 +446,9 @@ class ProcessMonitor(object):
                 if scheduler and cpu:
                     logging.debug(
                         "Putting CPU: {}  back on scheduler queue.".format(cpu))
-                    scheduler.put((0, cpu, 'Y'))
+                    print("PPUT CPU: ", cpu)
+
+                    scheduler.put(('0',cpu,'Y'))
 
             return result
 

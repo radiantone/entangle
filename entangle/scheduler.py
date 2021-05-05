@@ -115,8 +115,10 @@ class DefaultScheduler(object):
 
             while cpu_pending:
                 cpu = queue.get()
+                print('CPU:', cpu)
                 if int(cpu[1]) >= int(cpus):
-                    logging.debug("     CPU not within allocation: {} {}".format(cpu,cpus))
+                    logging.debug(
+                        "     CPU not within allocation: {} {}".format(cpu, cpus))
                     queue.put(cpu)
                 else:
                     logging.debug("GRABBED CPU: {} {}".format(cpu, cpus))
@@ -135,8 +137,9 @@ class DefaultScheduler(object):
                 logging.debug("Setting cpu_mask {}".format(cpu_mask))
                 os.sched_setaffinity(pid, cpu_mask)
 
-            result = f(*args,**kwargs)
+            result = f(*args, **kwargs)
             logging.debug("Putting cpu {} back on scheduler queue".format(cpu))
+
             queue.put(cpu)
             logging.debug("DefaultScheduler: after")
             logging.debug("DefaultScheduler: return {}".format(result))
@@ -181,10 +184,9 @@ def scheduler(function=None,
 
             _func = find_func(_func)
 
-
-
         source = inspect.getsource(_func)
         logging.debug("scheduler: source: {}".format(source))
+
         def wrapper(f, *args, **kwargs):
             import time
             logging.debug("scheduler: Calling function: {}".format(str(f)))

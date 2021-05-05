@@ -1,5 +1,5 @@
 from entangle.logging.debug import logging
-from entangle.thread import thread
+from entangle.process import process
 from entangle.http import request
 from entangle.workflow import workflow
 from entangle.scheduler import scheduler
@@ -9,7 +9,7 @@ scheduler_config = {'cpus': 3,
 
 
 @scheduler(**scheduler_config)
-@thread
+@process
 @request(url='https://datausa.io/api/data', method='GET')
 def mydata(data):
     import json
@@ -19,13 +19,13 @@ def mydata(data):
 
 
 @scheduler(**scheduler_config)
-@thread
+@process
 def two():
     return 2
 
 
 @scheduler(**scheduler_config)
-@thread
+@process
 def add(a, b):
     v = int(a) + int(b)
     print("ADD: *"+str(v)+"*")
