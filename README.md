@@ -68,7 +68,6 @@ $ virtualenv --python=python3.8 venv
 $ source venv/bin/activate
 (venv) $ pip install -r requirements.txt
 (venv) $ python -m entangle.examples.example
-
 ```
 
 *miniconda3*
@@ -77,7 +76,6 @@ $ source venv/bin/activate
 $ conda init
 $ pip install -r requirements.txt
 $ python -m entangle.examples.example
-
 ```
 ### Testing
 
