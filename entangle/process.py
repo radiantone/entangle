@@ -7,7 +7,9 @@ import multiprocessing
 from multiprocessing.shared_memory import SharedMemory
 from multiprocessing.managers import SharedMemoryManager
 
+global smm
 smm = SharedMemoryManager()
+smm.start()
 
 
 def process(function=None,
@@ -186,6 +188,8 @@ class ProcessMonitor(object):
             import time
             import os
 
+            global smm
+
             @asyncio.coroutine
             def get_result(q, func, sleep, now, process, event, wait, timeout):
                 """
@@ -264,180 +268,182 @@ class ProcessMonitor(object):
                     scheduler = kwargs['scheduler']
                     del kwargs['scheduler']
 
-            with smm:
-                if len(args) == 0:
-                    # Do nothing
-                    pass
-                else:
-                    asyncio.set_event_loop(asyncio.new_event_loop())
-                    loop = asyncio.get_event_loop()
+            #with smm:
+            if len(args) == 0:
+                # Do nothing
+                pass
+            else:
+                asyncio.set_event_loop(asyncio.new_event_loop())
+                loop = asyncio.get_event_loop()
 
-                    _tasks = []
-                    processes = []
+                _tasks = []
+                processes = []
 
-                    for arg in args:
+                for arg in args:
 
-                        e = multiprocessing.Event()
+                    e = multiprocessing.Event()
 
-                        if hasattr(arg, '__name__'):
-                            name = arg.__name__
-                        else:
-                            name = arg
+                    if hasattr(arg, '__name__'):
+                        name = arg.__name__
+                    else:
+                        name = arg
 
-                        queue = Queue()
+                    queue = Queue()
 
-                        # Need to pull a cpu off scheduler queue here
+                    # Need to pull a cpu off scheduler queue here
 
-                        _process = None
+                    _process = None
 
-                        if type(arg) == partial:
-                            logging.info("Process: {}".format(arg.__name__))
+                    if type(arg) == partial:
+                        logging.info("Process: {}".format(arg.__name__))
 
-                            kargs = {'queue': queue, 'event': e}
-                            # If not shared memory
+                        kargs = {'queue': queue, 'event': e}
+                        # If not shared memory
 
-                            # if shared memory, set the handles
-                            if self.shared_memory:
-                                kargs['smm'] = smm
-                                kargs['sm'] = SharedMemory
+                        # if shared memory, set the handles
+                        if self.shared_memory:
+                            kargs['smm'] = smm
+                            kargs['sm'] = SharedMemory
 
-                            if cpu:
-                                arg_cpu = scheduler.get()
+                        if cpu:
+                            arg_cpu = scheduler.get()
 
-                                # TODO: Fix. This bypasses the scheduler logic of capping the CPU #'s.
-                                logging.debug(
-                                    'ARG CPU SET TO: {}'.format(arg_cpu[1]))
-                                _process = Process(
-                                    target=assign_cpu, args=(
-                                        arg, arg_cpu[1],), kwargs=kargs
-                                )
-                                _process.cookie = arg_cpu
-                            else:
-                                logging.debug('NO CPU SET')
-                                _process = Process(
-                                    target=arg, kwargs=kargs)
-
-                            if self.shared_memory:
-                                _process.shared_memory = True
-
-                            processes += [_process]
-
-                            _process.start()
-                        else:
-                            logging.info("Value:".format(name))
-                            queue.put(arg)
-                            e.set()
-
-                        now = time.time()
-
-                        # Create an async task that monitors the queue for that arg
-                        # It will wait for event set from this child process
-                        _tasks += [get_result(queue, arg,
-                                              self.sleep, now, _process, e, self.wait, self.timeout)]
-
-                        # Wait until all the processes report results
-                        tasks = asyncio.gather(*_tasks)
-
-                    # Ensure we have joined all spawned processes
-
-                    args = loop.run_until_complete(tasks)
-
-                    [process.join() for process in processes]
-
-                    # Put CPU cookie back on scheduler queue
-                    if scheduler:
-                        for process in processes:
+                            # TODO: Fix. This bypasses the scheduler logic of capping the CPU #'s.
                             logging.debug(
-                                "Putting CPU: {}  back on scheduler queue.".format(process.cookie))
-                            scheduler.put((0, process.cookie, 'Y'))
+                                'ARG CPU SET TO: {}'.format(arg_cpu[1]))
+                            _process = Process(
+                                target=assign_cpu, args=(
+                                    arg, arg_cpu[1],), kwargs=kargs
+                            )
+                            _process.cookie = arg_cpu
+                        else:
+                            logging.debug('NO CPU SET')
+                            _process = Process(
+                                target=arg, kwargs=kargs)
 
-                if cpu:
-                    pid = os.getpid()
-                    cpu_mask = [int(cpu)]
-                    os.sched_setaffinity(pid, cpu_mask)
+                        if self.shared_memory:
+                            _process.shared_memory = True
 
-                if 'queue' in kwargs:
-                    queue = kwargs['queue']
-                    # get the queue and delete the argument
-                    del kwargs['queue']
+                        processes += [_process]
 
-                    event = None
-                    if 'event' in kwargs:
-                        event = kwargs['event']
-                        del kwargs['event']
+                        _process.start()
+                    else:
+                        logging.info("Value:".format(name))
+                        queue.put(arg)
+                        e.set()
 
-                    # Pass in shared memory handles
-                    if self.shared_memory:
-                        kwargs['smm'] = smm
-                        kwargs['sm'] = SharedMemory
+                    now = time.time()
 
-                    logging.info("Calling {}".format(func.__name__))
-                    logging.debug(args)
+                    # Create an async task that monitors the queue for that arg
+                    # It will wait for event set from this child process
+                    _tasks += [get_result(queue, arg,
+                                            self.sleep, now, _process, e, self.wait, self.timeout)]
 
-                    if not cpu and 'cpu' in kwargs:
-                        cpu = kwargs['cpu']
-                        del kwargs['cpu']
+                    # Wait until all the processes report results
+                    tasks = asyncio.gather(*_tasks)
 
-                    if not scheduler and 'scheduler' in kwargs:
-                        scheduler = kwargs['scheduler']
-                        del kwargs['scheduler']
+                # Ensure we have joined all spawned processes
 
-                    result = func(*args, **kwargs)
+                args = loop.run_until_complete(tasks)
 
-                    # Put own cpu back on queue
-                    if scheduler and cpu:
+                [process.join() for process in processes]
+
+                # Put CPU cookie back on scheduler queue
+                if scheduler:
+                    for process in processes:
                         logging.debug(
-                            "Putting CPU: {}  back on scheduler queue.".format(cpu))
-                        scheduler.put((0, cpu, 'Y'))
+                            "Putting CPU: {}  back on scheduler queue.".format(process.cookie))
+                        scheduler.put((0, process.cookie, 'Y'))
 
-                    if self.cache:
-                        pass
+            if cpu:
+                pid = os.getpid()
+                cpu_mask = [int(cpu)]
+                os.sched_setaffinity(pid, cpu_mask)
 
-                    queue.put(result)
+            if 'queue' in kwargs:
+                queue = kwargs['queue']
+                # get the queue and delete the argument
+                del kwargs['queue']
 
-                    if event:
-                        logging.debug(
-                            "Setting event for {}".format(func.__name__))
-                        event.set()
-                else:
-                    # Pass in shared memory handles
-                    if self.shared_memory:
-                        kwargs['smm'] = smm
-                        kwargs['sm'] = SharedMemory
+                event = None
+                if 'event' in kwargs:
+                    event = kwargs['event']
+                    del kwargs['event']
 
+                # Pass in shared memory handles
+                if self.shared_memory:
+                    kwargs['smm'] = smm
+                    kwargs['sm'] = SharedMemory
+
+                logging.info("Calling {}".format(func.__name__))
+                logging.debug(args)
+
+                if not cpu and 'cpu' in kwargs:
+                    cpu = kwargs['cpu']
+                    del kwargs['cpu']
+
+                if not scheduler and 'scheduler' in kwargs:
+                    scheduler = kwargs['scheduler']
+                    del kwargs['scheduler']
+
+                result = func(*args, **kwargs)
+
+                # Put own cpu back on queue
+                if scheduler and cpu:
                     logging.debug(
-                        "Calling function with: {}".format(str(args)))
+                        "Putting CPU: {}  back on scheduler queue.".format(cpu))
+                    scheduler.put((0, cpu, 'Y'))
 
-                    # Wrap with Process and queue with timeout
-                    #logging.debug("Executing function {} in MainThread".format(func))
-                    #result = func(*args, **kwargs)
-                    mq = Queue()
+                if self.cache:
+                    pass
 
-                    def func_wrapper(f, q):
-                        result = f()
-                        q.put(result)
+                queue.put(result)
 
-                    p = partial(func, *args, **kwargs)
-                    p = multiprocessing.Process(target=func_wrapper, args=(p, mq, ))
-                    p.start()
+                if event:
+                    logging.debug(
+                        "Setting event for {}".format(func.__name__))
+                    event.set()
+            else:
+                # Pass in shared memory handles
+                if self.shared_memory:
+                    kwargs['smm'] = smm
+                    kwargs['sm'] = SharedMemory
 
-                    # Wait for 10 seconds or until process finishes
-                    logging.debug("Executing function {} with timeout {}".format(func, self.timeout))
-                    p.join(self.timeout)
-                    result = mq.get()
+                logging.debug(
+                    "Calling function with: {}".format(str(args)))
 
-                    # If thread is still active
-                    if p.is_alive():
-                        p.terminate()
-                        p.join()
-                        raise ProcessTimeoutException()
+                # Wrap with Process and queue with timeout
+                #logging.debug("Executing function {} in MainThread".format(func))
+                #result = func(*args, **kwargs)
+                mq = Queue()
 
-                    if scheduler and cpu:
-                        logging.debug(
-                            "Putting CPU: {}  back on scheduler queue.".format(cpu))
-                        scheduler.put((0, cpu, 'Y'))
+                def func_wrapper(f, q):
+                    result = f()
+                    q.put(result)
 
-                return result
+                p = partial(func, *args, **kwargs)
+                p = multiprocessing.Process(target=func_wrapper, args=(p, mq, ))
+                p.start()
+
+                # Wait for 10 seconds or until process finishes
+                logging.debug("Executing function {} with timeout {}".format(func, self.timeout))
+                p.join(self.timeout)
+                result = mq.get()
+
+                # If thread is still active
+                if p.is_alive():
+                    p.terminate()
+                    p.join()
+                    raise ProcessTimeoutException()
+
+                if scheduler and cpu:
+                    logging.debug(
+                        "Putting CPU: {}  back on scheduler queue.".format(cpu))
+                    scheduler.put((0, cpu, 'Y'))
+
+            return result
+
+            #smm = SharedMemoryManager()
 
         p = partial(invoke, self.func, *args, **kwargs)
 
