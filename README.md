@@ -84,6 +84,10 @@ $ python -m entangle.examples.example
 ```shell
 $ pytest --full-trace --verbose --color=yes
 ```
+or if you don't have GPU
+```shell
+$  pytest --full-trace --verbose --color=yes tests/test_entangle.py
+```
 ### Miniconda
 
 If you are planning to run or use GPU enabled code it is recommended to set up a `miniconda` virtualenv.
