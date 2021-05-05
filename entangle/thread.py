@@ -11,11 +11,11 @@ smm = SharedMemoryManager()
 
 
 def thread(function=None,
-            timeout=None,
-            wait=None,
-            cache=False,
-            shared_memory=False,
-            sleep=0):
+           timeout=None,
+           wait=None,
+           cache=False,
+           shared_memory=False,
+           sleep=0):
     """
 
     :param function:
@@ -32,11 +32,11 @@ def thread(function=None,
             logging.debug(
                 "ThreadMonitor: {} with wait {}".format(f, wait))
             return ThreadMonitor(f,
-                                  timeout=timeout,
-                                  wait=wait,
-                                  shared_memory=shared_memory,
-                                  cache=cache,
-                                  sleep=sleep)
+                                 timeout=timeout,
+                                 wait=wait,
+                                 shared_memory=shared_memory,
+                                 cache=cache,
+                                 sleep=sleep)
 
         return wrapper(func)
 
@@ -152,8 +152,21 @@ class ThreadMonitor(object):
         from functools import partial
         from multiprocessing import Queue
         from threading import Thread
+        import inspect
 
         logging.info("Thread:invoke: {}".format(self.func.__name__))
+        _func = self.func
+        if type(self.func) is partial:
+
+            def find_func(p):
+                if type(p) is partial:
+                    return find_func(p.func)
+                return p
+
+            _func = find_func(self.func)
+
+        self.source = inspect.getsource(_func)
+        logging.info("Thread:source: {}".format(self.source))
 
         def assign_cpu(func, cpu, **kwargs):
             import os
@@ -282,7 +295,8 @@ class ThreadMonitor(object):
 
                             if cpu:
                                 arg_cpu = scheduler.get()
-                                logging.debug('ARG CPU SET TO: {}'.format(arg_cpu[1]))
+                                logging.debug(
+                                    'ARG CPU SET TO: {}'.format(arg_cpu[1]))
                                 _thread = Thread(
                                     target=assign_cpu, args=(
                                         arg, arg_cpu[1],), kwargs=kargs
@@ -354,7 +368,7 @@ class ThreadMonitor(object):
                         cpu = kwargs['cpu']
                         del kwargs['cpu']
 
-                    if not scheduler and  'scheduler' in kwargs:
+                    if not scheduler and 'scheduler' in kwargs:
                         scheduler = kwargs['scheduler']
                         del kwargs['scheduler']
 
@@ -400,4 +414,5 @@ class ThreadMonitor(object):
         else:
             p.__name__ = 'thread'
 
+        p.source = self.source
         return p

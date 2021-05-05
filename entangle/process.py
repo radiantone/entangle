@@ -151,8 +151,20 @@ class ProcessMonitor(object):
         """
         from functools import partial
         from multiprocessing import Queue, Process
+        import inspect
 
         logging.info("Process:invoke: {}".format(self.func.__name__))
+        _func = self.func
+        if type(self.func) is partial:
+
+            def find_func(p):
+                if type(p) is partial:
+                    return find_func(p.func)
+                return p
+
+            _func = find_func(self.func)
+
+        self.source = inspect.getsource(_func)
 
         def assign_cpu(func, cpu, **kwargs):
             import os

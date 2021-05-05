@@ -165,7 +165,26 @@ def scheduler(function=None,
     :return:
     """
     def decorator(func, cpus=12):
+        import inspect
 
+        _func = func
+
+        if type(func) is ProcessMonitor or type(func) is ThreadMonitor:
+            _func = func.func
+
+        if type(_func) is partial:
+
+            def find_func(p):
+                if type(p) is partial:
+                    return find_func(p.func)
+                return p
+
+            _func = find_func(_func)
+
+
+
+        source = inspect.getsource(_func)
+        logging.debug("scheduler: source: {}".format(source))
         def wrapper(f, *args, **kwargs):
             import time
             logging.debug("scheduler: Calling function: {}".format(str(f)))
@@ -178,7 +197,7 @@ def scheduler(function=None,
         sfunc = scheduler.register(func, cpus=cpus)
         logging.debug("scheduler: Returning function: {}".format(str(sfunc)))
         p = partial(wrapper, sfunc)
-
+        p.source = source
         """
         The decorator here delegates to impl to wrap the function in a scheduler function
         that performs the necessary request, wait handling with the scheduler
@@ -192,7 +211,13 @@ def scheduler(function=None,
 
         return p
 
-    if function is not None:
-        return decorator(function, cpus=cpus)
+    import inspect
 
-    return partial(decorator, **{'cpus':cpus})
+    if function is not None:
+        d = decorator(function, cpus=cpus)
+        return d
+
+    p = partial(decorator, **{'cpus': cpus})
+    logging.debug("scheduler: no source: ")
+
+    return p
