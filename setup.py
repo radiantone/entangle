@@ -56,7 +56,7 @@ setup(
     author=about['__author__'],
     author_email=about['__author_email__'],
     url=about['__url__'],
-    packages=['entangle', 'entangle.logging', 'entangle.examples'],
+    packages=['entangle', 'entangle.logging', 'entangle.examples', 'entangle.tests'],
     include_package_data=True,
     python_requires="==3.8.*",
     install_requires=['requests'],
