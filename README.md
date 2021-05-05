@@ -71,7 +71,7 @@ $ source venv/bin/activate
 ```
 
 *miniconda3*
-
+1. Install [miniconda3](#https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html) with python3.8 for linux
 ```shell
 $ pip install -r requirements.txt
 $ conda create --name <env> --file conda.list
