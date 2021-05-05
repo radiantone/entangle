@@ -67,6 +67,8 @@ def ssh(function=None, **kwargs):
             import inspect
 
             # Invoke function over ssh
+            # Function will need to be copied to remote machine as a file then
+            # executed 
 
             logging.debug("SSH: user:{} host:{} key: {}".format(kwargs['user'],kwargs['host'],kwargs['key']))
             del kwargs['user']
