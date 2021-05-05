@@ -5,52 +5,32 @@ tests.test_entangle.py
 """
 from entangle.process import process
 
-
-@process
-def one():
-    return 1
-
-
-@process
-def two():
-    return 2
-
-
-@process
-def five():
-    return 5
-
-
-@process
-def num(n):
-    return n
-
-
-@process
-def add(a, b):
-    v = int(a) + int(b)
-    print("ADD: *"+str(v)+"*")
-    return v
-
-
-@process
-def subtract(a, b):
-    return int(a) - int(b)
-
-
 class TestEntangle:
     """Test suite for entangle app class."""
 
+    def test_example2(self):
+        from entangle.examples.example2 import workflow1, workflow2
+
+        result = workflow2(workflow1)
+
+        try:
+            result()
+            assert True
+        except:
+            assert False
+
     def test_example(self):
+        from entangle.examples.example import add,num,one,two,five, subtract
+
         result = add(
             add(
                 num(6),
-                two()
+                two() if False else one()
             ),
             subtract(
                 five(),
                 two()
             )
         )
-        assert result() == 11
+        assert result() == 10
 
