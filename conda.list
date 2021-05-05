@@ -1,133 +1,133 @@
-# packages in environment at /home/darren/miniconda3:
-#
-# Name                    Version                   Build  Channel
-_libgcc_mutex             0.1                        main  
-_tflow_select             2.3.0                       mkl  
-absl-py                   0.12.0           py38h06a4308_0  
-aiohttp                   3.7.4            py38h27cfd23_1  
-appdirs                   1.4.4                    pypi_0    pypi
-astunparse                1.6.3                      py_0  
-async-timeout             3.0.1            py38h06a4308_0  
-attrs                     20.3.0             pyhd3eb1b0_0  
-autopep8                  1.5.6              pyhd3eb1b0_0  
-bcrypt                    3.2.0                    pypi_0    pypi
-blas                      1.0                         mkl  
-blinker                   1.4              py38h06a4308_0  
-brotlipy                  0.7.0           py38h27cfd23_1003  
-c-ares                    1.17.1               h27cfd23_0  
-ca-certificates           2021.4.13            h06a4308_1  
-cachetools                4.2.1              pyhd3eb1b0_0  
-certifi                   2020.12.5        py38h06a4308_0  
-cffi                      1.14.3           py38h261ae71_2  
-chardet                   3.0.4           py38h06a4308_1003  
-click                     7.1.2              pyhd3eb1b0_0  
-codegen                   1.0                      pypi_0    pypi
-conda                     4.10.1           py38h06a4308_1  
-conda-package-handling    1.7.2            py38h03888b9_0  
-coverage                  5.5              py38h27cfd23_2  
-cryptography              3.2.1            py38h3c74f83_1  
-cudatoolkit               11.0.221             h6bb024c_0  
-cython                    0.29.22          py38h2531618_0  
-dill                      0.3.3                    pypi_0    pypi
-distlib                   0.3.1                    pypi_0    pypi
-docker                    5.0.0                    pypi_0    pypi
-entangle                  0.0.1                    pypi_0    pypi
-filelock                  3.0.12                   pypi_0    pypi
-flatbuffers               1.12                     pypi_0    pypi
-gast                      0.3.3                    pypi_0    pypi
-globus-sdk                2.0.1                    pypi_0    pypi
-google-auth               1.28.1                   pypi_0    pypi
-google-auth-oauthlib      0.4.4              pyhd3eb1b0_0  
-google-pasta              0.2.0                      py_0  
-grpcio                    1.32.0                   pypi_0    pypi
-h5py                      2.10.0           py38hd6299e0_1  
-hdf5                      1.10.6               hb1b8bf9_0  
-idna                      2.10                       py_0  
-importlib-metadata        3.10.0           py38h06a4308_0  
-iniconfig                 1.1.1                    pypi_0    pypi
-intel-openmp              2020.2                      254  
-keras-preprocessing       1.1.2              pyhd3eb1b0_0  
-ld_impl_linux-64          2.33.1               h53a641e_7  
-libedit                   3.1.20191231         h14c3975_1  
-libffi                    3.3                  he6710b0_2  
-libgcc-ng                 9.1.0                hdf63c60_0  
-libgfortran-ng            7.3.0                hdf63c60_0  
-libllvm10                 10.0.1               hbcb73fb_5  
-libprotobuf               3.14.0               h8c45485_0  
-libstdcxx-ng              9.1.0                hdf63c60_0  
-llvmlite                  0.36.0           py38h612dafd_4  
-markdown                  3.3.4            py38h06a4308_0  
-mkl                       2020.2                      256  
-mkl-service               2.3.0            py38he904b0f_0  
-mkl_fft                   1.3.0            py38h54f3939_0  
-mkl_random                1.1.1            py38h0573a6f_0  
-multidict                 5.1.0            py38h27cfd23_2  
-ncurses                   6.2                  he6710b0_1  
-numba                     0.53.1           py38ha9443f7_0  
-numpy                     1.19.2           py38h54aff64_0  
-numpy-base                1.19.2           py38hfa32c7d_0  
-oauthlib                  3.1.0                      py_0  
-openssl                   1.1.1k               h27cfd23_0  
-opt-einsum                3.3.0                    pypi_0    pypi
-opt_einsum                3.1.0                      py_0  
-packaging                 20.9                     pypi_0    pypi
-paramiko                  2.7.2                    pypi_0    pypi
-pip                       20.2.4           py38h06a4308_0  
-pipenv                    2020.11.15               pypi_0    pypi
-pluggy                    0.13.1                   pypi_0    pypi
-posix-ipc                 1.0.4                    pypi_0    pypi
-protobuf                  3.15.8                   pypi_0    pypi
-psutil                    5.8.0                    pypi_0    pypi
-py                        1.10.0                   pypi_0    pypi
-py-cpuinfo                8.0.0                    pypi_0    pypi
-pyasn1                    0.4.8                      py_0  
-pyasn1-modules            0.2.8                    pypi_0    pypi
-pycodestyle               2.7.0              pyhd3eb1b0_0  
-pycosat                   0.6.3            py38h7b6447c_1  
-pycparser                 2.20                       py_2  
-pyjwt                     1.7.1                    py38_0  
-pymq                      0.4.0                    pypi_0    pypi
-pynacl                    1.4.0                    pypi_0    pypi
-pyopenssl                 19.1.0             pyhd3eb1b0_1  
-pyparsing                 2.4.7                    pypi_0    pypi
-pysocks                   1.7.1            py38h06a4308_0  
-pytest                    6.2.4                    pypi_0    pypi
-python                    3.8.5                h7579374_1  
-python-flatbuffers        1.12               pyhd3eb1b0_0  
-readline                  8.0                  h7b6447c_0  
-redis                     3.5.3                    pypi_0    pypi
-requests                  2.24.0                     py_0  
-requests-oauthlib         1.3.0                      py_0  
-rsa                       4.7.2              pyhd3eb1b0_1  
-ruamel_yaml               0.15.87          py38h7b6447c_1  
-scipy                     1.6.2            py38h91f5cce_0  
-setuptools                50.3.1           py38h06a4308_1  
-six                       1.15.0           py38h06a4308_0  
-sqlite                    3.33.0               h62c20be_0  
-tbb                       2020.3               hfd86e86_0  
-tblib                     1.7.0                    pypi_0    pypi
-tensorboard               2.4.1                    pypi_0    pypi
-tensorboard-plugin-wit    1.8.0                    pypi_0    pypi
-tensorflow                2.4.1           mkl_py38hb2083e0_0  
-tensorflow-base           2.4.1           mkl_py38h43e0292_0  
-tensorflow-estimator      2.4.1              pyheb71bc4_0  
-tensorflow-gpu            2.4.1                    pypi_0    pypi
-termcolor                 1.1.0                    pypi_0    pypi
-tk                        8.6.10               hbc83047_0  
-toml                      0.10.2             pyhd3eb1b0_0  
-tqdm                      4.51.0             pyhd3eb1b0_0  
-typeguard                 2.12.0                   pypi_0    pypi
-typing-extensions         3.7.4.3              hd3eb1b0_0  
-typing_extensions         3.7.4.3            pyh06a4308_0  
-urllib3                   1.25.11                    py_0  
-virtualenv                20.4.3                   pypi_0    pypi
-virtualenv-clone          0.5.4                    pypi_0    pypi
-websocket-client          0.58.0                   pypi_0    pypi
-werkzeug                  1.0.1              pyhd3eb1b0_0  
-wheel                     0.35.1             pyhd3eb1b0_0  
-wrapt                     1.12.1           py38h7b6447c_1  
-xz                        5.2.5                h7b6447c_0  
-yaml                      0.2.5                h7b6447c_0  
-yarl                      1.6.3            py38h27cfd23_0  
-zipp                      3.4.1              pyhd3eb1b0_0  
-zlib                      1.2.11               h7b6447c_3  
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: linux-64
+_libgcc_mutex=0.1=main
+_tflow_select=2.3.0=mkl
+absl-py=0.12.0=py38h06a4308_0
+aiohttp=3.7.4=py38h27cfd23_1
+appdirs=1.4.4=pypi_0
+astunparse=1.6.3=py_0
+async-timeout=3.0.1=py38h06a4308_0
+attrs=20.3.0=pyhd3eb1b0_0
+autopep8=1.5.6=pyhd3eb1b0_0
+bcrypt=3.2.0=pypi_0
+blas=1.0=mkl
+blinker=1.4=py38h06a4308_0
+brotlipy=0.7.0=py38h27cfd23_1003
+c-ares=1.17.1=h27cfd23_0
+ca-certificates=2021.4.13=h06a4308_1
+cachetools=4.2.1=pyhd3eb1b0_0
+certifi=2020.12.5=py38h06a4308_0
+cffi=1.14.3=py38h261ae71_2
+chardet=3.0.4=py38h06a4308_1003
+click=7.1.2=pyhd3eb1b0_0
+codegen=1.0=pypi_0
+conda=4.10.1=py38h06a4308_1
+conda-package-handling=1.7.2=py38h03888b9_0
+coverage=5.5=py38h27cfd23_2
+cryptography=3.2.1=py38h3c74f83_1
+cudatoolkit=11.0.221=h6bb024c_0
+cython=0.29.22=py38h2531618_0
+dill=0.3.3=pypi_0
+distlib=0.3.1=pypi_0
+docker=5.0.0=pypi_0
+entangle=0.0.1=pypi_0
+filelock=3.0.12=pypi_0
+flatbuffers=1.12=pypi_0
+gast=0.3.3=pypi_0
+globus-sdk=2.0.1=pypi_0
+google-auth=1.28.1=pypi_0
+google-auth-oauthlib=0.4.4=pyhd3eb1b0_0
+google-pasta=0.2.0=py_0
+grpcio=1.32.0=pypi_0
+h5py=2.10.0=py38hd6299e0_1
+hdf5=1.10.6=hb1b8bf9_0
+idna=2.10=py_0
+importlib-metadata=3.10.0=py38h06a4308_0
+iniconfig=1.1.1=pypi_0
+intel-openmp=2020.2=254
+keras-preprocessing=1.1.2=pyhd3eb1b0_0
+ld_impl_linux-64=2.33.1=h53a641e_7
+libedit=3.1.20191231=h14c3975_1
+libffi=3.3=he6710b0_2
+libgcc-ng=9.1.0=hdf63c60_0
+libgfortran-ng=7.3.0=hdf63c60_0
+libllvm10=10.0.1=hbcb73fb_5
+libprotobuf=3.14.0=h8c45485_0
+libstdcxx-ng=9.1.0=hdf63c60_0
+llvmlite=0.36.0=py38h612dafd_4
+markdown=3.3.4=py38h06a4308_0
+mkl=2020.2=256
+mkl-service=2.3.0=py38he904b0f_0
+mkl_fft=1.3.0=py38h54f3939_0
+mkl_random=1.1.1=py38h0573a6f_0
+multidict=5.1.0=py38h27cfd23_2
+ncurses=6.2=he6710b0_1
+numba=0.53.1=py38ha9443f7_0
+numpy=1.19.2=py38h54aff64_0
+numpy-base=1.19.2=py38hfa32c7d_0
+oauthlib=3.1.0=py_0
+openssl=1.1.1k=h27cfd23_0
+opt-einsum=3.3.0=pypi_0
+opt_einsum=3.1.0=py_0
+packaging=20.9=pypi_0
+paramiko=2.7.2=pypi_0
+pip=20.2.4=py38h06a4308_0
+pipenv=2020.11.15=pypi_0
+pluggy=0.13.1=pypi_0
+posix-ipc=1.0.4=pypi_0
+protobuf=3.15.8=pypi_0
+psutil=5.8.0=pypi_0
+py=1.10.0=pypi_0
+py-cpuinfo=8.0.0=pypi_0
+pyasn1=0.4.8=py_0
+pyasn1-modules=0.2.8=pypi_0
+pycodestyle=2.7.0=pyhd3eb1b0_0
+pycosat=0.6.3=py38h7b6447c_1
+pycparser=2.20=py_2
+pyjwt=1.7.1=py38_0
+pymq=0.4.0=pypi_0
+pynacl=1.4.0=pypi_0
+pyopenssl=19.1.0=pyhd3eb1b0_1
+pyparsing=2.4.7=pypi_0
+pysocks=1.7.1=py38h06a4308_0
+pytest=6.2.4=pypi_0
+python=3.8.5=h7579374_1
+python-flatbuffers=1.12=pyhd3eb1b0_0
+readline=8.0=h7b6447c_0
+redis=3.5.3=pypi_0
+requests=2.24.0=py_0
+requests-oauthlib=1.3.0=py_0
+rsa=4.7.2=pyhd3eb1b0_1
+ruamel_yaml=0.15.87=py38h7b6447c_1
+scipy=1.6.2=py38h91f5cce_0
+setuptools=50.3.1=py38h06a4308_1
+six=1.15.0=py38h06a4308_0
+sqlite=3.33.0=h62c20be_0
+tbb=2020.3=hfd86e86_0
+tblib=1.7.0=pypi_0
+tensorboard=2.4.1=pypi_0
+tensorboard-plugin-wit=1.8.0=pypi_0
+tensorflow=2.4.1=mkl_py38hb2083e0_0
+tensorflow-base=2.4.1=mkl_py38h43e0292_0
+tensorflow-estimator=2.4.1=pyheb71bc4_0
+tensorflow-gpu=2.4.1=pypi_0
+termcolor=1.1.0=pypi_0
+tk=8.6.10=hbc83047_0
+toml=0.10.2=pyhd3eb1b0_0
+tqdm=4.51.0=pyhd3eb1b0_0
+typeguard=2.12.0=pypi_0
+typing-extensions=3.7.4.3=hd3eb1b0_0
+typing_extensions=3.7.4.3=pyh06a4308_0
+urllib3=1.25.11=py_0
+virtualenv=20.4.3=pypi_0
+virtualenv-clone=0.5.4=pypi_0
+websocket-client=0.58.0=pypi_0
+werkzeug=1.0.1=pyhd3eb1b0_0
+wheel=0.35.1=pyhd3eb1b0_0
+wrapt=1.12.1=py38h7b6447c_1
+xz=5.2.5=h7b6447c_0
+yaml=0.2.5=h7b6447c_0
+yarl=1.6.3=py38h27cfd23_0
+zipp=3.4.1=pyhd3eb1b0_0
+zlib=1.2.11=h7b6447c_3

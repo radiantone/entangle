@@ -60,19 +60,27 @@ NOTE: At the moment entangle only works with python 3.8 due to how coroutines wo
 
 From repo root
 
+*python3.8*
+
 ```shell
 
-(venv) $ pip3 install pipenv
-(venv) $ pipenv install --dev
-(venv) $ pipenv run pytest
+$ virtualenv --python=python3.8 venv
+$ source venv/bin/activate
+(venv) $ pip3 install -r requirements.txt
 
 ```
-or
+
+*miniconda3*
+
 ```shell
-(venv) $ python setup.py install
-(venv) $ python setup.py clean
+$ pip install -r requirements.txt
+$ conda create --name <env> --file conda.list
 ```
+### Testing
 
+```shell
+$ pytest --full-trace --verbose --color=yes
+```
 ### Miniconda
 
 If you are planning to run or use GPU enabled code it is recommended to set up a `miniconda` virtualenv.
