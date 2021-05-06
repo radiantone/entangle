@@ -101,6 +101,7 @@ def ssh(function=None, **kwargs):
 
             vargs = []
 
+            "Resolve arguments"
             for arg in args:
                 if callable(arg):
                     vargs += [arg()]
@@ -170,17 +171,22 @@ def ssh(function=None, **kwargs):
 
             Need a parameter execute=False that only resolves dependencies and returns a tuple (*args, **kwargs)
             '''
-            def ssh_function(remotefunc, *args, **kwargs):
+            def ssh_function(remotefunc):
 
+                logging.debug("SSH FUNCTION: {}".format(remotefunc))
 
-                return ssh_result
+                '''
+                Copy sshapp*.py and sshsource*.py to remote host
+                Execute sshapp*.py on remote machine, parse stout for result pickle
+                '''
+                return {'result':'THE RESULT!'}
 
-            '''
-            result = ProcessMonitor(p, timeout=None,
+            ssh_p = partial(ssh_function, p)
+            ssh_p.__name__ = p.__name__
+            result = ProcessMonitor(ssh_p, timeout=None,
                                     wait=None,
                                     cache=False,
                                     shared_memory=False,
-                                    execute=False,
                                     sleep=0)
             
             if callable(result):
@@ -188,9 +194,8 @@ def ssh(function=None, **kwargs):
             else:
                 _result = result
             logging.debug("SSH RESULT: {}".format(_result))
+
             return _result
-            '''
-            return p
 
         p = partial(wrapper, func, **kwargs)
 
