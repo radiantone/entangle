@@ -310,7 +310,6 @@ class ProcessMonitor(object):
                             arg_cpu = scheduler.get()
 
                             # TODO: Fix. This bypasses the scheduler logic of capping the CPU #'s.
-                            print("PARG CPU:", arg_cpu)
                             logging.debug(
                                 'ARG CPU SET TO: {}'.format(arg_cpu[1]))
                             _process = Process(
@@ -355,7 +354,6 @@ class ProcessMonitor(object):
                     for process in processes:
                         logging.debug(
                             "Putting CPU: {}  back on scheduler queue.".format(process.cookie))
-                        print("PROCESS COOKIE2:", process.cookie)
                         scheduler.put(('0', process.cookie, 'Y'))
 
             if cpu:
@@ -396,7 +394,6 @@ class ProcessMonitor(object):
                     logging.debug(
                         "Putting CPU: {}  back on scheduler queue.".format(cpu))
 
-                    print("PROCESS1 COOKIE:", cpu)
                     scheduler.put(['0', cpu, 'N'])
 
                 if self.cache:
@@ -446,7 +443,6 @@ class ProcessMonitor(object):
                 if scheduler and cpu:
                     logging.debug(
                         "Putting CPU: {}  back on scheduler queue.".format(cpu))
-                    print("PPUT CPU: ", cpu)
 
                     scheduler.put(('0',cpu,'Y'))
 

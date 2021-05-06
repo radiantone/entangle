@@ -115,7 +115,6 @@ class DefaultScheduler(object):
 
             while cpu_pending:
                 cpu = queue.get()
-                print('CPU:', cpu)
                 if int(cpu[1]) >= int(cpus):
                     logging.debug(
                         "     CPU not within allocation: {} {}".format(cpu, cpus))

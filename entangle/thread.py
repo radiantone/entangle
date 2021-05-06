@@ -340,7 +340,6 @@ class ThreadMonitor(object):
                     for thread in threades:
                         logging.debug(
                             "Putting CPU: {}  back on scheduler queue.".format(thread.cookie))
-                        print("THREAD COOKIE:", thread.cookie)
                         scheduler.put(('0', thread.cookie, 'Y'))
 
             if cpu:

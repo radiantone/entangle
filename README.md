@@ -555,6 +555,10 @@ $ python -m entangle.examples.example6
 $ python -m entangle.examples.lambdaexample
 $ python -m entangle.examples.listexample
 $ python -m entangle.examples.listexample2
+$ python -m entangle.examples.dataflowexample
+$ python -m entangle.examples.dataflowexample2
+$ python -m entangle.examples.dockerexample
+$ python -m entangle.examples.aiexample
 $ python -m entangle.examples.schedulerexample
 $ python -m entangle.examples.schedulerexample2
 $ python -m entangle.examples.sshschedulerexample
