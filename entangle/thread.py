@@ -136,12 +136,28 @@ class ThreadMonitor(object):
         :param args:
         :param kwargs:
         """
+        from functools import partial
+        import inspect
+
         self.func = func
         self.shared_memory = kwargs['shared_memory']
         self.sleep = kwargs['sleep']
         self.cache = kwargs['cache']
         self.timeout = kwargs['timeout']
         self.wait = kwargs['wait']
+
+        if type(self.func) is partial:
+
+            def find_func(p):
+                if type(p) is partial:
+                    return find_func(p.func)
+                return p
+
+            _func = find_func(self.func)
+        else:
+            _func = func
+
+        self.source = inspect.getsource(_func)
 
     def __call__(self, *args, **kwargs):
         """
@@ -153,20 +169,10 @@ class ThreadMonitor(object):
         from functools import partial
         from multiprocessing import Queue
         from threading import Thread
-        import inspect
 
         logging.info("Thread:invoke: {}".format(self.func.__name__))
         _func = self.func
-        if type(self.func) is partial:
 
-            def find_func(p):
-                if type(p) is partial:
-                    return find_func(p.func)
-                return p
-
-            _func = find_func(self.func)
-
-        self.source = inspect.getsource(_func)
         logging.info("Thread:source: {}".format(self.source))
 
         def assign_cpu(func, cpu, **kwargs):
@@ -397,7 +403,7 @@ class ThreadMonitor(object):
                     kwargs['sm'] = SharedMemory
 
                 logging.debug(
-                    "Calling function with: {}".format(str(args)))
+                    "Calling function {} with: {}".format(func.__name__, str(args)))
 
                 result = func(*args, **kwargs)
 
