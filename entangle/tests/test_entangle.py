@@ -8,6 +8,51 @@ tests.test_entangle.py
 class TestEntangle:
     """Test suite for entangle app class."""
 
+    def test_dataflowexample2(self):
+        from entangle.logging.debug import logging
+        from entangle.examples.dataflowexample2 import emit, printx, printy, printz, echo
+
+        flow = emit(
+            printx(
+                printz(
+                    echo()
+                )
+            ),
+            printy(
+                printz()
+            ),
+            printy()
+        )
+        try:
+            flow('emit')
+            assert True
+        except:
+            assert False
+
+
+    def test_dataflowexample(self):
+        from entangle.logging.debug import logging
+        from entangle.examples.dataflowexample import emit, printx, printy, printz, echo
+
+
+        flow = emit(
+            printx(
+                printz(
+                    echo()
+                )
+            ),
+            printy(
+                printz()
+            ),
+            printy()
+        )
+        try:
+            flow('emit')
+            assert True
+        except:
+            assert False
+
+
     def test_schedulerexample2(self):
         from entangle.logging.info import logging
         from entangle.examples.schedulerexample2 import workflow2
