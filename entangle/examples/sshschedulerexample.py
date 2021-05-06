@@ -10,7 +10,6 @@ scheduler_config = {'cpus': 3,
                     'impl': 'entangle.scheduler.DefaultScheduler'}
 
 
-@ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub')
 @scheduler(**scheduler_config)
 @thread
 def add(a, b):
@@ -31,13 +30,14 @@ def three():
     return 3
 
 
+@ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub')
 @scheduler(**scheduler_config)
-@workflow
+@thread
 def workflow2():
     return add(
         three(),
         two()
-    )
+    )()
 
 
 result = workflow2()
