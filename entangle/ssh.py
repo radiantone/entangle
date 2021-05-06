@@ -1,7 +1,6 @@
 """
 ssh.py - Run processes and schedulers on remote machines
 """
-import codegen
 import logging
 import hashlib
 from uuid import uuid4
@@ -122,6 +121,10 @@ def ssh(function=None, **kwargs):
 
                 pargs = codecs.encode(pickle.dumps(vargs), "base64").decode()
                 pargs = re.sub(r'\n', "", pargs).strip()
+                app.write("import logging\n\n" \
+                          "logger=logging.getLogger()\n" \
+                          "logging.disabled=True\n" \
+                          "logger.disabled=True\n")
                 app.write("import pickle, codecs, re\n")
                 app.write("from {} import {}\n\n".format(sourceuuid, func.__name__))
                 app.write("pargs = '{}'\n".format(pargs))
