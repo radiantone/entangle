@@ -143,6 +143,7 @@ class ProcessMonitor(object):
         self.cache = kwargs['cache']
         self.timeout = kwargs['timeout']
         self.wait = kwargs['wait']
+        self.execute = kwargs['execute'] if 'execute' in kwargs else True
 
     def __call__(self, *args, **kwargs):
         """
@@ -361,16 +362,16 @@ class ProcessMonitor(object):
                 cpu_mask = [int(cpu)]
                 os.sched_setaffinity(pid, cpu_mask)
 
+            event = None
+            if 'event' in kwargs:
+                event = kwargs['event']
+                del kwargs['event']
+
             if 'queue' in kwargs:
                 queue = kwargs['queue']
                 # get the queue and delete the argument
                 del kwargs['queue']
-
-                event = None
-                if 'event' in kwargs:
-                    event = kwargs['event']
-                    del kwargs['event']
-
+                
                 # Pass in shared memory handles
                 if self.shared_memory:
                     kwargs['smm'] = smm
@@ -387,14 +388,23 @@ class ProcessMonitor(object):
                     scheduler = kwargs['scheduler']
                     del kwargs['scheduler']
 
-                result = func(*args, **kwargs)
+                try:
+                    logging.debug("process: execute: {}".format(self.execute))
+                    if self.execute:
+                        result = func(*args, **kwargs)
+                    else:
+                        if event:
+                            logging.debug(
+                                "Setting event for {}".format(func.__name__))
+                            event.set()
+                        return (args, kwargs)
+                finally:
+                    # Put own cpu back on queue
+                    if scheduler and cpu:
+                        logging.debug(
+                            "Putting CPU: {}  back on scheduler queue.".format(cpu))
 
-                # Put own cpu back on queue
-                if scheduler and cpu:
-                    logging.debug(
-                        "Putting CPU: {}  back on scheduler queue.".format(cpu))
-
-                    scheduler.put(['0', cpu, 'N'])
+                        scheduler.put(['0', cpu, 'N'])
 
                 if self.cache:
                     pass
@@ -420,19 +430,52 @@ class ProcessMonitor(object):
                 mq = Queue()
 
                 def func_wrapper(f, q):
+                    logging.debug("func_wrapper: {}".format(f))
                     result = f()
-                    q.put(result)
+                    logging.debug("func_wrapper: result: {}".format(result))
+
+                    # Unwrap any partials built up by stacked decorators
+                    if callable(result):
+                        return func_wrapper(result, q)
+                    try:
+                        logging.debug("func_wrapper: putting result on queue")
+                        q.put(result)
+                        logging.debug("func_wrapper: done putting queue")
+                    except:
+                        import traceback
+                        with open('error.out','w') as errfile:
+                            errfile.write(traceback.format_exc())
 
                 p = partial(func, *args, **kwargs)
-                p = multiprocessing.Process(
-                    target=func_wrapper, args=(p, mq, ))
-                p.start()
+                
+                logging.debug("process: execute: {}".format(self.execute))
 
-                # Wait for 10 seconds or until process finishes
-                logging.debug(
-                    "Executing function {} with timeout {}".format(func, self.timeout))
-                p.join(self.timeout)
+                try:
+                    if self.execute:
+                        p = multiprocessing.Process(
+                            target=func_wrapper, args=(p, mq, ))
+                        p.start()
+
+                        # Wait for 10 seconds or until process finishes
+                        logging.debug(
+                            "Executing function {} with timeout {}".format(func, self.timeout))
+                        p.join(self.timeout)
+                    else:
+                        if event:
+                            logging.debug(
+                                "Setting event for {}".format(func.__name__))
+                            event.set()
+                        return (args, kwargs)
+                finally:
+                    if scheduler and cpu:
+                        logging.debug(
+                            "Putting CPU: {}  back on scheduler queue.".format(cpu))
+
+                        scheduler.put(('0', cpu, 'Y'))
+
+                logging.debug("process: waiting for result on queue")
                 result = mq.get()
+                logging.debug("process: got result from queue")
 
                 # If thread is still active
                 if p.is_alive():
@@ -440,15 +483,7 @@ class ProcessMonitor(object):
                     p.join()
                     raise ProcessTimeoutException()
 
-                if scheduler and cpu:
-                    logging.debug(
-                        "Putting CPU: {}  back on scheduler queue.".format(cpu))
-
-                    scheduler.put(('0',cpu,'Y'))
-
             return result
-
-            #smm = SharedMemoryManager()
 
         p = partial(invoke, self.func, *args, **kwargs)
 

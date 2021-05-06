@@ -3,6 +3,8 @@ ssh.py - Run processes and schedulers on remote machines
 """
 import codegen
 import logging
+import hashlib
+from uuid import uuid4
 from functools import partial
 from entangle.process import ProcessMonitor
 from entangle.thread import ThreadMonitor
@@ -14,7 +16,10 @@ def ssh(function=None, **kwargs):
         import ast
         import astunparse
 
-
+        def find_func(p):
+            if type(p) is partial:
+                return find_func(p.func)
+            return p
 
         """
         $ ssh-keygen -t rsa -b 4096 -C "darren@radiant"
@@ -58,24 +63,130 @@ def ssh(function=None, **kwargs):
         if ssh_decorator:
             decorators.remove(ssh_decorator)
 
-        logging.debug("ssh: func new source: {}".format(astunparse.unparse(_ast)))
+        logging.debug("ssh: func new source: {}".format(
+            astunparse.unparse(_ast)))
         logging.debug("ssh args: {} {}".format(str(args), str(kwargs)))
 
         logging.debug("SSH: Calling function: {}".format(str(func)))
+
         def wrapper(f, *args, **kwargs):
             import time
             import inspect
+            import os
+            import sys
+            import re
 
             # Invoke function over ssh
             # Function will need to be copied to remote machine as a file then
-            # executed 
+            # executed
+            sourcefile = sys.argv[0]
 
-            logging.debug("SSH: user:{} host:{} key: {}".format(kwargs['user'],kwargs['host'],kwargs['key']))
+            if sourcefile[0] == '/':
+                print("FILE:",sourcefile)
+            else:
+                print("FILE:", os.getcwd()+os.path.sep+sourcefile)
+
+            print(sourcefile)
+            with open(sourcefile) as source:
+                logging.debug("SOURCE:{}".format(source.read()))
+
+            logging.debug("SSH: user:{} host:{} key: {}".format(
+                kwargs['user'], kwargs['host'], kwargs['key']))
             del kwargs['user']
             del kwargs['host']
             del kwargs['key']
 
-            return f(*args, **kwargs)
+            logging.debug("Run function: {}({},{})".format(
+                func.__name__, args, kwargs))
+
+            vargs = []
+
+            for arg in args:
+                if callable(arg):
+                    vargs += [arg()]
+                else:
+                    vargs += [arg]
+            
+            sourceuuid = "sshsource"+hashlib.md5(uuid4().bytes).hexdigest()
+            with open(sourcefile) as source:
+                _source = source.read()
+                _source = re.sub(r'@ssh', "#@ssh", _source).strip()
+                with open('{}.py'.format(sourceuuid), 'w') as appsource:
+                    appsource.write(_source)
+
+            appuuid = "sshapp"+hashlib.md5(uuid4().bytes).hexdigest()
+            with open('{}.py'.format(appuuid),'w') as app:
+                import codecs
+                import pickle
+                import re
+
+                pargs = codecs.encode(pickle.dumps(vargs), "base64").decode()
+                pargs = re.sub(r'\n', "", pargs).strip()
+                app.write("import pickle, codecs, re\n")
+                app.write("from {} import {}\n\n".format(sourceuuid, func.__name__))
+                app.write("pargs = '{}'\n".format(pargs))
+                app.write("args = pickle.loads(codecs.decode(pargs.encode(), \"base64\"))\n")
+                app.write("print(\"ARGS: {}\".format(args))\n")
+                app.write("result = {}(*args)()\n".format(func.__name__))
+                app.write("print(\"RESULT:\", result)\n")
+                app.write("resultp = codecs.encode(pickle.dumps(result), \"base64\").decode()\n")
+                app.write("resultp = re.sub(r'\\n', \"\", resultp).strip()\n")
+                app.write("print(resultp)\n")
+            
+
+            # Resolve args and kwargs
+            # Then invoke func.__name__ remotely from source script
+            # and return result
+            # use a process to run the remote ssh and block for result
+            # then async to monitor queue for result
+            #
+            # e.g.
+            # import appsource.py
+            #
+            # result = appname(arg1,arg2,kwarg1=kwval1, etc)
+            # pickle and encode result then print it
+
+            # Receiving side here in ssh.py gets the encoded pickle and unpickles
+            # it then returns the value
+            # 
+            # pfunc is a paramiko function that copies the python app source
+            # to remote machine and then invokes python 
+            # return ProcessMonitor(pfunc,..,..,)
+
+            #return f(*args, **kwargs)
+            p = partial(f, *args, **kwargs)
+
+
+            p.__name__ = f.__name__
+
+            logging.debug("args: {}   kwargs: {}".format(args,kwargs))
+            ''' 
+            What we want to do here is resolve the dependencies for f. Then encode those
+            in the above script output and send all that to remote machine to execute f(*args, **kwargs)
+
+            Need a parameter execute=False that only resolves dependencies and returns a tuple (*args, **kwargs)
+            '''
+            def ssh_function(remotefunc, *args, **kwargs):
+
+
+                return ssh_result
+
+            '''
+            result = ProcessMonitor(p, timeout=None,
+                                    wait=None,
+                                    cache=False,
+                                    shared_memory=False,
+                                    execute=False,
+                                    sleep=0)
+            
+            if callable(result):
+                _result = result()
+            else:
+                _result = result
+            logging.debug("SSH RESULT: {}".format(_result))
+            return _result
+            '''
+            return p
 
         p = partial(wrapper, func, **kwargs)
 

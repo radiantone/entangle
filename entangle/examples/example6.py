@@ -52,3 +52,4 @@ def workflow2(value):
 result = workflow2(workflow1)
 
 print(result())
+
