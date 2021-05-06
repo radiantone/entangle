@@ -371,7 +371,7 @@ class ProcessMonitor(object):
                 queue = kwargs['queue']
                 # get the queue and delete the argument
                 del kwargs['queue']
-                
+
                 # Pass in shared memory handles
                 if self.shared_memory:
                     kwargs['smm'] = smm
@@ -422,7 +422,7 @@ class ProcessMonitor(object):
                     kwargs['sm'] = SharedMemory
 
                 logging.debug(
-                    "Calling function with: {}".format(str(args)))
+                    "Calling function {} with: {}".format(func.__name__, str(args)))
 
                 # Wrap with Process and queue with timeout
                 #logging.debug("Executing function {} in MainThread".format(func))
@@ -443,11 +443,11 @@ class ProcessMonitor(object):
                         logging.debug("func_wrapper: done putting queue")
                     except:
                         import traceback
-                        with open('error.out','w') as errfile:
+                        with open('error.out', 'w') as errfile:
                             errfile.write(traceback.format_exc())
 
                 p = partial(func, *args, **kwargs)
-                
+
                 logging.debug("process: execute: {}".format(self.execute))
 
                 try:
