@@ -40,7 +40,8 @@ def ssh(function=None, **kwargs):
 
         ssh.close()
 
-        logging.debug("ssh: func source: {}".format(func.source))
+        logging.debug("ssh: func: {}".format(func.func))
+        logging.debug("ssh: func source:\n{}".format(func.source))
         _ast = ast.parse(func.source)
         print(ast.dump(_ast, annotate_fields=True))
         decorators = _ast.body[0].decorator_list
@@ -123,8 +124,8 @@ def ssh(function=None, **kwargs):
                 pargs = re.sub(r'\n', "", pargs).strip()
                 app.write("import logging\n\n" \
                           "logger=logging.getLogger()\n" \
-                          "logging.disabled=True\n" \
-                          "logger.disabled=True\n")
+                          "logging.disabled=False\n" \
+                          "logger.disabled=False\n")
                 app.write("import pickle, codecs, re\n")
                 app.write("from {} import {}\n\n".format(sourceuuid, func.__name__))
                 app.write("pargs = '{}'\n".format(pargs))
