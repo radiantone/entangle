@@ -538,7 +538,34 @@ For a workflow example using scheduler see [Scheduler Example](#scheduler-exampl
 Entangle allows you to pass a workflow (or dataflow) to a remote machine for execution. When combined with `@scheduler` decorators this also forwards scheduler behavior to the remote machine where it manages the received workflow there.
 This type of propagation requires no centralized (i.e. shared) scheduler or services and thus scales very well.
 
-TBD
+### SSH Decorator
+
+Functions or flows (graph of functions) are remoted by using the `@ssh` decorator like the example below.
+
+```python
+@ssh(user='me', host='myserver', key='/home/me/.ssh/id_rsa.pub', python='/home/me/venv/bin/python')
+@scheduler(**scheduler_config)
+@thread
+def workflow2():
+
+    _add = add(
+            three(),
+            two()
+          )
+
+    return _add()
+```
+
+In this example, we have declared a (contrived) workflow that adds the return values of 2 embedded functions and returns it.
+The `@ssh` decorator indicates that this workflow is to be copied and executed on the remote server `myserver` as user `me` using the python executable at `/home/me/venv/bin/python`.
+Entangle will marshall the codes to the remote server and execute them there. 
+
+### Schedule Propagation
+
+If any dependent or subsequent functions are invoked on the remote server, any decorators that apply to those will be enforced.
+If you use `@scheduler` then it will utilize the *scheduler queue* to request CPU cookies. If you also use another `@ssh` decorator then that dependent function will be shipped to a 3rd remote server and the process repeated there.
+
+*diagram here*
 
 ## Examples
 
