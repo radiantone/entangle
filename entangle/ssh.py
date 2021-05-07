@@ -50,7 +50,6 @@ def ssh(function=None, **kwargs):
         logging.debug("ssh: func: {}".format(func.func))
         logging.debug("ssh: func source:\n{}".format(func.source))
         _ast = ast.parse(func.source)
-        print(ast.dump(_ast, annotate_fields=True))
         decorators = _ast.body[0].decorator_list
         ssh_decorator = None
 
@@ -209,12 +208,12 @@ def ssh(function=None, **kwargs):
                 with open('/tmp/ssh.out','w') as sshout:
                     logging.debug("SSH: executing {} {}@{}".format(command, username, hostname))
                     sshout.write(
-                        "SSH: executing {} {}@{}".format(command, username, hostname))
+                        "SSH: executing {} {}@{}\n".format(command, username, hostname))
                     stdin, stdout, stderr = _ssh.exec_command(command)
 
                     for line in stdout.read().splitlines():
                         logging.debug("SSH: command stdout: {}".format(line))
-                        sshout.write("SSH: command stdout: {}".format(line))
+                        sshout.write("SSH: command stdout: {}\n".format(line))
 
                 _ssh.close()
                 return 2 #{'result':'THE RESULT!'}
