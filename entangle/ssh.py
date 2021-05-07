@@ -198,7 +198,7 @@ def ssh(function=None, **kwargs):
                 return result
                 '''
                 command = "{} /tmp/{}.py".format(python, appuuid)
-                with open('/tmp/ssh.out') as sshout:
+                with open('/tmp/ssh.out','w') as sshout:
                     logging.debug("SSH: executing {} {}@{}".format(command, username, hostname))
                     sshout.write(
                         "SSH: executing {} {}@{}".format(command, username, hostname))
