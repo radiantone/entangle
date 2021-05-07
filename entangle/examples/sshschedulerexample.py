@@ -21,23 +21,27 @@ def add(a, b):
 @scheduler(**scheduler_config)
 @thread
 def two():
+    print("Returning 2")
     return 2
 
 
 @scheduler(**scheduler_config)
 @thread
 def three():
+    print("Returning 3")
     return 3
 
 
-@ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub')
+@ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
 @scheduler(**scheduler_config)
 @thread
 def workflow2():
-    return add(
+    add = add(
         three(),
         two()
-    )()
+    )
+
+    return add()
 
 
 result = workflow2()
