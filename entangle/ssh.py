@@ -118,8 +118,9 @@ def ssh(function=None, **kwargs):
             sourceuuid = "sshsource"+hashlib.md5(uuid4().bytes).hexdigest()
             with open(sourcefile) as source:
                 _source = source.read()
-                _source = re.sub(r'@ssh(user=\'{}\', host=\'{}\''.format(username,
-                                 hostname), '#@ssh(user=\'{}\', host=\'{}\'', _source).strip()
+                _source = re.sub(r"@ssh(user='{}', host='{}'".format(username,
+                                 hostname), "#@ssh(user='{}', host='{}'".format(username,
+                                 hostname), _source).strip()
                 with open('{}.py'.format(sourceuuid), 'w') as appsource:
                     appsource.write(_source)
 
