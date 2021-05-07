@@ -180,7 +180,7 @@ def ssh(function=None, **kwargs):
 
             Need a parameter execute=False that only resolves dependencies and returns a tuple (*args, **kwargs)
             '''
-            def ssh_function(remotefunc):
+            def ssh_function(remotefunc, username, hostname, sshkey, appuuid, sourceuuid):
                 files = [appuuid+".py", sourceuuid+".py"]
                 logging.debug(
                     "SCP files: {} to {}@{}:{}".format(files, username, hostname, '/tmp'))
@@ -213,7 +213,7 @@ def ssh(function=None, **kwargs):
                 _ssh.close()
                 return {'result':'THE RESULT!'}
 
-            ssh_p = partial(ssh_function, p)
+            ssh_p = partial(ssh_function, p, username, hostname, sshkey, appuuid, sourceuuid)
             ssh_p.__name__ = p.__name__
             result = ProcessMonitor(ssh_p, timeout=None,
                                     wait=None,
