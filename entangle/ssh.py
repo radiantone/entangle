@@ -198,11 +198,15 @@ def ssh(function=None, **kwargs):
                 return result
                 '''
                 command = "{} /tmp/{}.py".format(python, appuuid)
-                logging.debug("SSH: executing {} {}@{}".format(command, username, hostname))
-                stdin, stdout, stderr = _ssh.exec_command(command)
+                with open('/tmp/ssh.out') as sshout:
+                    logging.debug("SSH: executing {} {}@{}".format(command, username, hostname))
+                    sshout.write(
+                        "SSH: executing {} {}@{}".format(command, username, hostname))
+                    stdin, stdout, stderr = _ssh.exec_command(command)
 
-                for line in stdout.read().splitlines():
-                    logging.debug("SSH: command stdout: {}".format(line))
+                    for line in stdout.read().splitlines():
+                        logging.debug("SSH: command stdout: {}".format(line))
+                        sshout.write("SSH: command stdout: {}".format(line))
 
                 _ssh.close()
                 return {'result':'THE RESULT!'}
