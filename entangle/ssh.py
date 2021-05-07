@@ -206,16 +206,13 @@ def ssh(function=None, **kwargs):
                     python, appuuid)
 
                 result = None
-                #with open('/tmp/ssh.out','w') as sshout:
+                
                 logging.debug("SSH: executing {} {}@{}".format(command, username, hostname))
-                sshout.write(
-                    "SSH: executing {} {}@{}\n".format(command, username, hostname))
                 stdin, stdout, stderr = _ssh.exec_command(command)
 
                 result_next = False
                 for line in stdout.read().splitlines():
                     logging.debug("SSH: command stdout: {}".format(line))
-                    sshout.write("SSH: command stdout: {}\n".format(line))
                     if result_next:
                         result = pickle.loads(
                             codecs.decode(line.encode(), "base64"))
