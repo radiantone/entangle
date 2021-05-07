@@ -206,7 +206,7 @@ def ssh(function=None, **kwargs):
                     python, appuuid)
 
                 result = None
-                
+
                 logging.debug("SSH: executing {} {}@{}".format(command, username, hostname))
                 stdin, stdout, stderr = _ssh.exec_command(command)
 
@@ -218,7 +218,7 @@ def ssh(function=None, **kwargs):
                             codecs.decode(line.encode(), "base64"))
                         logging.debug("SSH: got result: {}".format(result))
                         break
-                    if line == "===BEGIN===":
+                    if str(line) == "===BEGIN===":
                         result_next = True
 
                 _ssh.close()
