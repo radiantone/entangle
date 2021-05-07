@@ -86,7 +86,11 @@ def ssh(function=None, **kwargs):
             # Invoke function over ssh
             # Function will need to be copied to remote machine as a file then
             # executed
-            sourcefile = sys.argv[0]
+
+            if 'SOURCE' in os.environ:
+                sourcefile = os.environ['SOURCE']
+            else:
+                sourcefile = sys.argv[0]
 
             if sourcefile[0] == '/':
                 print("FILE:",sourcefile)
@@ -199,7 +203,9 @@ def ssh(function=None, **kwargs):
                 Unpickle result
                 return result
                 '''
-                command = "{} /tmp/{}.py".format(python, appuuid)
+                command = "export SOURCE={}.py; {} /tmp/{}.py".format(sourceuuid,
+                    python, appuuid)
+                    
                 with open('/tmp/ssh.out','w') as sshout:
                     logging.debug("SSH: executing {} {}@{}".format(command, username, hostname))
                     sshout.write(
