@@ -204,7 +204,7 @@ def ssh(function=None, **kwargs):
                 for line in stdout.read().splitlines():
                     logging.debug("SSH: command stdout: {}".format(line))
 
-                ssh.close()
+                _ssh.close()
                 return {'result':'THE RESULT!'}
 
             ssh_p = partial(ssh_function, p)
