@@ -23,7 +23,8 @@ A lightweight (serverless) native python parallel processing framework based on 
   * [DAG Dataflow](#dag-dataflow)
   * [Results Comparison](#results-comparison)
   * [Advantages of Strict Dataflow](#advantages-of-strict-dataflow)
-* [Schedulers](#schedulers)  
+* [Schedulers](#schedulers)
+* [Remote Flows](#remote-flows)  
 * [Examples](#examples)
     * [GPU Example](#gpu-example)
     * [Shared Memory Example](#shared-memory-example)
@@ -531,6 +532,13 @@ and return a `function` or `partial` that wraps the provided function with sched
 To see the implementation of `DefaultScheduler` click [here](https://github.com/radiantone/entangle/blob/main/entangle/scheduler.py).
 
 For a workflow example using scheduler see [Scheduler Example](#scheduler-example)  below.
+
+## Remote Flows
+
+Entangle allows you to pass a workflow (or dataflow) to a remote machine for execution. When combined with `@scheduler` decorators this also forwards scheduler behavior to the remote machine where it manages the received workflow there.
+This type of propagation requires no centralized (i.e. shared) scheduler or services and thus scales very well.
+
+TBD
 
 ## Examples
 

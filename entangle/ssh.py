@@ -34,6 +34,7 @@ def ssh(function=None, **kwargs):
 
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        logging.debug("SSH: connecting {} {} {}".format(hostname,username,sshkey))
         ssh.connect(hostname=hostname, username=username,
                     key_filename=sshkey)
 
