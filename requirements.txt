@@ -1,5 +1,6 @@
 aiohttp==3.7.4
 appdirs==1.4.4
+scp==0.13.3
 astunparse==1.6.3
 async-timeout==3.0.1
 attrs==20.3.0
