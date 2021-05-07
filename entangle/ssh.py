@@ -215,7 +215,7 @@ def ssh(function=None, **kwargs):
                     logging.debug("SSH: command stdout: {}".format(line))
                     if result_next:
                         result = pickle.loads(
-                            codecs.decode(line.encode(), "base64"))
+                            codecs.decode(str(line,'utf8').encode(), "base64"))
                         logging.debug("SSH: got result: {}".format(result))
                         break
                     if line == b"===BEGIN===":
