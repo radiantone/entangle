@@ -31,7 +31,7 @@ def ssh(function=None, **kwargs):
         username = kwargs['user']
         sshkey = kwargs['key']
         python = kwargs['python']
-
+        '''
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         logging.debug("SSH: connecting {} {} {}".format(hostname,username,sshkey))
@@ -46,7 +46,7 @@ def ssh(function=None, **kwargs):
             print(line)
 
         ssh.close()
-
+        '''
         logging.debug("ssh: func: {}".format(func.func))
         logging.debug("ssh: func source:\n{}".format(func.source))
         _ast = ast.parse(func.source)
