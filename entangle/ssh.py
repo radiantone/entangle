@@ -218,7 +218,7 @@ def ssh(function=None, **kwargs):
                             codecs.decode(line.encode(), "base64"))
                         logging.debug("SSH: got result: {}".format(result))
                         break
-                    if str(line) == "===BEGIN===":
+                    if line == b"===BEGIN===":
                         result_next = True
 
                 _ssh.close()
