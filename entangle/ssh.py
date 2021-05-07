@@ -7,6 +7,7 @@ from uuid import uuid4
 from functools import partial
 from entangle.process import ProcessMonitor
 from entangle.thread import ThreadMonitor
+from scp import SCPClient, SCPException
 
 def ssh(function=None, **kwargs):
 
@@ -26,10 +27,15 @@ def ssh(function=None, **kwargs):
         $ ssh-copy-id darren@radiant
 
         """
+        hostname = kwargs['host']
+        username = kwargs['user']
+        sshkey = kwargs['key']
+        python = kwargs['python']
+
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(hostname=kwargs['host'], username=kwargs['user'],
-                    key_filename=kwargs['key'])
+        ssh.connect(hostname=hostname, username=username,
+                    key_filename=sshkey)
 
         # Execute command that runs the passed in decorator on remote machine
         command = 'ls /home/darren'
@@ -172,13 +178,32 @@ def ssh(function=None, **kwargs):
             Need a parameter execute=False that only resolves dependencies and returns a tuple (*args, **kwargs)
             '''
             def ssh_function(remotefunc):
-
+                files = [appuuid+".py", sourceuuid+".py"]
+                logging.debug(
+                    "SCP files: {} to {}@{}:{}".format(files, username, hostname, '/tmp'))
+                _ssh = paramiko.SSHClient()
+                _ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                _ssh.connect(hostname=hostname, username=username,
+                            key_filename=sshkey)
                 logging.debug("SSH FUNCTION: {}".format(remotefunc))
-
+                scp = SCPClient(_ssh.get_transport())
+                
+                scp.put(files,
+                        remote_path='/tmp')
                 '''
                 Copy sshapp*.py and sshsource*.py to remote host
-                Execute sshapp*.py on remote machine, parse stout for result pickle
+                Execute sshapp*.py on remote machine, parse stdout for result pickle
+                Unpickle result
+                return result
                 '''
+                command = "{} /tmp/{}.py".format(python, appuuid)
+                logging.debug("SSH: executing {}".format(command))
+                stdin, stdout, stderr = _ssh.exec_command(command)
+
+                for line in stdout.read().splitlines():
+                    logging.debug("SSH: command stdout: {}".format(line))
+
+                ssh.close()
                 return {'result':'THE RESULT!'}
 
             ssh_p = partial(ssh_function, p)
@@ -193,6 +218,7 @@ def ssh(function=None, **kwargs):
                 _result = result()
             else:
                 _result = result
+
             logging.debug("SSH RESULT: {}".format(_result))
 
             return _result
