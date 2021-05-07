@@ -194,8 +194,11 @@ def ssh(function=None, **kwargs):
                 logging.debug("SSH FUNCTION: {}".format(remotefunc))
                 scp = SCPClient(_ssh.get_transport())
                 
-                scp.put(files,
-                        remote_path='/tmp')
+                try:
+                    scp.put(files,
+                            remote_path='/tmp')
+                finally:
+                    [os.remove(file) for file in files]
                 '''
                 Copy sshapp*.py and sshsource*.py to remote host
                 Execute sshapp*.py on remote machine, parse stdout for result pickle
@@ -221,6 +224,7 @@ def ssh(function=None, **kwargs):
                     if line == b"===BEGIN===":
                         result_next = True
 
+                _ssh.exec_command("rm {}".format(" ".join(["/tmp/"+file for file in files])))
                 _ssh.close()
                 return result
 
