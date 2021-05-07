@@ -203,7 +203,7 @@ def ssh(function=None, **kwargs):
                 Unpickle result
                 return result
                 '''
-                command = "export SOURCE={}.py; {} /tmp/{}.py".format(sourceuuid,
+                command = "export SOURCE={}.py; cd /tmp; {} /tmp/{}.py".format(sourceuuid,
                     python, appuuid)
 
                 with open('/tmp/ssh.out','w') as sshout:
