@@ -1,4 +1,4 @@
-from entangle.logging.file import logging
+from entangle.logging.debug import logging
 from entangle.thread import thread
 from entangle.http import request
 from entangle.ssh import ssh
@@ -51,7 +51,8 @@ def workflow2():
     return _add()
 
 
-result = workflow2()
+if __name__ == '__main__':
+    result = workflow2()
 
-print("RESULT:", result())
+    print("WORKFLOW RESULT:", result())
 

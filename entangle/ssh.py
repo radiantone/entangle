@@ -147,7 +147,7 @@ def ssh(function=None, **kwargs):
                 app.write("result = {}(*args)()\n".format(func.__name__))
                 app.write("print(\"RESULT:\", result)\n")
                 app.write("resultp = codecs.encode(pickle.dumps(result), \"base64\").decode()\n")
-                app.write("resultp = re.sub(r'\\n', \"\", resultp).strip()\n")
+                app.write("print('===BEGIN===')\n")
                 app.write("print(resultp)\n")
             
 
@@ -205,18 +205,25 @@ def ssh(function=None, **kwargs):
                 command = "export SOURCE={}.py; cd /tmp; {} /tmp/{}.py".format(sourceuuid,
                     python, appuuid)
 
+                result = None
                 with open('/tmp/ssh.out','w') as sshout:
                     logging.debug("SSH: executing {} {}@{}".format(command, username, hostname))
                     sshout.write(
                         "SSH: executing {} {}@{}\n".format(command, username, hostname))
                     stdin, stdout, stderr = _ssh.exec_command(command)
 
+                    result_next = False
                     for line in stdout.read().splitlines():
                         logging.debug("SSH: command stdout: {}".format(line))
                         sshout.write("SSH: command stdout: {}\n".format(line))
+                        if result_next:
+                            result = pickle.loads(codecs.decode(line.encode(), "base64"))
+                            break
+                        if line == "===BEGIN===":
+                            result_next = True
 
                 _ssh.close()
-                return 2 #{'result':'THE RESULT!'}
+                return result
 
             ssh_p = partial(ssh_function, p, username, hostname, sshkey, appuuid, sourceuuid)
             ssh_p.__name__ = p.__name__
