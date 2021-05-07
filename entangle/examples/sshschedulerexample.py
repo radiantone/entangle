@@ -1,4 +1,4 @@
-from entangle.logging.debug import logging
+from entangle.logging.file import logging
 from entangle.thread import thread
 from entangle.http import request
 from entangle.ssh import ssh
@@ -14,7 +14,7 @@ scheduler_config = {'cpus': 3,
 @thread
 def add(a, b):
     v = int(a) + int(b)
-    print("ADD: *"+str(v)+"*")
+    logging.info("ADD: *"+str(v)+"*")
     return v
 
 
@@ -22,15 +22,14 @@ def add(a, b):
 @scheduler(**scheduler_config)
 @thread
 def two():
-    print("Returning 2")
+    logging.info("Returning 2")
     return 2
 
 
-@ssh(user='darren', host='phoenix', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/miniconda3/bin/python')
 @scheduler(**scheduler_config)
 @thread
 def three():
-    print("Returning 3")
+    logging.info("Returning 3")
     return 3
 
 
