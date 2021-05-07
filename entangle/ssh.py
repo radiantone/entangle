@@ -205,7 +205,7 @@ def ssh(function=None, **kwargs):
                 '''
                 command = "export SOURCE={}.py; {} /tmp/{}.py".format(sourceuuid,
                     python, appuuid)
-                    
+
                 with open('/tmp/ssh.out','w') as sshout:
                     logging.debug("SSH: executing {} {}@{}".format(command, username, hostname))
                     sshout.write(
@@ -217,7 +217,7 @@ def ssh(function=None, **kwargs):
                         sshout.write("SSH: command stdout: {}".format(line))
 
                 _ssh.close()
-                return {'result':'THE RESULT!'}
+                return 2 #{'result':'THE RESULT!'}
 
             ssh_p = partial(ssh_function, p, username, hostname, sshkey, appuuid, sourceuuid)
             ssh_p.__name__ = p.__name__
