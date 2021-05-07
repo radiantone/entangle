@@ -43,12 +43,12 @@ setup with entangle installed as well.
 @thread
 def workflow2():
 
-    add = add(
+    _add = add(
         three(),
         two()
     )
 
-    return add()
+    return _add()
 
 
 result = workflow2()
