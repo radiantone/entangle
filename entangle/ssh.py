@@ -172,9 +172,7 @@ def ssh(function=None, **kwargs):
                 app.write("result = {}(*args)()\n".format(func.__name__))
                 app.write("print(\"RESULT:\", result)\n")
                 app.write(
-                    "#resultp = codecs.encode(pickle.dumps(result), \"base64\").decode()\n")
-                app.write(
-                    "resultp = pickle.dumps(result)\n")
+                    "resultp = codecs.encode(pickle.dumps(result), \"base64\").decode()\n")
                 app.write("print('===BEGIN===')\n")
                 app.write("print(resultp)")
             
@@ -225,7 +223,11 @@ def ssh(function=None, **kwargs):
                 for line in stdout.read().splitlines():
                     logging.debug("SSH: command stdout: {}".format(line))
                     if result_next:
-                        result = pickle.loads(line)
+                        #result = pickle.loads(line)
+                        #pickle.loads(eval(str(line, "utf8")))
+                        result = pickle.loads(
+                            codecs.decode(line, "base64"))
+
                         #result = pickle.loads(codecs.decode(str(line,'utf8').encode(), "base64"))
                         logging.debug("SSH: got result: {}".format(result))
                         break
