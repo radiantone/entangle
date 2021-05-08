@@ -9,6 +9,7 @@ from entangle.process import ProcessMonitor
 from entangle.thread import ThreadMonitor
 from scp import SCPClient, SCPException
 
+
 def ssh(function=None, **kwargs):
 
     def decorator(func, *args, **kwargs):
@@ -224,7 +225,7 @@ def ssh(function=None, **kwargs):
                 for line in stdout.read().splitlines():
                     logging.debug("SSH: command stdout: {}".format(line))
                     if result_next:
-                        resultlines += [line]
+                        resultlines += [str(line, 'utf8')]
                         logging.debug("SSH: got result line: {}".format(result))
                     if line == b"===BEGIN===":
                         result_next = True
