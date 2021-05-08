@@ -86,6 +86,35 @@ def ssh(function=None, **kwargs):
             # Function will need to be copied to remote machine as a file then
             # executed
 
+            def remove_ssh_decorator(fsource, username, hostname):
+                from ast import FunctionDef
+                _ast = ast.parse(fsource)
+                
+                ssh_decorators = []
+
+                for segment in _ast.body:
+                    if type(segment) == FunctionDef:
+                        decorators = segment.decorator_list
+                        for decorator in decorators:
+                            if hasattr(decorator, 'func') and decorator.func.id == 'ssh':
+                                user_keyword = None
+                                host_keyword = None
+                                for keyword in decorator.keywords:
+                                    if keyword.arg == 'user' and keyword.value.value == username:
+                                        user_keyword = keyword
+                                    if keyword.arg == 'host' and keyword.value.value == hostname:
+                                        host_keyword = keyword
+                                logging.debug("REMOVE SSH DECORATOR:")
+
+                                if user_keyword and host_keyword:
+                                    ssh_decorators += [decorator]
+
+                for ssh_decorator in ssh_decorators:
+                    logging.debug("SSH: Removing decorator: {}".format(ssh_decorator))
+                    decorators.remove(ssh_decorator)
+
+                return astunparse.unparse(_ast)
+
             if 'SOURCE' in os.environ:
                 sourcefile = os.environ['SOURCE']
             else:
@@ -105,7 +134,6 @@ def ssh(function=None, **kwargs):
 
             vargs = []
 
-            "Resolve arguments"
             for arg in args:
                 if callable(arg):
                     vargs += [arg()]
@@ -115,9 +143,12 @@ def ssh(function=None, **kwargs):
             sourceuuid = "sshsource"+hashlib.md5(uuid4().bytes).hexdigest()
             with open(sourcefile) as source:
                 _source = source.read()
+                _source = remove_ssh_decorator(_source, username, hostname)
+                '''
                 _source = re.sub(r"@ssh\(user='{}', host='{}'".format(username,
                                  hostname), "#@ssh(user='{}', host='{}'".format(username,
                                  hostname), _source).strip()
+                '''
                 with open('{}.py'.format(sourceuuid), 'w') as appsource:
                     appsource.write(_source)
 
@@ -145,26 +176,6 @@ def ssh(function=None, **kwargs):
                 app.write("print(resultp)")
             
 
-            # Resolve args and kwargs
-            # Then invoke func.__name__ remotely from source script
-            # and return result
-            # use a process to run the remote ssh and block for result
-            # then async to monitor queue for result
-            #
-            # e.g.
-            # import appsource.py
-            #
-            # result = appname(arg1,arg2,kwarg1=kwval1, etc)
-            # pickle and encode result then print it
-
-            # Receiving side here in ssh.py gets the encoded pickle and unpickles
-            # it then returns the value
-            # 
-            # pfunc is a paramiko function that copies the python app source
-            # to remote machine and then invokes python 
-            # return ProcessMonitor(pfunc,..,..,)
-
-            #return f(*args, **kwargs)
             p = partial(f, *args, **kwargs)
 
 
