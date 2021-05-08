@@ -174,7 +174,7 @@ def ssh(function=None, **kwargs):
                 app.write(
                     "resultp = codecs.encode(pickle.dumps(result), \"base64\").decode()\n")
                 app.write("print('===BEGIN===')\n")
-                app.write("print(resultp)")
+                app.write("print(resultp)\n")
             
 
             p = partial(f, *args, **kwargs)
