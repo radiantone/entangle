@@ -3,6 +3,7 @@ thread.py - Module that provides native OS thread implementation of function tas
 """
 import asyncio
 import logging
+import sys
 import multiprocessing
 from multiprocessing.shared_memory import SharedMemory
 from multiprocessing.managers import SharedMemoryManager
@@ -10,6 +11,7 @@ from multiprocessing.managers import SharedMemoryManager
 smm = SharedMemoryManager()
 smm.start()
 
+sys.path.append(os.getcwd())
 
 def thread(function=None,
            timeout=None,

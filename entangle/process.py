@@ -12,6 +12,7 @@ global smm
 smm = SharedMemoryManager()
 smm.start()
 
+sys.path.append(os.getcwd())
 
 def process(function=None,
             timeout=None,
@@ -476,7 +477,6 @@ class ProcessMonitor(object):
 
                 logging.debug("process: waiting for result on queue")
 
-                sys.path.append(os.getcwd())
                 result = mq.get()
                 logging.debug("process: got result from queue")
 

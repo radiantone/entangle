@@ -3,12 +3,14 @@ ssh.py - Run processes and schedulers on remote machines
 """
 import logging
 import hashlib
+import sys
 from uuid import uuid4
 from functools import partial
 from entangle.process import ProcessMonitor
 from entangle.thread import ThreadMonitor
 from scp import SCPClient, SCPException
 
+sys.path.append(os.getcwd())
 
 def ssh(function=None, **kwargs):
 
@@ -32,35 +34,14 @@ def ssh(function=None, **kwargs):
         username = kwargs['user']
         sshkey = kwargs['key']
         python = kwargs['python']
-        '''
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        logging.debug("SSH: connecting {} {} {}".format(hostname,username,sshkey))
-        ssh.connect(hostname=hostname, username=username,
-                    key_filename=sshkey)
 
-        # Execute command that runs the passed in decorator on remote machine
-        command = 'ls /home/darren'
-        stdin, stdout, stderr = ssh.exec_command(command)
-
-        for line in stdout.read().splitlines():
-            print(line)
-
-        ssh.close()
-        '''
         logging.debug("ssh: func: {}".format(func.func))
         logging.debug("ssh: func source:\n{}".format(func.source))
+
         _ast = ast.parse(func.source)
+
         decorators = _ast.body[0].decorator_list
         ssh_decorator = None
-
-        # TODO: Here we probably want to remove all the decorators and just build our
-        # ssh call to ensure the decorated behaviors are executed.
-        # Or we have to embed the decorator configs in the new source so it is passed
-        # to the remote machine.
-        # We want the @scheduler and its child decorators to run on the remote machine
-        # complete with configs intact.
-        # Functions have to be completely self-contained (i.e. include all imports)
 
         for decorator in decorators:
             if hasattr(decorator, 'func') and decorator.func.id == 'ssh':
@@ -80,7 +61,6 @@ def ssh(function=None, **kwargs):
             import time
             import inspect
             import os
-            import sys
             import re
 
             # Invoke function over ssh
@@ -126,6 +106,7 @@ def ssh(function=None, **kwargs):
 
             logging.debug("SSH: user:{} host:{} key: {}".format(
                 kwargs['user'], kwargs['host'], kwargs['key']))
+
             del kwargs['user']
             del kwargs['host']
             del kwargs['key']
@@ -142,10 +123,9 @@ def ssh(function=None, **kwargs):
                     vargs += [arg]
             
             sourceuuid = "sshsource"+hashlib.md5(uuid4().bytes).hexdigest()
+
             with open(sourcefile) as source:
                 _source = source.read()
-                #_source = remove_ssh_decorator(_source, username, hostname)
-                
                 _source = re.sub(r"@ssh\(user='{}', host='{}'".format(username,
                                  hostname), "#@ssh(user='{}', host='{}'".format(username,
                                  hostname), _source).strip()
@@ -154,6 +134,7 @@ def ssh(function=None, **kwargs):
                     appsource.write(_source)
 
             appuuid = "sshapp"+hashlib.md5(uuid4().bytes).hexdigest()
+
             with open('{}.py'.format(appuuid),'w') as app:
                 import codecs
                 import pickle
@@ -180,16 +161,10 @@ def ssh(function=None, **kwargs):
 
             p = partial(f, *args, **kwargs)
 
-
             p.__name__ = f.__name__
 
             logging.debug("args: {}   kwargs: {}".format(args,kwargs))
-            ''' 
-            What we want to do here is resolve the dependencies for f. Then encode those
-            in the above script output and send all that to remote machine to execute f(*args, **kwargs)
 
-            Need a parameter execute=False that only resolves dependencies and returns a tuple (*args, **kwargs)
-            '''
             def ssh_function(remotefunc, username, hostname, sshkey, appuuid, sourceuuid):
                 import importlib
 
@@ -207,8 +182,7 @@ def ssh(function=None, **kwargs):
                     scp.put(files,
                             remote_path='/tmp')
                 finally:
-                    pass
-                    #[os.remove(file) for file in files]
+                    [os.remove(file) for file in files]
                 '''
                 Copy sshapp*.py and sshsource*.py to remote host
                 Execute sshapp*.py on remote machine, parse stdout for result pickle
@@ -225,7 +199,7 @@ def ssh(function=None, **kwargs):
 
                 logging.debug("SSH: CWD {}".format(os.getcwd()))
                 logging.debug("SSH: importing module {}".format(sourceuuid))
-                sys.path.append(os.getcwd())
+
                 try:
                     importlib.import_module(sourceuuid)
                 except:
@@ -243,14 +217,18 @@ def ssh(function=None, **kwargs):
                         result_next = True
 
                 logging.debug("Unpickle: {}".format(b"".join(resultlines)))
+
                 result = pickle.loads(
                     codecs.decode(b"".join(resultlines), "base64"))
+
                 _ssh.exec_command("rm {}".format(" ".join(["/tmp/"+file for file in files])))
                 _ssh.close()
+
                 return result
 
             ssh_p = partial(ssh_function, p, username, hostname, sshkey, appuuid, sourceuuid)
             ssh_p.__name__ = p.__name__
+            
             result = ProcessMonitor(ssh_p, timeout=None,
                                     wait=None,
                                     cache=False,
