@@ -225,13 +225,13 @@ def ssh(function=None, **kwargs):
                 for line in stdout.read().splitlines():
                     logging.debug("SSH: command stdout: {}".format(line))
                     if result_next:
-                        resultlines += [str(line, 'utf8')]
+                        resultlines += [line]
                         logging.debug("SSH: got result line: {}".format(result))
                     if line == b"===BEGIN===":
                         result_next = True
 
                 result = pickle.loads(
-                    codecs.decode("".join(resultlines), "base64"))
+                    codecs.decode(b"".join(resultlines), "base64"))
                 _ssh.exec_command("rm {}".format(" ".join(["/tmp/"+file for file in files])))
                 _ssh.close()
                 return result
