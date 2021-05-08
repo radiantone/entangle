@@ -59,7 +59,7 @@ setup(
     packages=['entangle', 'entangle.logging', 'entangle.examples', 'entangle.tests'],
     include_package_data=True,
     python_requires="==3.8.*",
-    install_requires=['requests','paramiko','scp'],
+    install_requires=['requests','paramiko','scp','dill'],
     license=about['__license__'],
     zip_safe=False,
     cmdclass={
