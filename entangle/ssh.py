@@ -91,12 +91,6 @@ def ssh(function=None, **kwargs):
             else:
                 sourcefile = sys.argv[0]
 
-            if sourcefile[0] == '/':
-                print("FILE:",sourcefile)
-            else:
-                print("FILE:", os.getcwd()+os.path.sep+sourcefile)
-
-            print(sourcefile)
             with open(sourcefile) as source:
                 logging.debug("SOURCE:{}".format(source.read()))
 
