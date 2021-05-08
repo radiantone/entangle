@@ -173,10 +173,8 @@ def ssh(function=None, **kwargs):
                 app.write("print(\"RESULT:\", result)\n")
                 app.write(
                     "resultp = codecs.encode(pickle.dumps(result), \"base64\").decode()\n")
-                app.write("with open('/tmp/result.out','w') as ro:\n")
-                app.write("   ro.write(resultp)\n")
                 app.write("print('===BEGIN===')\n")
-                app.write("print(resultp)\n")
+                app.write("print(resultp)")
             
 
             p = partial(f, *args, **kwargs)
@@ -222,20 +220,17 @@ def ssh(function=None, **kwargs):
                 stdin, stdout, stderr = _ssh.exec_command(command)
 
                 result_next = False
+                resultlines = []
                 for line in stdout.read().splitlines():
                     logging.debug("SSH: command stdout: {}".format(line))
                     if result_next:
-                        #result = pickle.loads(line)
-                        #pickle.loads(eval(str(line, "utf8")))
-                        result = pickle.loads(
-                            codecs.decode(line, "base64"))
-
-                        #result = pickle.loads(codecs.decode(str(line,'utf8').encode(), "base64"))
-                        logging.debug("SSH: got result: {}".format(result))
-                        break
+                        resultlines += [line]
+                        logging.debug("SSH: got result line: {}".format(result))
                     if line == b"===BEGIN===":
                         result_next = True
 
+                result = pickle.loads(
+                    codecs.decode("".join(resultlines), "base64"))
                 _ssh.exec_command("rm {}".format(" ".join(["/tmp/"+file for file in files])))
                 _ssh.close()
                 return result
