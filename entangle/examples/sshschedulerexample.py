@@ -1,5 +1,6 @@
 from entangle.logging.debug import logging
 from entangle.process import process
+from entangle.thread import thread
 from entangle.http import request
 from entangle.ssh import ssh
 from entangle.workflow import workflow
@@ -36,7 +37,7 @@ def two():
 
 @ssh(user='darren', host='phoenix', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/miniconda3/bin/python')
 @scheduler(**scheduler_config)
-@process
+@thread
 def three():
     logging.info("Returning 3")
     result = MyResult()
