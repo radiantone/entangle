@@ -22,12 +22,11 @@ class MyResult(object):
 @scheduler(**scheduler_config)
 @process
 def add(a, b):
-    v = int(a) + int(b)
+    v = int(a.get_result()) + int(b)
     logging.info("ADD: *"+str(v)+"*")
     return v
 
 
-@ssh(user='darren', host='phoenix', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/miniconda3/bin/python')
 @scheduler(**scheduler_config)
 @process
 def two():
@@ -35,11 +34,14 @@ def two():
     return 4
 
 
+@ssh(user='darren', host='phoenix', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/miniconda3/bin/python')
 @scheduler(**scheduler_config)
 @process
 def three():
     logging.info("Returning 3")
-    return 3
+    result = MyResult()
+    result.set_result(3)
+    return result
 
 
 @ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
