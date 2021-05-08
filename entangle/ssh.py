@@ -205,7 +205,8 @@ def ssh(function=None, **kwargs):
                     scp.put(files,
                             remote_path='/tmp')
                 finally:
-                    [os.remove(file) for file in files]
+                    pass
+                    #[os.remove(file) for file in files]
                 '''
                 Copy sshapp*.py and sshsource*.py to remote host
                 Execute sshapp*.py on remote machine, parse stdout for result pickle
