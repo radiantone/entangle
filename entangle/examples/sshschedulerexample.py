@@ -42,11 +42,6 @@ def three():
     return 3
 
 
-'''
-@ssh instructs entangle to run the function on a remote server. Servers that want to participate with entangle workflows
-must already have shared keys in place to allow passwordless ssh use. Also, the remote machine needs to have a virtualenv
-setup with entangle installed as well.
-'''
 @ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
 @scheduler(**scheduler_config)
 @process
