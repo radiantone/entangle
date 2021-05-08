@@ -1,5 +1,5 @@
 from entangle.logging.file import logging
-from entangle.thread import thread
+from entangle.process import process
 from entangle.http import request
 from entangle.ssh import ssh
 from entangle.workflow import workflow
@@ -11,7 +11,7 @@ scheduler_config = {'cpus': 3,
 
 
 @scheduler(**scheduler_config)
-@thread
+@process
 def add(a, b):
     v = int(a) + int(b)
     logging.info("ADD: *"+str(v)+"*")
@@ -20,14 +20,14 @@ def add(a, b):
 
 @ssh(user='darren', host='phoenix', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/miniconda3/bin/python')
 @scheduler(**scheduler_config)
-@thread
+@process
 def two():
     logging.info("Returning 2")
-    return 2
+    return 4
 
 
 @scheduler(**scheduler_config)
-@thread
+@process
 def three():
     logging.info("Returning 3")
     return 3
@@ -40,7 +40,7 @@ setup with entangle installed as well.
 '''
 @ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
 @scheduler(**scheduler_config)
-@thread
+@process
 def workflow2():
 
     _add = add(
