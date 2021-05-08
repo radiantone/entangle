@@ -173,6 +173,8 @@ def ssh(function=None, **kwargs):
                 app.write("print(\"RESULT:\", result)\n")
                 app.write(
                     "resultp = codecs.encode(pickle.dumps(result), \"base64\").decode()\n")
+                app.write("with open('/tmp/result.out','w') as ro:\n")
+                app.write("   ro.write(resultp)\n")
                 app.write("print('===BEGIN===')\n")
                 app.write("print(resultp)\n")
             
