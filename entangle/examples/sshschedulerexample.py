@@ -10,6 +10,15 @@ scheduler_config = {'cpus': 3,
                     'impl': 'entangle.scheduler.DefaultScheduler'}
 
 
+class MyResult(object):
+
+    def set_result(self, result):
+        self._result = result
+
+    def get_result(self):
+        return self._result
+
+
 @scheduler(**scheduler_config)
 @process
 def add(a, b):
@@ -18,7 +27,7 @@ def add(a, b):
     return v
 
 
-@ssh(user='darren', host='phoenix', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/miniconda3/bin/python')
+#@ssh(user='darren', host='phoenix', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/miniconda3/bin/python')
 @scheduler(**scheduler_config)
 @process
 def two():
@@ -48,11 +57,14 @@ def workflow2():
         two()
     )
 
-    return _add()
+    result = _add()
+    my_result = MyResult()
+    my_result.set_result(result)
+    return my_result
 
 
 if __name__ == '__main__':
-    result = workflow2()
-
-    print("WORKFLOW RESULT:", result())
+    workflow = workflow2()
+    result = workflow()
+    print("WORKFLOW RESULT:", result.get_result())
 
