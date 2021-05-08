@@ -1,4 +1,4 @@
-from entangle.logging.file import logging
+from entangle.logging.debug import logging
 from entangle.process import process
 from entangle.http import request
 from entangle.ssh import ssh
