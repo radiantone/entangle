@@ -27,7 +27,7 @@ def add(a, b):
     return v
 
 
-#@ssh(user='darren', host='phoenix', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/miniconda3/bin/python')
+@ssh(user='darren', host='phoenix', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/miniconda3/bin/python')
 @scheduler(**scheduler_config)
 @process
 def two():
@@ -66,5 +66,6 @@ def workflow2():
 if __name__ == '__main__':
     workflow = workflow2()
     result = workflow()
+    print("WORKFLOW OBJ:", result)
     print("WORKFLOW RESULT:", result.get_result())
 

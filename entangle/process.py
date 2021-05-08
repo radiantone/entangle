@@ -3,6 +3,7 @@ process.py - Module that provides native OS process implementation of function t
 """
 import asyncio
 import logging
+import sys
 import multiprocessing
 from multiprocessing.shared_memory import SharedMemory
 from multiprocessing.managers import SharedMemoryManager
@@ -474,6 +475,8 @@ class ProcessMonitor(object):
                         scheduler.put(('0', cpu, 'Y'))
 
                 logging.debug("process: waiting for result on queue")
+
+                sys.path.append(os.getcwd())
                 result = mq.get()
                 logging.debug("process: got result from queue")
 

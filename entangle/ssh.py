@@ -191,6 +191,8 @@ def ssh(function=None, **kwargs):
             Need a parameter execute=False that only resolves dependencies and returns a tuple (*args, **kwargs)
             '''
             def ssh_function(remotefunc, username, hostname, sshkey, appuuid, sourceuuid):
+                import importlib
+
                 files = [appuuid+".py", sourceuuid+".py"]
                 logging.debug(
                     "SCP files: {} to {}@{}:{}".format(files, username, hostname, '/tmp'))
@@ -221,16 +223,26 @@ def ssh(function=None, **kwargs):
                 logging.debug("SSH: executing {} {}@{}".format(command, username, hostname))
                 stdin, stdout, stderr = _ssh.exec_command(command)
 
+                logging.debug("SSH: CWD {}".format(os.getcwd()))
+                logging.debug("SSH: importing module {}".format(sourceuuid))
+                sys.path.append(os.getcwd())
+                try:
+                    importlib.import_module(sourceuuid)
+                except:
+                    pass
+
                 result_next = False
                 resultlines = []
                 for line in stdout.read().splitlines():
                     logging.debug("SSH: command stdout: {}".format(line))
                     if result_next:
-                        resultlines += [line]
-                        logging.debug("SSH: got result line: {}".format(result))
+                        if len(line.strip()) > 0:
+                            resultlines += [line]
+                            logging.debug("SSH: got result line: {}".format(line))
                     if line == b"===BEGIN===":
                         result_next = True
 
+                logging.debug("Unpickle: {}".format(b"".join(resultlines)))
                 result = pickle.loads(
                     codecs.decode(b"".join(resultlines), "base64"))
                 _ssh.exec_command("rm {}".format(" ".join(["/tmp/"+file for file in files])))
