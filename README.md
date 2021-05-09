@@ -375,8 +375,8 @@ But essentially it allows for separation of workflow *declaration* from *executi
 
 ## Containers
 
-TBD
-
+Entangle supports two container technologies: *docker* and *singularity*. These are used with the associated decorators `@docker` and `@singularity`. 
+Using containers allows you to run functions that have complex OS or python depdendencies not native to your hosting environment.
 
 ## Dataflows 
 
@@ -545,17 +545,11 @@ Moreover, parts of a workflow can be sent to different machines for a truly dist
 Functions or flows (graph of functions) are remoted by using the `@ssh` decorator like the example below.
 
 ```python
-@ssh(user='me', host='myserver', key='/home/me/.ssh/id_rsa.pub', python='/home/me/venv/bin/python')
+@ssh(user='me', host='radiant', key='/home/me/.ssh/id_rsa.pub', python='/home/me/venv/bin/python')
 @scheduler(**scheduler_config)
 @thread
 def workflow2():
-
-    _add = add(
-            three(),
-            two()
-          )
-
-    return _add()
+    pass
 ```
 
 In this example, we have declared a (contrived) workflow that adds the return values of 2 embedded functions and returns it.
@@ -572,6 +566,53 @@ If you use `@scheduler` then it will utilize the *scheduler queue* to request CP
 Each time a workflow decorated with `@scheduler` is sent to a remote machine, that scheduler then manages its portion of the workflow and any dependent functions that it might resolve.
 This pattern forms a sort of *distributed hierarchy* of schedulers that work in parallel across multiple machines, yet fully resolve to complete the root workflow.
 
+Let's take a closer look at this example, which uses 3 different machines to solve its workflow.
+
+```python
+
+@ssh(user='darren', host='miko', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
+@scheduler(**config)
+@process
+def two():
+    # run some codes
+    return 2
+
+@ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
+@scheduler(**config)
+@process
+def three():
+    # run some codes
+    return 3
+
+@scheduler(**config)
+@process
+def add(a, b):
+    v = int(a.get_result()) + int(b)
+    logging.info("ADD: *"+str(v)+"*")
+    return v
+
+@ssh(user='darren', host='phoenix', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
+@scheduler(**config)
+@process
+def workflow():
+
+    _add = add(
+        three(),
+        two()
+    )
+    return _add()
+```
+
+In the above example, the `workflow` is first sent to machine `phoenix` and executed there. It wraps the function `add` which is alos executes on `phoenix` because it has no `@ssh` decorator.
+
+The `add` function requires the functions `three` and `two` be solved first. These two functions are sent to machines `miko` and `radiant` to be solved.
+The results are returned to the `add` function running on `phoenix` and the result of the `workflow` is returned to the calling machine, or the machine where the workflow was executed on.
+
+One the `workflow` reaches `phoenix` the `@scheduler` attached to the workflow manages the CPU's there according to its constraints.
+Since the `add` function has two dependencies that can run in parallel the `@schedular` can request 2 CPUs and run them in parallel.
+
+
+*diagram*
 
 ## Examples
 
