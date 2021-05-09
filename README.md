@@ -588,7 +588,6 @@ def three():
 @process
 def add(a, b):
     v = int(a.get_result()) + int(b)
-    logging.info("ADD: *"+str(v)+"*")
     return v
 
 @ssh(user='darren', host='phoenix', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
