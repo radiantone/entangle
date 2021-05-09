@@ -569,7 +569,7 @@ If you use `@scheduler` then it will utilize the *scheduler queue* to request CP
 
 *diagram here*
 
-Each time a workflow decorated with `@schedular` is sent to a remote machine, that schedular then manages that portion of the workflow and any dependent functions that it might resolve.
+Each time a workflow decorated with `@scheduler` is sent to a remote machine, that scheduler then manages its portion of the workflow and any dependent functions that it might resolve.
 This pattern forms a sort of *distributed hierarchy* of schedulers that work in parallel across multiple machines, yet fully resolve to complete the root workflow.
 
 
