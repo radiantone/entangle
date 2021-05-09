@@ -24,7 +24,7 @@ A lightweight (serverless) native python parallel processing framework based on 
   * [Results Comparison](#results-comparison)
   * [Advantages of Strict Dataflow](#advantages-of-strict-dataflow)
 * [Schedulers](#schedulers)
-* [Remote Flows](#remote-flows)  
+* [Distributed Flows](#distributed-flows)  
 * [Examples](#examples)
     * [GPU Example](#gpu-example)
     * [Shared Memory Example](#shared-memory-example)
@@ -172,7 +172,7 @@ For devops use cases Entangle allows you to write simple, parallel workflow grap
 
 ### What Entangle is not
 Here are some things entangle is not, *out-of-the-box*. This isn't to say entangle can't do these things. In fact, entangle is designed to be a low level framework for implementing these kinds of things.
-* Entangle is not inherently distributed
+
 * Entangle does not yet perform fail over or retries
 * Entangle is not a batch process framework
 * Entangle is not map/reduce
@@ -533,10 +533,12 @@ To see the implementation of `DefaultScheduler` click [here](https://github.com/
 
 For a workflow example using scheduler see [Scheduler Example](#scheduler-example)  below.
 
-## Remote Flows
+## Distributed Flows
 
 Entangle allows you to pass a workflow (or dataflow) to a remote machine for execution. When combined with `@scheduler` decorators this also forwards scheduler behavior to the remote machine where it manages the received workflow there.
 This type of propagation requires no centralized (i.e. shared) scheduler or services and thus scales very well.
+
+Moreover, parts of a workflow can be sent to different machines for a truly distributed workflow.
 
 ### SSH Decorator
 
@@ -560,12 +562,16 @@ In this example, we have declared a (contrived) workflow that adds the return va
 The `@ssh` decorator indicates that this workflow is to be copied and executed on the remote server `myserver` as user `me` using the python executable at `/home/me/venv/bin/python`.
 Entangle will marshall the codes to the remote server and execute them there. 
 
-### Schedule Propagation
+### Scheduler Propagation
 
 If any dependent or subsequent functions are invoked on the remote server, any decorators that apply to those will be enforced.
 If you use `@scheduler` then it will utilize the *scheduler queue* to request CPU cookies. If you also use another `@ssh` decorator then that dependent function will be shipped to a 3rd remote server and the process repeated there.
 
 *diagram here*
+
+Each time a workflow decorated with `@schedular` is sent to a remote machine, that schedular then manages that portion of the workflow and any dependent functions that it might resolve.
+This pattern forms a sort of *distributed hierarchy* of schedulers that work in parallel across multiple machines, yet fully resolve to complete the root workflow.
+
 
 ## Examples
 
