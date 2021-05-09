@@ -19,7 +19,7 @@ with open('README.md', 'r') as f:
 
 class CleanCommand(Command):
     """Custom clean command to tidy up the project root."""
-    CLEAN_FILES = './build ./dist ./*.pyc ./*.tgz ./*.egg-info'.split(' ')
+    CLEAN_FILES = './build ./dist ./*.pyc ./*.tgz ./entangle.log ./.pytest_cache ./*.egg-info'.split(' ')
 
     user_options = []
 
@@ -42,7 +42,10 @@ class CleanCommand(Command):
                     raise ValueError(
                         "%s is not a path inside %s" % (path, here))
                 print('removing %s' % os.path.relpath(path))
-                shutil.rmtree(path)
+                try:
+                    shutil.rmtree(path)
+                except:
+                    os.remove(path)
 
 
 # package configuration - for reference see:
