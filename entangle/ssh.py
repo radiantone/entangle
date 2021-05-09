@@ -4,13 +4,13 @@ ssh.py - Run processes and schedulers on remote machines
 import logging
 import hashlib
 import sys
+import os
 from uuid import uuid4
 from functools import partial
 from entangle.process import ProcessMonitor
 from entangle.thread import ThreadMonitor
 from scp import SCPClient, SCPException
 
-sys.path.append(os.getcwd())
 
 def ssh(function=None, **kwargs):
 
@@ -182,7 +182,8 @@ def ssh(function=None, **kwargs):
                     scp.put(files,
                             remote_path='/tmp')
                 finally:
-                    [os.remove(file) for file in files]
+                    pass
+                    #[os.remove(file) for file in files]
                 '''
                 Copy sshapp*.py and sshsource*.py to remote host
                 Execute sshapp*.py on remote machine, parse stdout for result pickle
@@ -199,7 +200,7 @@ def ssh(function=None, **kwargs):
 
                 logging.debug("SSH: CWD {}".format(os.getcwd()))
                 logging.debug("SSH: importing module {}".format(sourceuuid))
-
+                sys.path.append(os.getcwd())
                 try:
                     importlib.import_module(sourceuuid)
                 except:
@@ -242,6 +243,9 @@ def ssh(function=None, **kwargs):
 
             logging.debug("SSH RESULT: {}".format(_result))
 
+
+            files = [appuuid+".py", sourceuuid+".py"]
+            #[os.remove(file) for file in files]
             return _result
 
         p = partial(wrapper, func, **kwargs)

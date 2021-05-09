@@ -4,6 +4,7 @@ thread.py - Module that provides native OS thread implementation of function tas
 import asyncio
 import logging
 import sys
+import os
 import multiprocessing
 from multiprocessing.shared_memory import SharedMemory
 from multiprocessing.managers import SharedMemoryManager
@@ -11,7 +12,6 @@ from multiprocessing.managers import SharedMemoryManager
 smm = SharedMemoryManager()
 smm.start()
 
-sys.path.append(os.getcwd())
 
 def thread(function=None,
            timeout=None,
@@ -237,6 +237,7 @@ class ThreadMonitor(object):
 
                         logging.debug("Got event for {}".format(name))
 
+                        sys.path.append(os.getcwd())
                         _result = q.get()
 
                         logging.debug("Got result for[{}] {}".format(
