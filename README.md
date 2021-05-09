@@ -603,13 +603,13 @@ def workflow():
     return _add()
 ```
 
-In the above example, the `workflow` is first sent to machine `phoenix` and executed there. It wraps the function `add` which is alos executes on `phoenix` because it has no `@ssh` decorator.
+In the above example, the `workflow()` is first sent to machine `phoenix` and executed there. It wraps the function `add` which also executes on `phoenix` because it has no `@ssh` decorator and the workflow is already there.
 
-The `add` function requires the functions `three` and `two` be solved first. These two functions are sent to machines `miko` and `radiant` to be solved.
-The results are returned to the `add` function running on `phoenix` and the result of the `workflow` is returned to the calling machine, or the machine where the workflow was executed on.
+The `add()` function requires the functions `three()` and `two()` be solved first. These two functions are sent to machines `miko` and `radiant` to be solved.
+The results are returned to the `add` function running on `phoenix` and the result of the `workflow()` is returned to the calling machine, or the machine where the workflow was executed on.
 
-One the `workflow` reaches `phoenix` the `@scheduler` attached to the workflow manages the CPU's there according to its constraints.
-Since the `add` function has two dependencies that can run in parallel the `@schedular` can request 2 CPUs and run them in parallel.
+Once the `workflow()` reaches `phoenix` the `@scheduler` attached to the workflow manages the CPU's there according to its constraints.
+Since the `add()` function has two dependencies that can run in parallel the `@schedular` can request 2 CPUs and run them in parallel.
 
 
 *diagram*
