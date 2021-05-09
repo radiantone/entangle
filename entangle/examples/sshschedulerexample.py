@@ -1,4 +1,4 @@
-from entangle.logging.debug import logging
+from entangle.logging.file import logging
 from entangle.process import process
 from entangle.thread import thread
 from entangle.http import request
@@ -28,6 +28,7 @@ def add(a, b):
     return v
 
 
+@ssh(user='darren', host='miko', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
 @scheduler(**scheduler_config)
 @process
 def two():
