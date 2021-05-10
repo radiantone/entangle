@@ -74,7 +74,7 @@ $ source venv/bin/activate
 *miniconda3*
 1. Install [miniconda3](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html) with python3.8 for linux
 ```shell
-$ conda init   # optional unless using conda
+$ conda init   
 $ python setup.py install
 $ python -m entangle.examples.example
 ```
