@@ -410,6 +410,8 @@ But essentially it allows for separation of workflow *declaration* from *executi
 Entangle supports two container technologies: *docker* and *singularity*. These are used with the associated decorators `@docker` and `@singularity`. 
 Using containers allows you to run functions that have complex OS or python depdendencies not native to your hosting environment.
 
+For a complete example, please see [Docker Example](#docker-example)
+
 ## Dataflows 
 
 
