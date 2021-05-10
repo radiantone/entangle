@@ -940,19 +940,15 @@ The above example launches a GPU enabled docker on the `nvidia docker` platform 
 
 The example below demonstrates the dataflow capability of Entangle. This is a different compute paradigm from workflows. Please read th section on [Dataflows vs Workflows](#dataflows-vs-workflows) for complete explanation of the difference.
 
-> NOTE: We use threads as our execution unit in this example as it makes seeing the output possible. With `@process` you won't see the aggregate output on your console, instead it will be logged to `example.log` file.
+> NOTE: We use threads as our execution unit in this example as it makes seeing the output possible. With `@process` you won't see the aggregate output on your console, instead it will be logged to `entangle.log` file.
 > With Entangle you decide whether to use concurrency (threads) or parallelism (processes). Entangle is itself, threadless.
 ```python
 import threading
 import time
+from entangle.logging.debug import logging
 from entangle.dataflow import thread
 from entangle.dataflow import process
 from entangle.dataflow import dataflow
-
-import logging
-logging.basicConfig(filename='example.log',
-                    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
-
 
 def triggered(func, result):
     print("triggered: {} {}".format(func.__name__, result))
