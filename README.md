@@ -839,12 +839,9 @@ for parallel running processes.
 ### AI Example
 Here is an example that uses tensorflow to train a model and return the summary.
 ```python
+from entangle.logging.debug import logging
 from entangle.docker import docker
 from entangle.process import process
-
-import logging
-logging.basicConfig(
-    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
 @process
 @docker(image="tensorflow/tensorflow:latest-gpu", packages=['tensorflow_datasets'])
@@ -1082,11 +1079,7 @@ triggered: inner Y: HELLO
 ### Scheduler Example
 
 ```python
-import logging
-
-logging.basicConfig(filename='scheduler.log',
-                    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
-
+from entangle.logging.debug import logging
 from entangle.process import process
 from entangle.http import request
 from entangle.workflow import workflow
