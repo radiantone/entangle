@@ -81,11 +81,11 @@ $ python -m entangle.examples.example
 ### Testing
 
 ```shell
-$ pytest --full-trace --verbose --color=yes --disable-pytest-warnings --no-summary --pyargs entangle.tests
+$ pytest --verbose --color=yes --disable-pytest-warnings --no-summary --pyargs entangle.tests
 ```
 or if you don't have GPU
 ```shell
-$ pytest --full-trace --verbose --color=yes --pyargs entangle.tests.test_entangle
+$ pytest --verbose --color=yes --pyargs entangle.tests.test_entangle
 ```
 ### Miniconda
 
