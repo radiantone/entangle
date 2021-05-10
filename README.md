@@ -280,7 +280,7 @@ Let's look at the example below:
 ```
 This represents the *structured* paradigm, based off a more strict type of lambda math notation where functions invoke functions until the top-most value is produced.
 
-We can also write this as a sequence of declarations
+We can also write this as a sequence of *imperative* declarations
 
 ```python
     _five = five()
