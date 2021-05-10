@@ -260,6 +260,38 @@ Workflows execute in *natural dependency ordering* that you'd expect from any py
 
 Note that this paradigm is pretty much the way most imperative languages operate today, but it does differ from *dataflows* which we talk about down below [Dataflows](#dataflows).
 
+### Imperative vs Structured Declaration
+
+In Entangle, there are two ways you can write your workflows, depending which is more convenient for you. Both produce in the same execution sequence and results.
+
+Let's look at the example below:
+
+```python
+    result = add(
+                add(
+                    num(6),
+                    two() if False else one()
+                ),
+                subtract(
+                    five(),
+                    two()
+                )
+    )
+```
+This represents the *structured* paradigm, based off a more strict type of lambda math notation where functions invoke functions until the top-most value is produced.
+
+We can also write this as a sequence of declarations
+
+```python
+    _five = five()
+    _two = two()
+    _sub = subtract(_five,_two)
+    _num = num(6)
+    _two2 = two() if False else one()
+    _add1 = add(_num,_two2)
+    result = add(_add1,_sub)
+```
+
 ## Process Behavior
 
 Keyword parameters on the `@process` decorator allow you to control some meta-behavior of the process.

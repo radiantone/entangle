@@ -35,6 +35,16 @@ def subtract(a, b):
 
 
 if __name__ == '__main__':
+
+    '''
+    _five = five()
+    _two = two()
+    _sub = subtract(_five,_two)
+    _num = num(6)
+    _two2 = two() if False else one()
+    _add1 = add(_num,_two2)
+    result = add(_add1,_sub)
+    '''
     result = add(
                 add(
                     num(6),
@@ -45,5 +55,4 @@ if __name__ == '__main__':
                     two()
                 )
     )
-
     print(result())
