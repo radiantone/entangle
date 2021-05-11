@@ -31,7 +31,6 @@ cython=0.29.22=py38h2531618_0
 dill=0.3.3=pypi_0
 distlib=0.3.1=pypi_0
 docker=5.0.0=pypi_0
-entangle=0.0.1=pypi_0
 filelock=3.0.12=pypi_0
 flatbuffers=1.12=pypi_0
 gast=0.3.3=pypi_0
