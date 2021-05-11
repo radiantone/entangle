@@ -63,6 +63,7 @@ From PyPi
 
 ```shell
 $ pip install --upgrade py-entangle
+$ python -m entangle.examples.example
 ```
 From repo root
 
@@ -92,9 +93,15 @@ or if you don't have GPU
 ```shell
 $ pytest --verbose --color=yes --pyargs entangle.tests.test_entangle
 ```
+### Cleaning
+Clean all build files, directories, temp files and any files created by examples and tests.
+
+```shell
+$ python setup.py clean
+```
 ### Miniconda
 
-If you are planning to run or use GPU enabled code it is recommended to set up a `miniconda` virtualenv.
+If you are planning to run or use GPU enabled code it is recommended to set up a [miniconda3](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html) virtualenv.
 
 ## Design Goals
 

@@ -19,7 +19,7 @@ with open('README.md', 'r') as f:
 
 class CleanCommand(Command):
     """Custom clean command to tidy up the project root."""
-    CLEAN_FILES = './build ./dist ./*.pyc ./*.tgz ./entangle.log ./.pytest_cache ./*.egg-info'.split(' ')
+    CLEAN_FILES = './build ./dist **/*/__pycache__ ./*.pyc ./ssh*py ./*.tgz ./entangle.log ./.pytest_cache ./*.egg-info'.split(' ')
 
     user_options = []
 
