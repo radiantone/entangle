@@ -1,0 +1,11 @@
+name: Publish Python 🐍 distributions 📦 to PyPI
+
+jobs:
+  build:
+    on:
+       push:
+         tags:
+           - 'v*'
+       
+  deploy:
+       needs: release
