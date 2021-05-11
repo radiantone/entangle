@@ -101,9 +101,9 @@ setup(
 
     },
     classifiers=[
-        'Development Status :: 1 - Alpha',
+        'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 3.8',
     ],
-    keywords='parallel processing'
+    keywords='parallel processing, devops, dataflow, supercomputing, workflows'
 )
