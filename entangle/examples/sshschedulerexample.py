@@ -33,7 +33,7 @@ def add(a, b):
 @process
 def two():
     logging.info("Returning 2")
-    return 4
+    return 2
 
 
 @ssh(user='darren', host='phoenix', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/miniconda3/bin/python')
