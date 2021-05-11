@@ -5,7 +5,7 @@ __version__.py
 Information about the current version of the py-package-template package.
 """
 
-__title__ = 'entangled'
+__title__ = 'py-entangle'
 __description__ = 'A python native parallel processing framework based on simple decorators.'
 __version__ = '0.0.9'
 __author__ = 'Darren Govoni'
