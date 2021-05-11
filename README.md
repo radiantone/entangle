@@ -52,9 +52,9 @@ The term is derived from a quantum physics phenomena called *[quantum entangleme
 
 In this context, it is a metaphor for how tasks send data (particles) to one another in the context of a connected microflow.
 
-### Important Notes
+### IMPORTANT NOTES!
 
-Please keep in mind that Entangle is *in development* and there are no releases as of yet. If you clone this repo and want to experiment be sure to update often as things break, improve, get fixed etc. quite frequently on the this branch for now.
+Please keep in mind that Entangle is *in development* and is classied as `Pre-Alpha`. If you clone this repo and want to experiment be sure to update often as things break, improve, get fixed etc. quite frequently. The `main` branch will always contain the most current release. All development for the next version is done on that branch (e.g. 0.0.19). If you want the current development version, look for the latest version numbered branch.
 ## Install
 
 NOTE: At the moment entangle only works with python 3.8 due to how coroutines work there and also shared memory features.
