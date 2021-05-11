@@ -81,11 +81,7 @@ def import_string(dotted_path):
     """
     from importlib import import_module
 
-    try:
-        module_path, class_name = dotted_path.rsplit('.', 1)
-    except ValueError:
-        msg = "%s doesn't look like a module path" % dotted_path
-        six.reraise(ImportError, ImportError(msg), sys.exc_info()[2])
+    module_path, class_name = dotted_path.rsplit('.', 1)
 
     module = import_module(module_path)
 
@@ -95,6 +91,14 @@ def import_string(dotted_path):
         msg = 'Module "%s" does not define a "%s" attribute/class' % (
             module_path, class_name)
         six.reraise(ImportError, ImportError(msg), sys.exc_info()[2])
+
+
+class FileLockScheduler(object):
+    """
+    Will implement de-centralized CPU binding using shared memory and lock files
+    see: entangle/scratch/sheduler.py
+    """
+    pass
 
 
 class DefaultScheduler(object):
@@ -148,7 +152,7 @@ class DefaultScheduler(object):
 
 
 def scheduler(function=None,
-              impl=DefaultScheduler,
+              impl='entangle.scheduler.DefaultScheduler',
               cpus=12,
               algorithm='first_available',
               max_time=60*60):
