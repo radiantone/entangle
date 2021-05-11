@@ -664,7 +664,6 @@ Since the `add()` function has two dependencies that can run in parallel the `@s
 * [General Example](#general-example)
 
 There are a variety of example workflows and dataflows you can run. In addition to the sample code provided below you can run these using the following commands.
-> NOTE: You probably will have to do `python setup.py install` from within the repo in order to run these.
 ```shell
 $ python -m entangle.examples.example
 $ python -m entangle.examples.example2
