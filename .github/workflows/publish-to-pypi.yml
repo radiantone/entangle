@@ -40,6 +40,8 @@ jobs:
         pip install setuptools wheel twine
         python -m pip install --upgrade build
     - name: Build and publish
+      run: |
+        python -m build
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
