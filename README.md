@@ -59,6 +59,11 @@ Please keep in mind that Entangle is *in development* and there are no releases 
 
 NOTE: At the moment entangle only works with python 3.8 due to how coroutines work there and also shared memory features.
 
+From PyPi
+
+```shell
+$ pip install --upgrade py-entangle
+```
 From repo root
 
 *python3.8*
@@ -67,7 +72,7 @@ From repo root
 
 $ virtualenv --python=python3.8 venv
 $ source venv/bin/activate
-(venv) $ pip install -r requirements.txt
+(venv) $ python setup.py install
 (venv) $ python -m entangle.examples.example
 ```
 
