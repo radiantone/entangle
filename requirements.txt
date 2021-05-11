@@ -23,9 +23,6 @@ entangle==0.0.1
 filelock==3.0.12
 gast==0.4.0
 globus-sdk==2.0.1
-google-auth==1.28.1
-google-auth-oauthlib==0.4.4
-google-pasta==0.2.0
 grpcio==1.36.1
 h5py==2.10.0
 idna==2.10
@@ -40,7 +37,6 @@ oauthlib==3.1.0
 opt-einsum==3.3.0
 packaging==20.9
 paramiko==2.7.2
-pip==20.2.4
 pipenv==2020.11.15
 pluggy==0.13.1
 posix-ipc==1.0.4
@@ -75,13 +71,10 @@ tqdm==4.51.0
 typeguard==2.12.0
 typing-extensions==3.7.4.3
 urllib3==1.25.11
-virtualenv==20.4.3
-virtualenv-clone==0.5.4
 websocket-client==0.58.0
 Werkzeug==1.0.1
 wheel==0.35.1
 wrapt==1.12.1
 yarl==1.6.3
 zipp==3.4.1
-dill
 astunparse==1.6.3
