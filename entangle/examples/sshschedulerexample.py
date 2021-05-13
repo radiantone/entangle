@@ -51,7 +51,7 @@ def two():
 def three():
     logging.info("Returning 3")
     _result = MyResult()
-    result.set_result(3)
+    _result.set_result(3)
     return _result
 
 
