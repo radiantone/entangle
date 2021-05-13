@@ -1,8 +1,8 @@
 """
 request.py - Module that provides http request tasks
 """
-import requests
 from functools import partial
+import requests
 
 
 def request(function=None,
@@ -20,7 +20,7 @@ def request(function=None,
     :return:
     """
     def decorator(func):
-        def wrapper(f):
+        def wrapper(f_func):
 
             # Build http request function here, get result
             # call func with result
@@ -32,10 +32,12 @@ def request(function=None,
                         response = requests.get(url=url, params=data)
                         return response.content
 
+                    return None
+
                 response = make_request(url, method, kwargs)
                 return _func(response)
 
-            pfunc = partial(invoke_request, func)
+            pfunc = partial(invoke_request, f_func)
             pfunc.__name__ = func.__name__
             return pfunc
 
@@ -45,5 +47,3 @@ def request(function=None,
         return decorator(function)
 
     return decorator
-
-

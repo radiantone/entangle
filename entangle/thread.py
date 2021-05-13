@@ -5,7 +5,7 @@ import asyncio
 import logging
 import sys
 import os
-import queue
+import queue as que
 import time
 import multiprocessing
 
@@ -179,7 +179,7 @@ class ThreadMonitor:
 
                         return _result
 
-                    except queue.Empty as exc:
+                    except que.Empty as exc:
                         if _thread and not _thread.is_alive():
                             raise ThreadTerminatedException() from exc
 

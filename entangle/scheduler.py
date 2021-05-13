@@ -1,46 +1,9 @@
+# pylint: disable=locally-disabled, not-callable
+
 """
 scheduler.py - A shared memory scheduler that runs in a process within a workflow. nodes send requests to the scheduler queue
 and then wait for a reply. the reply gives the node parameters to run its process such as what cpu to run it on. When a process is finished,
 the node sends message to scheduler that its processed finished and the scheduler can then task another node.
-
-The scheduler decorator is assigned to a @workflow node:
-
-@workflow
-@scheduler(
-    cpus=12,
-    max_time=60*60
-    log='logs/log',
-    class='my.Schedular',
-    algorithm='first_available'
-)
-def myworkflow():
-    return ()
-
-workflow = myworkflow(
-    funca(
-        funcb()
-    )
-)
-
-
-myworkflow will create a scheduler and pass its queue along to execution nodes in the workflow
-The nodes will detect the scheduler queue and adjust their behavior accordingly.
-
-All the schedulers are associated with each function. There is no single, central scheduler, rather
-the schedulers coordinate their state using shared memory. This way, they act like one scheduler.
-
-The first scheduler to run can put its CPU allocation in shared memory and assign one to itself. As it runs its process
-and completes, it can free up its CPU allocation and then try to run another job by pulling a job off its queue.
-
-Other schedulers will run and try to reserve a CPU from shared memory CPU map. If they are all taken, the scheduler will
-use asyncio coroutine to monitor shared memory for available resource. if it finds a free CPU, then it occupies that CPU and
-lets its process run using cpu affinity for it. then frees the CPU block in shared memory. The process runs until all the processes
-needing CPUs have completed.
------
-
-Using shared memory, the first defaultscheduler to run will set up a shared memory list with all the CPU metadata in it.
-And a queue.
-
 
 """
 
@@ -48,6 +11,7 @@ import logging
 import threading
 import six
 import os
+from typing import Callable
 from functools import partial
 from entangle.process import ProcessMonitor
 from entangle.thread import ThreadMonitor
@@ -150,7 +114,7 @@ def scheduler(function=None,
               impl='entangle.scheduler.DefaultScheduler',
               cpus=12,
               algorithm='first_available',
-              max_time=60*60):
+              max_time=60*60) -> Callable:
     import importlib
     from functools import partial
 
@@ -165,7 +129,7 @@ def scheduler(function=None,
     :param sleep:
     :return:
     """
-    def decorator(func, cpus=12):
+    def decorator(func, cpus=12) -> Callable:
         import inspect
 
         _func = func
@@ -185,7 +149,7 @@ def scheduler(function=None,
         source = inspect.getsource(_func)
         logging.debug("scheduler: source: {}".format(source))
 
-        def wrapper(f, *args, **kwargs):
+        def wrapper(f, *args, **kwargs) -> Callable:
             import time
             logging.debug("scheduler: Calling function: {}".format(str(f)))
             logging.debug("Waiting 2 seconds...")

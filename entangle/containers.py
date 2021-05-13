@@ -1,19 +1,20 @@
 """
 docker.py - Module that provides docker support decorators for running tasks inside containers
 """
-import docker
 import logging
-
+import inspect
+import re
 from functools import partial
+import docker as dkr
 
-client = docker.from_env()
+
+client = dkr.from_env()
 
 
 def docker(function=None,
            image=None,
-           packages=[],
-           consume_gpu=True,
-           sleep=0):
+           packages=None,
+           consume_gpu=True):
     """
 
     :param function:
@@ -22,14 +23,12 @@ def docker(function=None,
     :return:
     """
     def decorator(func):
-        def wrapper(f):
-            import inspect
-            import re
+        def wrapper(f_func):
 
-            lines = inspect.getsource(f)
-            logging.info("Running container: {}".format(image))
+            lines = inspect.getsource(f_func)
+            logging.info("Running container: %s",image)
             lines = re.sub('@', '#@', lines)
-            name = f.__name__
+            name = f_func.__name__
 
             installpackages = []
             for package in packages:
@@ -50,59 +49,10 @@ def docker(function=None,
             logging.debug(result)
             return result
 
-        p = partial(wrapper, func)
-        p.__name__ = func.__name__
+        pfunc = partial(wrapper, func)
+        pfunc.__name__ = func.__name__
 
-        return p
-
-    if function is not None:
-        return decorator(function)
-
-    return decorator
-
-
-def singularity(function=None,
-                image=None,
-                packages=[],
-                consume_gpu=True,
-                sleep=0):
-    """
-
-    :param function:
-    :param image:
-    :param sleep:
-    :return:
-    """
-    def decorator(func):
-        def wrapper(f):
-            import inspect
-            import re
-
-            lines = inspect.getsource(f)
-            logging.info("Running container: {}".format(image))
-            lines = re.sub('@', '#@', lines)
-            name = f.__name__
-
-            installpackages = []
-            for package in packages:
-                installpackages += ["pip install -q {}".format(package)]
-
-            code = "bash -c \"{}\npython <<HEREDOC {}\nprint({}())\"\nHEREDOC".format(
-                ";".join(installpackages), lines, name)
-
-            logging.debug(code)
-            env = {}
-
-            #result = client.containers.run(
-            #    image, code, environment=env)
-
-            #logging.debug(result)
-            return  # result
-
-        p = partial(wrapper, func)
-        p.__name__ = func.__name__
-
-        return p
+        return pfunc
 
     if function is not None:
         return decorator(function)

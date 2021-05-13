@@ -8,6 +8,8 @@ import os
 import inspect
 import multiprocessing
 import time
+import queue as que
+from typing import Callable
 from functools import partial
 from multiprocessing import Queue, Process
 from multiprocessing.shared_memory import SharedMemory
@@ -22,7 +24,7 @@ def process(function=None,
             wait=None,
             cache=False,
             shared_memory=False,
-            sleep=0):
+            sleep=0) -> Callable:
     """
 
     :param function:
@@ -32,15 +34,15 @@ def process(function=None,
     :param sleep:
     :return:
     """
-    logging.debug("TIMEOUT: %s",timeout)
+    logging.debug("TIMEOUT: %s", timeout)
 
-    def decorator(func):
+    def decorator(func) -> Callable:
         """
         Description
         :param func:
         :return:
         """
-        def wrapper(f_func):
+        def wrapper(f_func) -> Callable:
             """
             Description
             :param f_func:
@@ -82,7 +84,7 @@ class ProcessMonitor:
     Primary monitor class for processes. Creates and monitors queues and processes to resolve argument tasks.
     """
 
-    def __init__(self, func, *args, **kwargs):
+    def __init__(self, func, *args, **kwargs) -> Callable:
         """
 
         :param func:
@@ -100,7 +102,7 @@ class ProcessMonitor:
     def get_func(self):
         return self.func
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> Callable:
         """
 
         :param args:
@@ -108,7 +110,7 @@ class ProcessMonitor:
         :return:
         """
 
-        logging.info("Process:invoke: %s",self.func.__name__)
+        logging.info("Process:invoke: %s", self.func.__name__)
         _func = self.func
         if isinstance(self.func, partial):
 
@@ -166,11 +168,11 @@ class ProcessMonitor:
                     logging.debug("Checking queue for result...")
                     try:
                         logging.debug(
-                            "Waiting on event for %s with wait %s",name, self.wait)
+                            "Waiting on event for %s with wait %s", name, self.wait)
 
                         if wait:
                             logging.debug(
-                                "Wait event timeout in %s seconds.",wait)
+                                "Wait event timeout in %s seconds.", wait)
                             event.wait(wait)
                             if not event.is_set():
                                 if process.is_alive():
@@ -180,20 +182,20 @@ class ProcessMonitor:
                             logging.debug("Waiting until complete.")
                             event.wait()
 
-                        logging.debug("Got event for %s",name)
+                        logging.debug("Got event for %s", name)
 
-                        logging.debug("Timeout is %s",timeout)
+                        logging.debug("Timeout is %s", timeout)
                         if timeout:
                             logging.debug(
-                                "Pre get(timeout=%s)",timeout)
+                                "Pre get(timeout=%s)", timeout)
                             _result = _queue.get(timeout=timeout)
                             logging.debug(
-                                "Post get(timeout=%s)",timeout)
+                                "Post get(timeout=%s)", timeout)
                         else:
                             _result = _queue.get()
 
                         logging.debug("Got result for[%s] %s",
-                            name, str(_result))
+                                      name, str(_result))
 
                         yield
 
@@ -201,7 +203,7 @@ class ProcessMonitor:
                     except multiprocessing.TimeoutError:
                         logging.debug("Timeout exception")
                         raise ProcessTimeoutException()
-                    except queue.Empty:
+                    except que.Empty:
                         if process and not process.is_alive():
                             raise ProcessTerminatedException()
 
@@ -244,7 +246,7 @@ class ProcessMonitor:
                     _process = None
 
                     if isinstance(arg, partial):
-                        logging.info("Process: %s",arg.__name__)
+                        logging.info("Process: %s", arg.__name__)
 
                         kargs = {'queue': _queue, 'event': event}
                         # If not shared memory
@@ -259,7 +261,7 @@ class ProcessMonitor:
 
                             # TODO: Fix. This bypasses the scheduler logic of capping the CPU #'s.
                             logging.debug(
-                                'ARG CPU SET TO: %s',arg_cpu[1])
+                                'ARG CPU SET TO: %s', arg_cpu[1])
                             _process = Process(
                                 target=assign_cpu, args=(
                                     arg, arg_cpu[1],), kwargs=kargs
@@ -277,7 +279,7 @@ class ProcessMonitor:
 
                         _process.start()
                     else:
-                        logging.info("Value: %s",name)
+                        logging.info("Value: %s", name)
                         _queue.put(arg)
                         event.set()
 
@@ -301,7 +303,7 @@ class ProcessMonitor:
                 if scheduler:
                     for _process in processes:
                         logging.debug(
-                            "Putting CPU: %s  back on scheduler queue.",_process.cookie)
+                            "Putting CPU: %s  back on scheduler queue.", _process.cookie)
                         scheduler.put(('0', _process.cookie, 'Y'))
 
             if cpu:
@@ -324,7 +326,7 @@ class ProcessMonitor:
                     kwargs['smm'] = SMM
                     kwargs['sm'] = SharedMemory
 
-                logging.info("Calling %s",func.__name__)
+                logging.info("Calling %s", func.__name__)
                 logging.debug(args)
 
                 if not cpu and 'cpu' in kwargs:
@@ -336,20 +338,20 @@ class ProcessMonitor:
                     del kwargs['scheduler']
 
                 try:
-                    logging.debug("process: execute: %s",self.execute)
+                    logging.debug("process: execute: %s", self.execute)
                     if self.execute:
                         result = func(*args, **kwargs)
                     else:
                         if event:
                             logging.debug(
-                                "Setting event for %s",func.__name__)
+                                "Setting event for %s", func.__name__)
                             event.set()
                         return (args, kwargs)
                 finally:
                     # Put own cpu back on queue
                     if scheduler and cpu:
                         logging.debug(
-                            "Putting CPU: %s back on scheduler queue.",cpu)
+                            "Putting CPU: %s back on scheduler queue.", cpu)
 
                         scheduler.put(['0', cpu, 'N'])
 
@@ -360,7 +362,7 @@ class ProcessMonitor:
 
                 if event:
                     logging.debug(
-                        "Setting event for %s",func.__name__)
+                        "Setting event for %s", func.__name__)
                     event.set()
             else:
                 # Pass in shared memory handles
@@ -369,7 +371,7 @@ class ProcessMonitor:
                     kwargs['sm'] = SharedMemory
 
                 logging.debug(
-                    "Calling function %s with: %s",func.__name__, str(args))
+                    "Calling function %s with: %s", func.__name__, str(args))
 
                 # Wrap with Process and queue with timeout
                 #logging.debug("Executing function {} in MainThread".format(func))
@@ -407,18 +409,18 @@ class ProcessMonitor:
 
                         # Wait for 10 seconds or until process finishes
                         logging.debug(
-                            "Executing function %s with timeout %s",func, self.timeout)
+                            "Executing function %s with timeout %s", func, self.timeout)
                         proc.join(self.timeout)
                     else:
                         if event:
                             logging.debug(
-                                "Setting event for %s",func.__name__)
+                                "Setting event for %s", func.__name__)
                             event.set()
                         return (args, kwargs)
                 finally:
                     if scheduler and cpu:
                         logging.debug(
-                            "Putting CPU: %s back on scheduler queue.",cpu)
+                            "Putting CPU: %s back on scheduler queue.", cpu)
 
                         scheduler.put(('0', cpu, 'Y'))
 

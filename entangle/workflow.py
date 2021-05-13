@@ -5,11 +5,21 @@ import logging
 
 
 def workflow(func, **kwargs):
-
+    """
+    Desc
+    :param func:
+    :param kwargs:
+    :return:
+    """
     def inner(*args, **kwargs):
+        """
+        Desc
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        logging.debug("workflow args: %s %s",str(args), str(kwargs))
 
-        logging.debug("workflow args: {} {}".format(str(args), str(kwargs)))
-        
         if 'cpu' in kwargs:
             del kwargs['cpu']
 

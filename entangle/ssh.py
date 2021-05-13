@@ -169,7 +169,6 @@ def ssh(function=None, **kwargs):
                 app.write("print('===BEGIN===')\n")
                 app.write("print(resultp)")
 
-
             p_func = partial(f_func, *args, **kwargs)
 
             p_func.__name__ = f_func.__name__
@@ -236,7 +235,7 @@ def ssh(function=None, **kwargs):
                 result = pickle.loads(
                     codecs.decode(b"".join(resultlines), "base64"))
 
-                _ssh.exec_command("rm %s"," ".join(["/tmp/"+file for file in files]))
+                _ssh.exec_command("rm {}".format(" ".join(["/tmp/"+file for file in files])))
                 _ssh.close()
 
                 return result
@@ -264,7 +263,7 @@ def ssh(function=None, **kwargs):
 
         p_func = partial(wrapper, func, **kwargs)
 
-        if isinstance(func, ProcessMonitor, ThreadMonitor):
+        if isinstance(func, (ProcessMonitor, ThreadMonitor)):
             p_func.__name__ = func.func.__name__
         else:
             p_func.__name__ = func.__name__

@@ -1,7 +1,9 @@
-from entangle.logging.file import logging
+"""
+
+"""
+from entangle.logging.debug import logging
 from entangle.process import process
 from entangle.thread import thread
-from entangle.http import request
 from entangle.ssh import ssh
 from entangle.workflow import workflow
 from entangle.scheduler import scheduler
@@ -11,7 +13,13 @@ scheduler_config = {'cpus': 3,
                     'impl': 'entangle.scheduler.DefaultScheduler'}
 
 
-class MyResult(object):
+class MyResult:
+    """
+
+    """
+
+    def __init__(self):
+        self._result = None
 
     def set_result(self, result):
         self._result = result
@@ -67,4 +75,3 @@ if __name__ == '__main__':
     result = workflow()
     print("WORKFLOW OBJ:", result)
     print("WORKFLOW RESULT:", result.get_result())
-
