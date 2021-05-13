@@ -1,3 +1,7 @@
+# pylint: disable=locally-disabled, multiple-statements, import-outside-toplevel, import-error, no-value-for-parameter, invalid-name, too-many-function-args, unused-import, missing-function-docstring
+"""
+TBD
+"""
 from entangle.logging.debug import logging
 from entangle.containers import docker
 from entangle.process import process
@@ -66,9 +70,8 @@ def train():
 # wait is how long I will wait on dependent values. timeout is how long I should take
 @process(wait=20)
 def values(*args):
-    values = [arg for arg in args]
 
-    return values
+    return args
 
 
 o = values(

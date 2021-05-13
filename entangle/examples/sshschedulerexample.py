@@ -1,5 +1,6 @@
+# pylint: disable=locally-disabled, multiple-statements, line-too-long, no-value-for-parameter, invalid-name, too-many-function-args, unused-import, missing-function-docstring
 """
-
+TBD
 """
 from entangle.logging.debug import logging
 from entangle.process import process
@@ -15,14 +16,14 @@ scheduler_config = {'cpus': 3,
 
 class MyResult:
     """
-
+    MyResult
     """
 
     def __init__(self):
         self._result = None
 
-    def set_result(self, result):
-        self._result = result
+    def set_result(self, value):
+        self._result = value
 
     def get_result(self):
         return self._result
@@ -49,9 +50,9 @@ def two():
 @thread
 def three():
     logging.info("Returning 3")
-    result = MyResult()
+    _result = MyResult()
     result.set_result(3)
-    return result
+    return _result
 
 
 @ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
@@ -64,9 +65,9 @@ def workflow2():
         two()
     )
 
-    result = _add()
+    _result = _add()
     my_result = MyResult()
-    my_result.set_result(result)
+    my_result.set_result(_result)
     return my_result
 
 

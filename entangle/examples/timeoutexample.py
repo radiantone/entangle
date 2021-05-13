@@ -1,13 +1,18 @@
-from entangle.logging.debug import logging
-from entangle.process import process
+# pylint: disable=locally-disabled, multiple-statements, no-value-for-parameter, no-member, unused-argument, invalid-name, too-many-function-args, unused-import, missing-function-docstring
+"""
+TBD
+"""
 from timeit import default_timer as timer
 from numba import vectorize
 import numpy as np
+from entangle.logging.debug import logging
+from entangle.process import process
+
 
 @process(timeout=0.5, shared_memory=True)
 def dopow(names, smm=None, sm=None):
     print("Names:", names)
-    (namea, nameb, shapea, shapeb, typea, typeb) = names
+    (namea, nameb, _, _, typea, typeb) = names
 
     start = timer()
 
@@ -20,10 +25,10 @@ def dopow(names, smm=None, sm=None):
     np_shmb = np.frombuffer(shmb.buf, dtype=typeb)
 
     @vectorize(['float32(float32, float32)'], target='cuda')
-    def pow(a, b):
+    def _pow(a, b):
         return a ** b
 
-    pow(np_shma, np_shmb)
+    _pow(np_shma, np_shmb)
 
     duration = timer() - start
 

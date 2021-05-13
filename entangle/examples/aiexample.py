@@ -1,3 +1,7 @@
+# pylint: disable=locally-disabled, multiple-statements, import-outside-toplevel, import-error, no-value-for-parameter, invalid-name, too-many-function-args, unused-import, missing-function-docstring
+"""
+aiexample.py
+"""
 from entangle.logging.debug import logging
 from entangle.containers import docker
 from entangle.process import process
@@ -55,5 +59,5 @@ def train():
     return model.summary()
 
 
-model = train()
-print(model())
+result = train()
+print(result())
