@@ -1,6 +1,14 @@
 # pylint: disable=locally-disabled, multiple-statements, line-too-long, no-value-for-parameter, invalid-name, too-many-function-args, unused-import, missing-function-docstring
 """
-TBD
+sshschedulerexample.py - Example usage of @ssh and @schedular decorators
+
+Create and copy ssh keys to your hosts
+
+$ ssh-keygen -t rsa
+$ ssh-copy-id -i /home/$USER/.ssh/id_rsa.pub <destination hostname>
+
+This must be done bidirectionally between all hosts
+
 """
 from entangle.logging.debug import logging
 from entangle.process import process
