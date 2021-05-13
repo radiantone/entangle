@@ -5,6 +5,10 @@ import glob
 import shutil
 from setuptools import setup
 from setuptools import Command
+import distutils.cmd
+import distutils.log
+import setuptools
+import subprocess
 
 # get key package details from py_pkg/__version__.py
 about = {}  # type: ignore
@@ -17,9 +21,67 @@ with open('README.md', 'r') as f:
     readme = f.read()
 
 
+class PyTestCommand(distutils.cmd.Command):
+  """A custom command to run Pylint on all Python source files."""
+
+  description = 'Run pytest tests'
+  user_options = [
+      
+  ]
+
+  def initialize_options(self):
+    """Set default values for options."""
+    # Each user option must be listed here with their default value.
+    pass
+
+  def finalize_options(self):
+    """Post-process options."""
+    pass
+
+  def run(self):
+    """Run command."""
+    command = [
+        'pytest --full-trace --verbose --color=yes --disable-pytest-warnings --no-summary --pyargs entangle.tests']
+
+    self.announce(
+        'Running command: %s' % str(command),
+        level=distutils.log.INFO)
+    subprocess.Popen(command, shell=True)
+
+class PylintCommand(distutils.cmd.Command):
+  """A custom command to run Pylint on all Python source files."""
+
+  description = 'run Pylint on Python source files'
+  user_options = [
+      # The format is (long option, short option, description).
+      ('pylint-rcfile=', None, 'path to Pylint config file'),
+  ]
+
+  def initialize_options(self):
+    """Set default values for options."""
+    # Each user option must be listed here with their default value.
+    self.pylint_rcfile = ''
+
+  def finalize_options(self):
+    """Post-process options."""
+    if self.pylint_rcfile:
+      assert os.path.exists(self.pylint_rcfile), (
+          'Pylint config file %s does not exist.' % self.pylint_rcfile)
+
+  def run(self):
+    """Run command."""
+    command = ['pylint entangle']
+    #if self.pylint_rcfile:
+    #  command.append('--rcfile=%s' % self.pylint_rcfile)
+    #command.append('entangle')
+    self.announce(
+        'Running command: %s' % str(command),
+        level=distutils.log.INFO)
+    subprocess.Popen(command, shell=True)
+
 class CleanCommand(Command):
     """Custom clean command to tidy up the project root."""
-    CLEAN_FILES = './build ./dist ./*.pyc ./*.tgz ./entangle.log ./.pytest_cache ./*.egg-info'.split(' ')
+    CLEAN_FILES = './build ./dist ./__pycache__ **/*/__pycache__ ./*.pyc ./ssh*py ./*.tgz ./entangle.log ./.pytest_cache ./*.egg-info'.split(' ')
 
     user_options = []
 
@@ -88,14 +150,15 @@ setup(
         'setuptools',
         'six==1.15.0',
         'typeguard==2.12.0',
-        'dill',
+        'pylint==2.8.2',
         'astunparse==1.6.3'
-
     ],
     license=about['__license__'],
     zip_safe=False,
     cmdclass={
         'clean': CleanCommand,
+        'pylint': PylintCommand,
+        'test': PyTestCommand
     },
     entry_points={
 

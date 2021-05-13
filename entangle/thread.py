@@ -5,7 +5,14 @@ import asyncio
 import logging
 import sys
 import os
+import queue as que
+import time
 import multiprocessing
+
+from functools import partial
+import inspect
+from threading import Thread
+from multiprocessing import Queue
 from multiprocessing.shared_memory import SharedMemory
 from multiprocessing.managers import SharedMemoryManager
 
@@ -28,13 +35,13 @@ def thread(function=None,
     :param sleep:
     :return:
     """
-    logging.debug("TIMEOUT: {}".format(timeout))
+    logging.debug("TIMEOUT: %s",timeout)
 
     def decorator(func):
-        def wrapper(f):
+        def wrapper(_func):
             logging.debug(
-                "ThreadMonitor: {} with wait {}".format(f, wait))
-            return ThreadMonitor(f,
+                "ThreadMonitor: %s with wait %s", _func, wait)
+            return ThreadMonitor(_func,
                                  timeout=timeout,
                                  wait=wait,
                                  shared_memory=shared_memory,
@@ -49,84 +56,20 @@ def thread(function=None,
     return decorator
 
 
-def pool(function=None,
-         timeout=None,
-         wait=None,
-         cache=False,
-         shared_memory=False,
-         sleep=0):
-    """
-    A thread pool that executes the workflow callgraph inside out so it
-    can pool only the graph leaf nodes in a thread pool executor.
-
-    :param function:
-    :param timeout:
-    :param cache:
-    :param shared_memory:
-    :param sleep:
-    :return:
-    """
-
-    def decorator(func):
-        def wrapper(f):
-
-            class poolmonitor():
-
-                def __init__(self, func, *args, **kwargs):
-
-                    self.func = func
-
-                def __call__(self, *args, **kwargs):
-                    from functools import partial
-                    # return partial here
-                    logging.debug("FUNC: {}".format(self.func.__name__))
-                    logging.debug("ARGS: {}".format(str(args)))
-
-                    if len(args) > 0:
-                        logging.debug("POOL: {}".format(str(args)))
-                        # Only send partial functions to the pol
-
-                    p = partial(self.func)
-                    p.__name__ = self.func.__name__
-                    p.pargs = args
-                    p.pkwargs = kwargs
-                    return p
-
-            pm = poolmonitor(f)
-
-            # Once we have the poolmonitor call graph, we need to traverse
-            # it and invert the calling sequence and ensure that argument
-            # results get gather before a new thread function is given to the pool
-
-            return pm
-
-        return wrapper(func)
-
-    if function is not None:
-        return decorator(function)
-
-    return decorator
-
 
 class ThreadTerminatedException(Exception):
     """
 
     """
-    pass
 
 
 class ThreadTimeoutException(Exception):
     """
 
     """
-    pass
 
 
-class PoolMonitor(object):
-    pass
-
-
-class ThreadMonitor(object):
+class ThreadMonitor:
     """
     Primary monitor class for threades. Creates and monitors queues and threades to resolve argument tasks.
     """
@@ -138,9 +81,6 @@ class ThreadMonitor(object):
         :param args:
         :param kwargs:
         """
-        from functools import partial
-        import inspect
-
         self.func = func
         self.shared_memory = kwargs['shared_memory']
         self.sleep = kwargs['sleep']
@@ -148,12 +88,12 @@ class ThreadMonitor(object):
         self.timeout = kwargs['timeout']
         self.wait = kwargs['wait']
 
-        if type(self.func) is partial:
+        if isinstance(self.func, partial):
 
-            def find_func(p):
-                if type(p) is partial:
-                    return find_func(p.func)
-                return p
+            def find_func(pfunc):
+                if isinstance(pfunc, partial):
+                    return find_func(pfunc.func)
+                return pfunc
 
             _func = find_func(self.func)
         else:
@@ -168,18 +108,13 @@ class ThreadMonitor(object):
         :param kwargs:
         :return:
         """
-        from functools import partial
-        from multiprocessing import Queue
-        from threading import Thread
 
-        logging.info("Thread:invoke: {}".format(self.func.__name__))
+        logging.info("Thread:invoke: %s",self.func.__name__)
         _func = self.func
 
-        logging.info("Thread:source: {}".format(self.source))
+        logging.info("Thread:source: %s",self.source)
 
         def assign_cpu(func, cpu, **kwargs):
-            import os
-
             pid = os.getpid()
             cpu_mask = [int(cpu)]
             os.sched_setaffinity(pid, cpu_mask)
@@ -194,11 +129,9 @@ class ThreadMonitor(object):
             :param kwargs:
             :return:
             """
-            import time
-            import os
 
             @asyncio.coroutine
-            def get_result(q, func, sleep, now, thread, event, wait):
+            def get_result(qfunc, func, sleep, now, _thread, event, wait):
                 """
 
                 :param q:
@@ -209,9 +142,8 @@ class ThreadMonitor(object):
                 :param timeout:
                 :return:
                 """
-                import queue
-                import time
 
+                logging.debug("get_result: started %s", now)
                 if hasattr(func, '__name__'):
                     name = func.__name__
                 else:
@@ -221,37 +153,35 @@ class ThreadMonitor(object):
                     logging.debug("Checking queue for result...")
                     try:
                         logging.debug(
-                            "Waiting on event for {} with wait {}".format(name, self.wait))
+                            "Waiting on event for %s with wait %s",name, self.wait)
 
                         if wait:
                             logging.debug(
-                                "Wait event timeout in {} seconds.".format(wait))
+                                "Wait event timeout in %s seconds.",wait)
                             event.wait(wait)
                             if not event.is_set():
-                                if thread.is_alive():
-                                    thread.terminate()
+                                if _thread.is_alive():
+                                    _thread.terminate()
                                 raise ThreadTimeoutException()
                         else:
                             logging.debug("Waiting until complete.")
                             event.wait()
 
-                        logging.debug("Got event for {}".format(name))
+                        logging.debug("Got event for %s",name)
 
                         sys.path.append(os.getcwd())
-                        _result = q.get()
+                        _result = qfunc.get()
 
-                        logging.debug("Got result for[{}] {}".format(
-                            name, str(_result)))
+                        logging.debug("Got result for[%s] %s",
+                            name, str(_result))
 
                         yield
 
                         return _result
 
-                    except queue.Empty:
-                        import time
-
-                        if thread and not thread.is_alive():
-                            raise ThreadTerminatedException()
+                    except que.Empty as exc:
+                        if _thread and not _thread.is_alive():
+                            raise ThreadTerminatedException() from exc
 
                         yield time.sleep(sleep)
 
@@ -279,7 +209,7 @@ class ThreadMonitor(object):
 
                 for arg in args:
 
-                    e = multiprocessing.Event()
+                    event = multiprocessing.Event()
 
                     if hasattr(arg, '__name__'):
                         name = arg.__name__
@@ -292,10 +222,10 @@ class ThreadMonitor(object):
 
                     _thread = None
 
-                    if type(arg) == partial:
-                        logging.info("Thread: {}".format(arg.__name__))
+                    if isinstance(arg, partial):
+                        logging.info("Thread: %s",arg.__name__)
 
-                        kargs = {'queue': queue, 'event': e}
+                        kargs = {'queue': queue, 'event': event}
                         # If not shared memory
 
                         # if shared memory, set the handles
@@ -306,7 +236,7 @@ class ThreadMonitor(object):
                         if cpu:
                             arg_cpu = scheduler.get()
                             logging.debug(
-                                'ARG CPU SET TO: {}'.format(arg_cpu[1]))
+                                'ARG CPU SET TO: %s',arg_cpu[1])
                             _thread = Thread(
                                 target=assign_cpu, args=(
                                     arg, arg_cpu[1],), kwargs=kargs
@@ -324,16 +254,16 @@ class ThreadMonitor(object):
 
                         _thread.start()
                     else:
-                        logging.info("Value:".format(name))
+                        logging.info("Value: %s",name)
                         queue.put(arg)
-                        e.set()
+                        event.set()
 
                     now = time.time()
 
                     # Create an async task that monitors the queue for that arg
                     # It will wait for event set from this child thread
                     _tasks += [get_result(queue, arg,
-                                          self.sleep, now, _thread, e, self.wait)]
+                                          self.sleep, now, _thread, event, self.wait)]
 
                     # Wait until all the threades report results
                     tasks = asyncio.gather(*_tasks)
@@ -342,13 +272,13 @@ class ThreadMonitor(object):
 
                 args = loop.run_until_complete(tasks)
 
-                [thread.join() for thread in threades]
+                _joins = [thread.join() for thread in threades]
 
                 # Put CPU cookie back on scheduler queue
                 if scheduler:
                     for thread in threades:
                         logging.debug(
-                            "Putting CPU: {}  back on scheduler queue.".format(thread.cookie))
+                            "Putting CPU: %s  back on scheduler queue.",thread.cookie)
                         scheduler.put(('0', thread.cookie, 'Y'))
 
             if cpu:
@@ -371,7 +301,7 @@ class ThreadMonitor(object):
                     kwargs['smm'] = smm
                     kwargs['sm'] = SharedMemory
 
-                logging.info("Calling {}".format(func.__name__))
+                logging.info("Calling %s",func.__name__)
                 logging.debug(args)
 
                 if not cpu and 'cpu' in kwargs:
@@ -387,7 +317,7 @@ class ThreadMonitor(object):
                 # Put own cpu back on queue
                 if scheduler and cpu:
                     logging.debug(
-                        "Putting CPU: {}  back on scheduler queue.".format(cpu))
+                        "Putting CPU: %s  back on scheduler queue.",cpu)
                     scheduler.put(['0', cpu, 'N'])
 
                 if self.cache:
@@ -397,7 +327,7 @@ class ThreadMonitor(object):
 
                 if event:
                     logging.debug(
-                        "Setting event for {}".format(func.__name__))
+                        "Setting event for %s",func.__name__)
                     event.set()
             else:
                 # Pass in shared memory handles
@@ -406,24 +336,24 @@ class ThreadMonitor(object):
                     kwargs['sm'] = SharedMemory
 
                 logging.debug(
-                    "Calling function {} with: {}".format(func.__name__, str(args)))
+                    "Calling function %s with: %s",func.__name__, str(args))
 
                 result = func(*args, **kwargs)
 
                 if scheduler and cpu:
                     logging.debug(
-                        "Putting CPU: {}  back on scheduler queue.".format(cpu))
+                        "Putting CPU: %s  back on scheduler queue.",cpu)
 
                     scheduler.put((0, cpu, 'Y3'))
 
             return result
 
-        p = partial(invoke, self.func, *args, **kwargs)
+        pfunc = partial(invoke, self.func, *args, **kwargs)
 
         if hasattr(self.func, '__name__'):
-            p.__name__ = self.func.__name__
+            pfunc.__name__ = self.func.__name__
         else:
-            p.__name__ = 'thread'
+            pfunc.__name__ = 'thread'
 
-        p.source = self.source
-        return p
+        pfunc.source = self.source
+        return pfunc
