@@ -1,0 +1,5 @@
+[VARIABLES]
+additional-builtins=_
+
+[MESSAGES CONTROL]
+disable=not-callable
