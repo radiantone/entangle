@@ -8,6 +8,7 @@ import os
 import inspect
 import multiprocessing
 import time
+import traceback
 import queue as que
 from typing import Callable
 from functools import partial
@@ -69,20 +70,19 @@ class ProcessTerminatedException(Exception):
     """
     Description
     """
-    pass
 
 
 class ProcessTimeoutException(Exception):
     """
     Description
     """
-    pass
 
 
 class ProcessMonitor:
     """
     Primary monitor class for processes. Creates and monitors queues and processes to resolve argument tasks.
     """
+    source = None
 
     def __init__(self, func, *args, **kwargs) -> Callable:
         """
@@ -98,8 +98,12 @@ class ProcessMonitor:
         self.timeout = kwargs['timeout']
         self.wait = kwargs['wait']
         self.execute = kwargs['execute'] if 'execute' in kwargs else True
+        self.source = None
 
     def get_func(self):
+        """
+        Desc
+        """
         return self.func
 
     def __call__(self, *args, **kwargs) -> Callable:
@@ -200,12 +204,12 @@ class ProcessMonitor:
                         yield
 
                         return _result
-                    except multiprocessing.TimeoutError:
+                    except multiprocessing.TimeoutError as ex:
                         logging.debug("Timeout exception")
-                        raise ProcessTimeoutException()
-                    except que.Empty:
+                        raise ProcessTimeoutException() from ex
+                    except que.Empty as ex:
                         if process and not process.is_alive():
-                            raise ProcessTerminatedException()
+                            raise ProcessTerminatedException() from ex
 
                         yield time.sleep(sleep)
 
@@ -391,7 +395,6 @@ class ProcessMonitor:
                         _wq.put(result)
                         logging.debug("func_wrapper: done putting queue")
                     except Exception:
-                        import traceback
                         with open('error.out', 'w') as errfile:
                             errfile.write(traceback.format_exc())
 

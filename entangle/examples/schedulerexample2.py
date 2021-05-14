@@ -1,3 +1,7 @@
+# pylint: disable=locally-disabled, multiple-statements, no-value-for-parameter, invalid-name, too-many-function-args, unused-import, missing-function-docstring
+"""
+TBD
+"""
 from entangle.logging.file import logging
 from entangle.process import process
 from entangle.http import request

@@ -1,3 +1,8 @@
+# pylint: disable=locally-disabled, multiple-statements, no-value-for-parameter, unexpected-keyword-arg, invalid-name, too-many-function-args, unused-import, missing-function-docstring
+"""
+TBD
+"""
+import json
 from entangle.logging.debug import logging
 from entangle.process import process
 from entangle.http import request
@@ -12,7 +17,6 @@ scheduler_config = {'cpus': 3,
 @process
 @request(url='https://datausa.io/api/data', method='GET')
 def mydata(data):
-    import json
     data = json.loads(data)
     print('My function got the data! ', data)
     return int(data['data'][0]['Year'])

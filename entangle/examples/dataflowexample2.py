@@ -1,10 +1,15 @@
+# pylint: disable=locally-disabled, multiple-statements, no-value-for-parameter, invalid-name, too-many-function-args, unused-import, missing-function-docstring
+"""
+TBD
+"""
+import threading
+import time
 from entangle.logging.file import logging
 from entangle.dataflow import process
 from entangle.dataflow import dataflow
 from entangle.scheduler import scheduler
 
-import threading
-import time
+
 
 def triggered(func, result):
     print("triggered: {} {}".format(func.__name__, result))
@@ -19,7 +24,7 @@ scheduler_config = {'cpus': 2,
 @process
 def printx(x):
     print('printx: {}'.format(threading.current_thread().name))
-    return("X: {}".format(x))
+    return "X: {}".format(x)
 
 
 @scheduler(**scheduler_config)
@@ -27,7 +32,7 @@ def printx(x):
 @process
 def printy(y):
     print('printy: {}'.format(threading.current_thread().name))
-    return("Y: {}".format(y))
+    return "Y: {}".format(y)
 
 
 @scheduler(**scheduler_config)
@@ -35,7 +40,7 @@ def printy(y):
 @process
 def printz(z):
     print('printz: {}'.format(threading.current_thread().name))
-    return("Z: {}".format(z))
+    return "Z: {}".format(z)
 
 
 @scheduler(**scheduler_config)
@@ -48,7 +53,7 @@ def echo(e):
 
 @scheduler(**scheduler_config)
 @dataflow(executor='thread', callback=triggered, maxworkers=3)
-def emit(a, **kwargs):
+def emit(a):
     print('emit: {}'.format(threading.current_thread().name))
     return a+"!"
 
@@ -72,7 +77,3 @@ flow = emit(
 flow('emit')
 
 time.sleep(2)
-
-# Call flow again with different input value
-# TODO: This seems to hang
-#flow('HELLO')

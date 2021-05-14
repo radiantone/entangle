@@ -1,8 +1,13 @@
+# pylint: disable=locally-disabled, multiple-statements, no-value-for-parameter, no-member, invalid-name, too-many-function-args, unused-import, missing-function-docstring
+"""
+TBD
+"""
+from timeit import default_timer as timer
 import numpy as np
+from numba import vectorize
 from entangle.logging.file import logging
 from entangle.process import process
 from entangle.scheduler import scheduler
-from timeit import default_timer as timer
 
 
 scheduler_config = {'cpus': 3,
@@ -12,10 +17,10 @@ scheduler_config = {'cpus': 3,
 #@scheduler(**scheduler_config)
 @process
 def dovectors1():
-    from numba import vectorize
+    # pylint: disable=locally-disabled, unused-variable
 
     @vectorize(['float32(float32, float32)'], target='cuda')
-    def pow(a, b):
+    def dopow(a, b):
         return a ** b
 
     vec_size = 100
@@ -24,7 +29,7 @@ def dovectors1():
     c = np.zeros(vec_size, dtype=np.float32)
 
     start = timer()
-    matrix = pow(a, b)
+    matrix = dopow(a, b)
     duration = timer() - start
     return duration
 
@@ -32,10 +37,10 @@ def dovectors1():
 #@scheduler(**scheduler_config)
 @process
 def dovectors2():
-    from numba import vectorize
+    # pylint: disable=locally-disabled, unused-variable
 
     @vectorize(['float32(float32, float32)'], target='cuda')
-    def pow(a, b):
+    def dopow(a, b):
         return a ** b
 
     vec_size = 100000000
@@ -44,7 +49,7 @@ def dovectors2():
     c = np.zeros(vec_size, dtype=np.float32)
 
     start = timer()
-    matrix = pow(a, b)
+    matrix = dopow(a, b)
     duration = timer() - start
     return duration
 
@@ -53,9 +58,7 @@ def dovectors2():
 @process
 def durations(*args):
 
-    times = [arg for arg in args]
-
-    return times
+    return args
 
 
 if __name__ == '__main__':
