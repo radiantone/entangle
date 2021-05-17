@@ -35,7 +35,7 @@ def printz(z):
     return "     Z: {}".format(z)
 
 
-@dataflow(executor='thread', callback=triggered, maxworkers=5)
+@dataflow(callback=triggered, maxworkers=5)
 def emit(a):
     print('emit: {}'.format(threading.current_thread().name))
     return a+"!"
