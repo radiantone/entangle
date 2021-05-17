@@ -89,7 +89,7 @@ class DataflowNode:
         logging.debug("Inside dataflow: %s",
             self.func.__name__)
 
-        if len(self.args) > 0 and isinstance(self.args[0], DataflowNode):
+        if len(self.args) > 0 and not isinstance(self.args[0], DataflowNode):
             logging.debug("Calling partial")
 
             if callable(self.args[0]) and self.args[0].__name__ == "<lambda>":
@@ -143,7 +143,7 @@ class DataflowNode:
 
             logging.debug("Result %s",result)
             for arg in self.args:
-                if isinstance(arg,DataflowNode):
+                if isinstance(arg, DataflowNode):
                     logging.debug("Sending %s to %s",
                         result, arg.func.__name__)
 

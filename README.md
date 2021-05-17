@@ -1,13 +1,32 @@
 ![logo](./images/logo.png)
 
-A lightweight (serverless) native python parallel processing framework based on simple decorators and call graphs, supporting both *control flow* and *dataflow* execution paradigms as well as de-centralized CPU scheduling.
+A lightweight (serverless) native python parallel processing framework based on simple decorators and call graphs, supporting both *control flow* and *dataflow* execution paradigms as well as de-centralized CPU & GPU scheduling. 
 
+> For a quick look at what makes Entangle special, take a look at [Design Goals](#design-goals).
+
+## Quick Usage
+
+With Entangle you can run simple, hardware parallelized code with conditional logic that looks like this.
+
+```python
+result = add(
+            add(
+                num(6),
+                two() if False else one()
+            ),
+            subtract(
+                five(),
+                two()
+            )
+)
+print(result())
+```
 ## Outline
 
 * [Overview](#overview)
   * [What does "Entangle" mean?](#what-does-entangle-mean)
   * [Important Notes](#important-notes)
-* [Install](#install)
+* [Installation](#installation)
 * [Design Goals](#design-goals)  
 * [Architecture](#architecture)
 * [Declarative Infrastructure](#declarative-infrastructure)
@@ -54,8 +73,9 @@ In this context, it is a metaphor for how tasks send data (particles) to one ano
 
 ### IMPORTANT NOTES!
 
-Please keep in mind that Entangle is *in development* and is classified as `Pre-Alpha`. If you clone this repo and want to experiment be sure to update often as things break, improve, get fixed etc. quite frequently. The `main` branch will always contain the most current release. All development for the next version is done on that branch (e.g. 0.0.19). If you want the current development version, look for the latest version numbered branch.
-## Install
+Please keep in mind that Entangle is *in development* and is classified as `Pre-Alpha`. Some of the functionality shown here is incomplete. If you clone this repo and want to experiment be sure to update often as things break, improve, get fixed etc. quite frequently. The `main` branch will always contain the most current release. All development for the next version is done on that branch (e.g. 0.1.4). If you want the current development version, look for the latest semantic version numbered branch.
+
+## Installation
 
 NOTE: At the moment entangle only works with python 3.8 due to how coroutines work there and also shared memory features.
 
@@ -84,6 +104,22 @@ $ conda init
 $ python setup.py install
 $ python -m entangle.examples.example
 ```
+
+### Installing Numba
+
+On some systems you might encounter the following error when trying to install Entangle, during the `numba` installation.
+```bash
+RuntimeError: Could not find a `llvm-config` binary.
+```
+
+Try the following remedy (for ubuntu systems)
+
+```bash
+$ sudo apt-get install -y --no-install-recommends  llvm-10 llvm-10-dev
+$ export LLVM_CONFIG=/usr/bin/llvm-config-10
+$ pip3 install --upgrade py-entangle
+```
+
 ### Testing
 
 ```shell
@@ -111,10 +147,11 @@ If you are planning to run or use GPU enabled code it is recommended to set up a
 * Plain Old Python
 * True Parallelism
 * Pluggable & Flexible
-* Composition
+* Composition Based
 * Shared-Nothing
 * Serverless & Threadless
 * True Dataflow Support
+* CPU/GPU Scheduling
 
 ## Architecture
 
@@ -279,29 +316,29 @@ In Entangle, there are two ways you can write your workflows, depending which is
 Let's look at the example below:
 
 ```python
-    result = add(
-                add(
-                    num(6),
-                    two() if False else one()
-                ),
-                subtract(
-                    five(),
-                    two()
-                )
-    )
+result = add(
+            add(
+                num(6),
+                two() if False else one()
+            ),
+            subtract(
+                five(),
+                two()
+            )
+)
 ```
 This represents the *structured* paradigm, based off a more strict type of lambda math notation where functions invoke functions until the top-most value is produced.
 
 We can also write this as a sequence of *imperative* declarations
 
 ```python
-    _five = five()
-    _two = two()
-    _sub = subtract(_five,_two)
-    _num = num(6)
-    _two2 = two() if False else one()
-    _add1 = add(_num,_two2)
-    result = add(_add1,_sub)
+_five = five()
+_two = two()
+_sub = subtract(_five,_two)
+_num = num(6)
+_two2 = two() if False else one()
+_add1 = add(_num,_two2)
+result = add(_add1,_sub)
 ```
 
 ## Process Behavior
@@ -327,6 +364,8 @@ o = values(
 In the above example, it is saying that the `values` function will wait up to 20 seconds for *both* `one()` and `train()` functions to complete and return values otherwise it will throw a `ProcessTimeoutException`.
 ### Timeout
 
+Timeout is more self-evident. It is the wait period in seconds, entangle will allow a process to run.
+
 ```python
 
 # Wait at most, 3 seconds for this task to complete
@@ -339,6 +378,7 @@ def task():
 def taskB():
     return False
 ```
+
 When a process times out, a `ProcessTimeoutException` will be thrown by Entangle and the process will be terminated if it is still alive.
 
 ## Composition
