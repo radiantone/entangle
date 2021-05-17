@@ -141,7 +141,6 @@ setup(
         #'numba==0.53.1',
         'paramiko==2.7.2',
         'pip',
-        'pipenv==2020.11.15',
         'psutil==5.8.0',
         'py-cpuinfo==8.0.0',
         'pytest==6.2.4',
