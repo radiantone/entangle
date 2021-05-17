@@ -1,4 +1,5 @@
 ![logo](./images/logo.png)
+<font size="-1">This version: 0.1.5</font>
 
 A lightweight (serverless) native python parallel processing framework based on simple decorators and call graphs, supporting both *control flow* and *dataflow* execution paradigms as well as de-centralized CPU & GPU scheduling. 
 
@@ -107,7 +108,9 @@ $ python -m entangle.examples.example
 
 ### Installing Numba
 
-On some systems you might encounter the following error when trying to install Entangle, during the `numba` installation.
+> NOTE: Numba package is disabled by default in `setup.py`. If you want this package, just uncomment it; however some OS specific steps might be required.
+
+On some systems you might encounter the following error when trying to install  `numba`.
 ```bash
 RuntimeError: Could not find a `llvm-config` binary.
 ```
