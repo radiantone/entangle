@@ -1,5 +1,5 @@
 read -p "Enter tag message: " desc
-export BRANCH=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
-git tag -a "v$BRANCH"  -m "$desc"
+read -p "Enter release version: " VERSION
+git tag -a "v$VERSION"  -m "$desc"
 git commit -m "$desc"
-git push origin "v$BRANCH"
+git push origin "v$VERSION"
