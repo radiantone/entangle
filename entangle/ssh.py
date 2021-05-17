@@ -128,7 +128,8 @@ def ssh(function=None, **kwargs):
                 _ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 _ssh.connect(hostname=hostname, username=username,
                             key_filename=sshkey)
-                command = "python3.8 -m venv {}; {}/bin/pip install --upgrade py-entangle".format(env, env)
+                command = "python3.8 -m venv {}; export LLVM_CONFIG=/usr/bin/llvm-config-10; {}/bin/pip install --upgrade py-entangle".format(
+                    env, env)
                 _, stdout, _ = _ssh.exec_command(command)
                 for line in stdout.read().splitlines():
                     logging.debug("SSH: setup_virtualenv: stdout: %s", line)
@@ -136,7 +137,7 @@ def ssh(function=None, **kwargs):
             if 'env' in kwargs:
                 # Set up virtualenv
                 setup_virtualenv(kwargs['host'],kwargs['user'],kwargs['key'],kwargs['env'])
-                python = "{}/bin/python".format(kwargs['env'])
+                #python = "{}/bin/python".format(kwargs['env'])
                 del kwargs['env']
 
             del kwargs['user']

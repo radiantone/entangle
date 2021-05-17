@@ -63,7 +63,7 @@ def three():
     return _result
 
 
-@ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub', env="myenv")
+@ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
 @scheduler(**scheduler_config)
 @process
 def workflow2():
