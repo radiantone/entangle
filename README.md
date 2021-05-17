@@ -1,5 +1,7 @@
-![logo](./images/logo.png)
 <font size="-1">This version: 0.1.5</font>
+
+![logo](./images/logo.png)
+
 
 A lightweight (serverless) native python parallel processing framework based on simple decorators and call graphs, supporting both *control flow* and *dataflow* execution paradigms as well as de-centralized CPU & GPU scheduling. 
 
