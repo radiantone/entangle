@@ -45,7 +45,7 @@ def ssh(function=None, **kwargs):
         hostname = kwargs['host']
         username = kwargs['user']
         sshkey = kwargs['key']
-        python = kwargs['python']
+        python = kwargs['python'] if 'python' in kwargs else "python3.8"
 
         logging.debug("ssh: func: %s", func.func)
         logging.debug("ssh: func source:\n%s", func.source)
@@ -121,6 +121,23 @@ def ssh(function=None, **kwargs):
 
             logging.debug("SSH: user:%s host:%s key: %s",
                 kwargs['user'], kwargs['host'], kwargs['key'])
+
+
+            def setup_virtualenv(host, user, key, env):
+                _ssh = paramiko.SSHClient()
+                _ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                _ssh.connect(hostname=hostname, username=username,
+                            key_filename=sshkey)
+                command = "python3.8 -m venv {}; {}/bin/pip install --upgrade py-entangle".format(env, env)
+                _, stdout, _ = _ssh.exec_command(command)
+                for line in stdout.read().splitlines():
+                    logging.debug("SSH: setup_virtualenv: stdout: %s", line)
+
+            if 'env' in kwargs:
+                # Set up virtualenv
+                setup_virtualenv(kwargs['host'],kwargs['user'],kwargs['key'],kwargs['env'])
+                python = "{}/bin/python".format(kwargs['env'])
+                del kwargs['env']
 
             del kwargs['user']
             del kwargs['host']
