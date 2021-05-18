@@ -52,7 +52,7 @@ def echo(e):
 
 
 @scheduler(**scheduler_config)
-@dataflow(executor='thread', callback=triggered, maxworkers=3)
+@dataflow(callback=triggered, maxworkers=3)
 def emit(a):
     print('emit: {}'.format(threading.current_thread().name))
     return a+"!"
