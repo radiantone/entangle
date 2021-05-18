@@ -1,4 +1,4 @@
-<font size="-1">This version: 0.1.7</font>
+*This version: 0.1.8*
 
 ![logo](./images/logo.png)
 
