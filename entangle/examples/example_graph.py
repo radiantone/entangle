@@ -71,3 +71,5 @@ if __name__ == '__main__':
     result = workflow()
     print(result)
 
+    graph = workflow.graph(wait=True)
+    print("GRAPH:",graph)

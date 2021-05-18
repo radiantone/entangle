@@ -71,3 +71,14 @@ if __name__ == '__main__':
     result = workflow()
     print(result)
 
+    future = workflow.graph(wait=False)
+
+    def show_graph(graph):
+        print("GRAPH:", graph.result())
+
+    future.add_done_callback(show_graph)
+
+    loop = asyncio.get_event_loop()
+    print("WAITING ON RESULT")
+    loop.run_until_complete(future)
+    print("GOT RESULT")
