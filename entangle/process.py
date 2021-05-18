@@ -8,6 +8,7 @@ import os
 import inspect
 import multiprocessing
 import time
+import json
 import traceback
 import queue as que
 import signal
@@ -17,12 +18,12 @@ from functools import partial
 from multiprocessing import Queue, Process
 from multiprocessing.shared_memory import SharedMemory
 from multiprocessing.managers import SharedMemoryManager
+from concurrent.futures import Future
 
 SMM = SharedMemoryManager()
 SMM.start()
 
-graph = SMM.ShareableList('graph')
-
+graph_queue = Queue()
 
 def handler(signum, frame):
     # Handle any cleanup here
@@ -97,6 +98,7 @@ class ProcessMonitor:
     Primary monitor class for processes. Creates and monitors queues and processes to resolve argument tasks.
     """
     source = None
+    graph = {}
 
     def __init__(self, func, *args, **kwargs) -> Callable:
         """
@@ -164,7 +166,8 @@ class ProcessMonitor:
             :return:
             """
             graphs = []
-            json_graph = None
+            json_graph = "{}"
+            json_graphs = []
 
             @asyncio.coroutine
             def get_result(_queue, func, sleep, now, process, event, wait, timeout):
@@ -332,11 +335,12 @@ class ProcessMonitor:
                 _args = loop.run_until_complete(tasks)
                 args = [_arg['result'] for _arg in _args]
 
-
                 arg_graph = [_arg['graph'] for _arg in _args]
+                json_graphs = [_arg['json'] for _arg in _args if 'json' in _arg]
                 #from itertools import chain
 
                 # Arg graph tuple[0] maps onto graphs tuple[1]
+                logging.debug("JSON GRAPHs: %s", json_graphs)
                 logging.debug("ARG GRAPH: %s", arg_graph)
                 #graphs = graphs + arg_graph
 
@@ -352,6 +356,7 @@ class ProcessMonitor:
                 skip_add = False
 
                 logging.debug("GRAPH BEFORE: %s", graphs)
+                '''
                 if len(arg_graph) == 1 and len(graphs) == 1:
                     if len(arg_graph[0]) == 1:
                         if arg_graph[0][0] == graphs[0]:
@@ -360,24 +365,27 @@ class ProcessMonitor:
                 if not skip_add:
                     logging.debug("SKIP: %s",skip_add)
                     graphs = add_to_graph(graphs, arg_graph)
-                #graphs = list(chain.from_iterable(graphs))
+                '''
                 logging.debug("GRAPH: %s",graphs)
-                import json
 
                 _G = {}
                 _G[func.__name__] = {}
                 G = _G[func.__name__]
                 for node in graphs:
                     if len(node) < 2:
-                        logging.debug("NODE: %s", node)
                         continue
                     if node[1] not in G:
                         G[node[1]] = []
+
+                    for graphnode in json_graphs:
+                        if node[1] in graphnode:
+                            G[node[1]] = graphnode[node[1]]
+                    '''
                     for argnodes in arg_graph:
                         for argnode in argnodes:
                             if argnode[0] == node[1]:
                                 G[node[1]] += [argnode[1]]
-
+                    '''
                 json_graph = json.dumps(_G, indent=4)
                 logging.debug("JSON: %s", json_graph)
                 _ = [process.join() for process in processes]
@@ -442,9 +450,11 @@ class ProcessMonitor:
                     pass
 
                 # TODO: Embed arg graphs
-                logging.debug("PUT GRAPH [%s]: %s",func.__name__, graphs)
+                logging.debug("PUT GRAPH [%s]: %s", func.__name__, graphs)
+                logging.debug(
+                    "PUT GRAPH JSON [%s]: %s", func.__name__, json_graph)
                 queue.put(
-                    {'graph': graphs, 'result': result})
+                    {'graph': graphs, 'json': json.loads(json_graph), 'result': result})
 
                 if event:
                     logging.debug(
@@ -517,8 +527,11 @@ class ProcessMonitor:
                 response = _mq.get()
 
 
-                if json_graph:
-                    logging.debug("FINAL JSON: %s",json_graph)
+                if len(json_graphs) > 0:
+                    callgraph = {func.__name__: json_graphs}
+                    graph_queue.put(callgraph)
+                    self.graph = json.dumps(callgraph)
+
                 result = response['result']
                 logging.debug("process: got result from queue")
 
@@ -536,5 +549,29 @@ class ProcessMonitor:
             pfunc.__name__ = self.func.__name__
         else:
             pfunc.__name__ = 'process'
+        
+        def get_graph(wait=True):
+            if wait:
+                return graph_queue.get()
+            else:
+                @asyncio.coroutine
+                def wait_for_graph():
+
+                    logging.debug("wait_for_graph: looping")
+                    while True:
+                        try:
+                            logging.debug("wait_for_graph: checking queue")
+                            graph = graph_queue.get_nowait()
+                            logging.debug("wait_for_graph: got result")
+                            return graph
+                        except:
+                            logging.debug("wait_for_graph: yielding")
+                            yield
+
+                loop = asyncio.get_event_loop()
+                task = loop.create_task(wait_for_graph())
+                return task
+
+        pfunc.graph = get_graph
 
         return pfunc
