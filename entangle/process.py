@@ -128,8 +128,6 @@ class ProcessMonitor:
         :return:
         """
 
-        json_graph = None
-
         logging.info("Process:invoke: %s", self.func.__name__)
         _func = self.func
         if isinstance(self.func, partial):
@@ -166,6 +164,8 @@ class ProcessMonitor:
             :return:
             """
             graphs = []
+            json_graph = None
+
             @asyncio.coroutine
             def get_result(_queue, func, sleep, now, process, event, wait, timeout):
                 """
@@ -517,7 +517,8 @@ class ProcessMonitor:
                 response = _mq.get()
 
 
-                logging.debug("FINAL JSON: %s",json_graph)
+                if json_graph:
+                    logging.debug("FINAL JSON: %s",json_graph)
                 result = response['result']
                 logging.debug("process: got result from queue")
 
