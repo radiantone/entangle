@@ -10,6 +10,8 @@ import multiprocessing
 import time
 import traceback
 import queue as que
+import signal
+
 from typing import Callable
 from functools import partial
 from multiprocessing import Queue, Process
@@ -19,6 +21,18 @@ from multiprocessing.managers import SharedMemoryManager
 SMM = SharedMemoryManager()
 SMM.start()
 
+graph = SMM.ShareableList('graph')
+
+
+def handler(signum, frame):
+    # Handle any cleanup here
+    SMM.shutdown()
+
+
+signal.signal(signal.SIGINT, handler)
+signal.signal(signal.SIGTERM, handler)
+
+# Get shared memory list for adding call graph tuples
 
 def process(function=None,
             timeout=None,
@@ -114,6 +128,8 @@ class ProcessMonitor:
         :return:
         """
 
+        json_graph = None
+
         logging.info("Process:invoke: %s", self.func.__name__)
         _func = self.func
         if isinstance(self.func, partial):
@@ -149,6 +165,7 @@ class ProcessMonitor:
             :param kwargs:
             :return:
             """
+            graphs = []
             @asyncio.coroutine
             def get_result(_queue, func, sleep, now, process, event, wait, timeout):
                 """
@@ -192,18 +209,22 @@ class ProcessMonitor:
                         if timeout:
                             logging.debug(
                                 "Pre get(timeout=%s)", timeout)
-                            _result = _queue.get(timeout=timeout)
+                            _response = _queue.get(timeout=timeout)
+                            _result = _response['result']
                             logging.debug(
                                 "Post get(timeout=%s)", timeout)
                         else:
-                            _result = _queue.get()
+                            _response = _queue.get()
+                            _result = _response['result']
 
                         logging.debug("Got result for[%s] %s",
                                       name, str(_result))
 
                         yield
 
-                        return _result
+                        # Unwrap graph data list, and result (graph, result)
+
+                        return _response
                     except multiprocessing.TimeoutError as ex:
                         logging.debug("Timeout exception")
                         raise ProcessTimeoutException() from ex
@@ -239,13 +260,11 @@ class ProcessMonitor:
                     event = multiprocessing.Event()
 
                     if hasattr(arg, '__name__'):
-                        name = arg.__name__
+                        aname = arg.__name__
                     else:
-                        name = arg
+                        aname = arg
 
                     _queue = Queue()
-
-                    # Need to pull a cpu off scheduler queue here
 
                     _process = None
 
@@ -266,6 +285,8 @@ class ProcessMonitor:
                             # TODO: Fix. This bypasses the scheduler logic of capping the CPU #'s.
                             logging.debug(
                                 'ARG CPU SET TO: %s', arg_cpu[1])
+
+                            # Update sharedlist with func to arg names
                             _process = Process(
                                 target=assign_cpu, args=(
                                     arg, arg_cpu[1],), kwargs=kargs
@@ -273,6 +294,8 @@ class ProcessMonitor:
                             _process.cookie = arg_cpu[1]
                         else:
                             logging.debug('NO CPU SET')
+
+                            # Update sharedlist with func to arg names
                             _process = Process(
                                 target=arg, kwargs=kargs)
 
@@ -283,14 +306,21 @@ class ProcessMonitor:
 
                         _process.start()
                     else:
-                        logging.info("Value: %s", name)
-                        _queue.put(arg)
+                        logging.info("Value: %s", aname)
+
+                        # TODO: Put (graph,result) tuple here
+                        _queue.put(
+                            {'graph': [(func.__name__, aname)], 'result': arg})
                         event.set()
 
                     now = time.time()
 
                     # Create an async task that monitors the queue for that arg
                     # It will wait for event set from this child process
+                    if hasattr(arg, '__name__'):
+                        graphs += [(func.__name__, arg.__name__)]
+                    else:
+                        graphs += [(func.__name__, arg)]
                     _tasks += [get_result(_queue, arg,
                                           self.sleep, now, _process, event, self.wait, self.timeout)]
 
@@ -299,8 +329,57 @@ class ProcessMonitor:
 
                 # Ensure we have joined all spawned processes
 
-                args = loop.run_until_complete(tasks)
+                _args = loop.run_until_complete(tasks)
+                args = [_arg['result'] for _arg in _args]
 
+
+                arg_graph = [_arg['graph'] for _arg in _args]
+                #from itertools import chain
+
+                # Arg graph tuple[0] maps onto graphs tuple[1]
+                logging.debug("ARG GRAPH: %s", arg_graph)
+                #graphs = graphs + arg_graph
+
+                def add_to_graph(gr, argr):
+                    for item in argr:
+                        if isinstance(item, list):
+                            add_to_graph(gr,item)
+                        elif isinstance(item, tuple):
+                            gr += [item]
+
+                    return gr
+
+                skip_add = False
+
+                logging.debug("GRAPH BEFORE: %s", graphs)
+                if len(arg_graph) == 1 and len(graphs) == 1:
+                    if len(arg_graph[0]) == 1:
+                        if arg_graph[0][0] == graphs[0]:
+                            skip_add = True
+
+                if not skip_add:
+                    logging.debug("SKIP: %s",skip_add)
+                    graphs = add_to_graph(graphs, arg_graph)
+                #graphs = list(chain.from_iterable(graphs))
+                logging.debug("GRAPH: %s",graphs)
+                import json
+
+                _G = {}
+                _G[func.__name__] = {}
+                G = _G[func.__name__]
+                for node in graphs:
+                    if len(node) < 2:
+                        logging.debug("NODE: %s", node)
+                        continue
+                    if node[1] not in G:
+                        G[node[1]] = []
+                    for argnodes in arg_graph:
+                        for argnode in argnodes:
+                            if argnode[0] == node[1]:
+                                G[node[1]] += [argnode[1]]
+
+                json_graph = json.dumps(_G, indent=4)
+                logging.debug("JSON: %s", json_graph)
                 _ = [process.join() for process in processes]
 
                 # Put CPU cookie back on scheduler queue
@@ -362,7 +441,10 @@ class ProcessMonitor:
                 if self.cache:
                     pass
 
-                queue.put(result)
+                # TODO: Embed arg graphs
+                logging.debug("PUT GRAPH [%s]: %s",func.__name__, graphs)
+                queue.put(
+                    {'graph': graphs, 'result': result})
 
                 if event:
                     logging.debug(
@@ -392,7 +474,8 @@ class ProcessMonitor:
                         return func_wrapper(result, _wq)
                     try:
                         logging.debug("func_wrapper: putting result on queue")
-                        _wq.put(result)
+                        # TODO: Put (graph,result) tuple here
+                        _wq.put({'graph':[(func.__name__,_wf.__name__)], 'result':result})
                         logging.debug("func_wrapper: done putting queue")
                     except Exception:
                         with open('error.out', 'w') as errfile:
@@ -401,6 +484,7 @@ class ProcessMonitor:
                     return None
 
                 pfunc = partial(func, *args, **kwargs)
+                pfunc.__name__ = func.__name__
 
                 logging.debug("process: execute: %s", self.execute)
 
@@ -430,7 +514,11 @@ class ProcessMonitor:
                 logging.debug("process: waiting for result on queue")
 
                 sys.path.append(os.getcwd())
-                result = _mq.get()
+                response = _mq.get()
+
+
+                logging.debug("FINAL JSON: %s",json_graph)
+                result = response['result']
                 logging.debug("process: got result from queue")
 
                 # If thread is still active
