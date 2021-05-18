@@ -72,4 +72,4 @@ if __name__ == '__main__':
     print(result)
 
     graph = workflow.graph(wait=True)
-    print("GRAPH:",graph)
+    print("GRAPH:",json.dumps(graph, indent=4))
