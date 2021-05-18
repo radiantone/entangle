@@ -98,7 +98,7 @@ class ThreadTimeoutException(Exception):
 
 class ThreadMonitor:
     """
-    Primary monitor class for threades. Creates and monitors queues and threades to resolve argument tasks.
+    Primary monitor class for threads. Creates and monitors queues and threads to resolve argument tasks.
     """
     source = None
     graph = {}
@@ -259,7 +259,7 @@ class ThreadMonitor:
                 loop = asyncio.get_event_loop()
 
                 _tasks = []
-                threades = []
+                threads = []
 
                 for arg in args:
 
@@ -308,7 +308,7 @@ class ThreadMonitor:
                         if self.shared_memory:
                             _thread.shared_memory = True
 
-                        threades += [_thread]
+                        threads += [_thread]
 
                         _thread.start()
                     else:
@@ -330,10 +330,10 @@ class ThreadMonitor:
                     _tasks += [get_result(_queue, arg,
                                           self.sleep, now, _thread, event, self.wait, self.timeout)]
 
-                    # Wait until all the threades report results
+                    # Wait until all the threads report results
                     tasks = asyncio.gather(*_tasks)
 
-                # Ensure we have joined all spawned threades
+                # Ensure we have joined all spawned threads
 
                 _args = loop.run_until_complete(tasks)
                 args = [_arg['result'] for _arg in _args]
@@ -341,12 +341,9 @@ class ThreadMonitor:
                 arg_graph = [_arg['graph'] for _arg in _args]
                 json_graphs = [_arg['json']
                                for _arg in _args if 'json' in _arg]
-                #from itertools import chain
 
-                # Arg graph tuple[0] maps onto graphs tuple[1]
                 logging.debug("JSON GRAPHs: %s", json_graphs)
                 logging.debug("ARG GRAPH: %s", arg_graph)
-                #graphs = graphs + arg_graph
 
                 def add_to_graph(gr, argr):
                     for item in argr:
@@ -357,19 +354,6 @@ class ThreadMonitor:
 
                     return gr
 
-                skip_add = False
-
-                logging.debug("GRAPH BEFORE: %s", graphs)
-                '''
-                if len(arg_graph) == 1 and len(graphs) == 1:
-                    if len(arg_graph[0]) == 1:
-                        if arg_graph[0][0] == graphs[0]:
-                            skip_add = True
-
-                if not skip_add:
-                    logging.debug("SKIP: %s",skip_add)
-                    graphs = add_to_graph(graphs, arg_graph)
-                '''
                 logging.debug("GRAPH: %s", graphs)
 
                 _G = {}
@@ -384,19 +368,14 @@ class ThreadMonitor:
                     for graphnode in json_graphs:
                         if node[1] in graphnode:
                             G[node[1]] = graphnode[node[1]]
-                    '''
-                    for argnodes in arg_graph:
-                        for argnode in argnodes:
-                            if argnode[0] == node[1]:
-                                G[node[1]] += [argnode[1]]
-                    '''
+
                 json_graph = json.dumps(_G, indent=4)
                 logging.debug("JSON: %s", json_graph)
-                _ = [thread.join() for thread in threades]
+                _ = [thread.join() for thread in threads]
 
                 # Put CPU cookie back on scheduler queue
                 if scheduler:
-                    for _thread in threades:
+                    for _thread in threads:
                         logging.debug(
                             "Putting CPU: %s  back on scheduler queue.", _thread.cookie)
                         scheduler.put(('0', _thread.cookie, 'Y'))

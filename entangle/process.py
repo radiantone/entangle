@@ -311,7 +311,6 @@ class ProcessMonitor:
                     else:
                         logging.info("Value: %s", aname)
 
-                        # TODO: Put (graph,result) tuple here
                         _queue.put(
                             {'graph': [(func.__name__, aname)], 'result': arg})
                         event.set()
@@ -333,16 +332,18 @@ class ProcessMonitor:
                 # Ensure we have joined all spawned processes
 
                 _args = loop.run_until_complete(tasks)
-                args = [_arg['result'] for _arg in _args]
+                try:
+                    args = [_arg['result'] for _arg in _args]
+                    arg_graph = [_arg['graph'] for _arg in _args]
+                    json_graphs = [_arg['json']
+                               for _arg in _args if 'json' in _arg]
+                except:
+                    args = [_arg for _arg in _args]
+                    arg_graph = []
+                    json_graphs = []
 
-                arg_graph = [_arg['graph'] for _arg in _args]
-                json_graphs = [_arg['json'] for _arg in _args if 'json' in _arg]
-                #from itertools import chain
-
-                # Arg graph tuple[0] maps onto graphs tuple[1]
                 logging.debug("JSON GRAPHs: %s", json_graphs)
                 logging.debug("ARG GRAPH: %s", arg_graph)
-                #graphs = graphs + arg_graph
 
                 def add_to_graph(gr, argr):
                     for item in argr:
@@ -353,19 +354,6 @@ class ProcessMonitor:
 
                     return gr
 
-                skip_add = False
-
-                logging.debug("GRAPH BEFORE: %s", graphs)
-                '''
-                if len(arg_graph) == 1 and len(graphs) == 1:
-                    if len(arg_graph[0]) == 1:
-                        if arg_graph[0][0] == graphs[0]:
-                            skip_add = True
-
-                if not skip_add:
-                    logging.debug("SKIP: %s",skip_add)
-                    graphs = add_to_graph(graphs, arg_graph)
-                '''
                 logging.debug("GRAPH: %s",graphs)
 
                 _G = {}
@@ -380,12 +368,7 @@ class ProcessMonitor:
                     for graphnode in json_graphs:
                         if node[1] in graphnode:
                             G[node[1]] = graphnode[node[1]]
-                    '''
-                    for argnodes in arg_graph:
-                        for argnode in argnodes:
-                            if argnode[0] == node[1]:
-                                G[node[1]] += [argnode[1]]
-                    '''
+
                 json_graph = json.dumps(_G, indent=4)
                 logging.debug("JSON: %s", json_graph)
                 _ = [process.join() for process in processes]
@@ -449,7 +432,6 @@ class ProcessMonitor:
                 if self.cache:
                     pass
 
-                # TODO: Embed arg graphs
                 logging.debug("PUT GRAPH [%s]: %s", func.__name__, graphs)
                 logging.debug(
                     "PUT GRAPH JSON [%s]: %s", func.__name__, json_graph)
@@ -469,9 +451,6 @@ class ProcessMonitor:
                 logging.debug(
                     "Calling function %s with: %s", func.__name__, str(args))
 
-                # Wrap with Process and queue with timeout
-                #logging.debug("Executing function {} in MainThread".format(func))
-                #result = func(*args, **kwargs)
                 _mq = Queue()
 
                 def func_wrapper(_wf, _wq):
@@ -504,7 +483,6 @@ class ProcessMonitor:
                             target=func_wrapper, args=(pfunc, _mq, ))
                         proc.start()
 
-                        # Wait for 10 seconds or until process finishes
                         logging.debug(
                             "Executing function %s with timeout %s", func, self.timeout)
                         proc.join(self.timeout)
@@ -535,7 +513,6 @@ class ProcessMonitor:
                 result = response['result']
                 logging.debug("process: got result from queue")
 
-                # If thread is still active
                 if proc.is_alive():
                     proc.terminate()
                     proc.join()
