@@ -94,6 +94,7 @@ class ProcessTimeoutException(Exception):
     Description
     """
 
+
 class ProcessMonitor:
     """
     Primary monitor class for processes. Creates and monitors queues and processes to resolve argument tasks.
@@ -126,13 +127,11 @@ class ProcessMonitor:
         return self.func
 
     def future(self, callback=None):
+        asyncio.set_event_loop(asyncio.new_event_loop())
         loop = asyncio.get_event_loop()
 
-        def done(result):
-            callback(result)
-
         @asyncio.coroutine
-        def wait_for_done(future, future_queue):
+        def wait_for_done(future_queue):
 
             logging.debug(
                 "wait_for_done: looping: result queue: %s", future_queue)
@@ -141,24 +140,21 @@ class ProcessMonitor:
                     logging.debug("wait_for_done: checking queue")
                     result = future_queue.get_nowait()
                     logging.debug("wait_for_done: got result")
-                    future.set_result(result)
                     return result
                 except:
                     yield
 
-        _future = loop.create_future()
+        _future = loop.create_task(wait_for_done(self.result_queue))
 
-        def process_future():
-            logging.debug("process_future: running wait_for_done")
-            loop.run_until_complete(wait_for_done(_future, self.result_queue))
-            logging.debug("process_future: done wait_for_done")
+        def entangle():
+            loop.run_until_complete(_future)
+
+        _future.loop = loop
+        _future.entangle = entangle
 
         if callback:
             _future.add_done_callback(callback)
 
-        logging.debug("future: starting thread")
-        thread = threading.Thread(target=process_future)
-        thread.start()
         return _future
 
     def __call__(self, *args, **kwargs) -> Callable:
@@ -561,11 +557,13 @@ class ProcessMonitor:
 
             print("WRITING RESULT TO:", future_queue)
             future_queue.put(result)
+
             return result
 
         # Need to pass in a queue here that the future coroutine can listen on
         kwargs['future_queue'] = self.result_queue
         pfunc = partial(invoke, self.func, *args, **kwargs)
+
         if hasattr(self.func, '__name__'):
             pfunc.__name__ = self.func.__name__
         else:
@@ -594,4 +592,5 @@ class ProcessMonitor:
 
         pfunc.graph = get_graph
         pfunc.future = self.future
+
         return pfunc  # InvokeProxy(pfunc)
