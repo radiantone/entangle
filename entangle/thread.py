@@ -520,7 +520,6 @@ class ThreadMonitor:
 
                 # If thread is still active
                 if proc.is_alive():
-                    proc.terminate()
                     proc.join()
                     raise ThreadTimeoutException()
 

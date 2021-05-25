@@ -6,6 +6,7 @@ import logging
 import sys
 import os
 import inspect
+import threading
 import multiprocessing
 import time
 import json
@@ -18,22 +19,23 @@ from functools import partial
 from multiprocessing import Queue, Process
 from multiprocessing.shared_memory import SharedMemory
 from multiprocessing.managers import SharedMemoryManager
-from concurrent.futures import Future
 
 SMM = SharedMemoryManager()
 SMM.start()
 
 graph_queue = Queue()
 
-def handler(signum, frame):
-    # Handle any cleanup here
+
+def handler():
+    """
+    Handle any cleanup here
+    """
     SMM.shutdown()
 
 
 signal.signal(signal.SIGINT, handler)
 signal.signal(signal.SIGTERM, handler)
 
-# Get shared memory list for adding call graph tuples
 
 def process(function=None,
             timeout=None,
@@ -92,7 +94,6 @@ class ProcessTimeoutException(Exception):
     Description
     """
 
-
 class ProcessMonitor:
     """
     Primary monitor class for processes. Creates and monitors queues and processes to resolve argument tasks.
@@ -115,12 +116,50 @@ class ProcessMonitor:
         self.wait = kwargs['wait']
         self.execute = kwargs['execute'] if 'execute' in kwargs else True
         self.source = None
+        self.result_queue = Queue()
+        print("RESULT QUEUE: ", self.result_queue)
 
     def get_func(self):
         """
         Desc
         """
         return self.func
+
+    def future(self, callback=None):
+        loop = asyncio.get_event_loop()
+
+        def done(result):
+            callback(result)
+
+        @asyncio.coroutine
+        def wait_for_done(future, future_queue):
+
+            logging.debug(
+                "wait_for_done: looping: result queue: %s", future_queue)
+            while True:
+                try:
+                    logging.debug("wait_for_done: checking queue")
+                    result = future_queue.get_nowait()
+                    logging.debug("wait_for_done: got result")
+                    future.set_result(result)
+                    return result
+                except:
+                    yield
+
+        _future = loop.create_future()
+
+        def process_future():
+            logging.debug("process_future: running wait_for_done")
+            loop.run_until_complete(wait_for_done(_future, self.result_queue))
+            logging.debug("process_future: done wait_for_done")
+
+        if callback:
+            _future.add_done_callback(callback)
+
+        logging.debug("future: starting thread")
+        thread = threading.Thread(target=process_future)
+        thread.start()
+        return _future
 
     def __call__(self, *args, **kwargs) -> Callable:
         """
@@ -168,6 +207,8 @@ class ProcessMonitor:
             graphs = []
             json_graph = "{}"
             json_graphs = []
+            future_queue = kwargs['future_queue']
+            del kwargs['future_queue']
 
             @asyncio.coroutine
             def get_result(_queue, func, sleep, now, process, event, wait, timeout):
@@ -336,7 +377,7 @@ class ProcessMonitor:
                     args = [_arg['result'] for _arg in _args]
                     arg_graph = [_arg['graph'] for _arg in _args]
                     json_graphs = [_arg['json']
-                               for _arg in _args if 'json' in _arg]
+                                   for _arg in _args if 'json' in _arg]
                 except:
                     args = [_arg for _arg in _args]
                     arg_graph = []
@@ -348,13 +389,13 @@ class ProcessMonitor:
                 def add_to_graph(gr, argr):
                     for item in argr:
                         if isinstance(item, list):
-                            add_to_graph(gr,item)
+                            add_to_graph(gr, item)
                         elif isinstance(item, tuple):
                             gr += [item]
 
                     return gr
 
-                logging.debug("GRAPH: %s",graphs)
+                logging.debug("GRAPH: %s", graphs)
 
                 _G = {}
                 _G[func.__name__] = {}
@@ -464,7 +505,8 @@ class ProcessMonitor:
                     try:
                         logging.debug("func_wrapper: putting result on queue")
                         # TODO: Put (graph,result) tuple here
-                        _wq.put({'graph':[(func.__name__,_wf.__name__)], 'result':result})
+                        _wq.put(
+                            {'graph': [(func.__name__, _wf.__name__)], 'result': result})
                         logging.debug("func_wrapper: done putting queue")
                     except Exception:
                         with open('error.out', 'w') as errfile:
@@ -504,7 +546,6 @@ class ProcessMonitor:
                 sys.path.append(os.getcwd())
                 response = _mq.get()
 
-
                 if len(json_graphs) > 0:
                     callgraph = {func.__name__: json_graphs}
                     graph_queue.put(callgraph)
@@ -518,15 +559,18 @@ class ProcessMonitor:
                     proc.join()
                     raise ProcessTimeoutException()
 
+            print("WRITING RESULT TO:", future_queue)
+            future_queue.put(result)
             return result
 
+        # Need to pass in a queue here that the future coroutine can listen on
+        kwargs['future_queue'] = self.result_queue
         pfunc = partial(invoke, self.func, *args, **kwargs)
-
         if hasattr(self.func, '__name__'):
             pfunc.__name__ = self.func.__name__
         else:
             pfunc.__name__ = 'process'
-        
+
         def get_graph(wait=True):
             if wait:
                 return graph_queue.get()
@@ -542,7 +586,6 @@ class ProcessMonitor:
                             logging.debug("wait_for_graph: got result")
                             return graph
                         except:
-                            logging.debug("wait_for_graph: yielding")
                             yield
 
                 loop = asyncio.get_event_loop()
@@ -550,5 +593,5 @@ class ProcessMonitor:
                 return task
 
         pfunc.graph = get_graph
-
-        return pfunc
+        pfunc.future = self.future
+        return pfunc  # InvokeProxy(pfunc)

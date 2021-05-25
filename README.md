@@ -1,4 +1,4 @@
-*This version: 0.1.9*
+*This version: 0.1.10*
 
 ![logo](./images/logo.png)
 
@@ -122,7 +122,7 @@ Try the following remedy (for ubuntu systems)
 ```bash
 $ sudo apt-get install -y --no-install-recommends  llvm-10 llvm-10-dev
 $ export LLVM_CONFIG=/usr/bin/llvm-config-10
-$ pip3 install --upgrade py-entangle
+$ pip3 install numba
 ```
 
 ### Testing
