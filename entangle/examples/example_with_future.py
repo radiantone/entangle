@@ -4,6 +4,7 @@ TBD
 """
 from entangle.logging.debug import logging
 from entangle.process import process
+from multiprocessing import Process
 
 
 @process
@@ -49,6 +50,7 @@ if __name__ == '__main__':
     _add1 = add(_num,_two2)
     result = add(_add1,_sub)
     """
+
     workflow = add(
         add(
             num(6),
@@ -71,9 +73,9 @@ if __name__ == '__main__':
 
     # set up future callbacks
     future = workflow.future(callback=callback)
-    
+
     # Trigger workflow. Blocks
     workflow()
-
+    
     # Notify all the futures
     future.entangle()
