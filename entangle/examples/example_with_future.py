@@ -72,5 +72,6 @@ if __name__ == '__main__':
     def callback(result):
         print("CALLBACK:", result.result())
 
+    print(workflow())
     future = workflow.future(callback=callback)
     print(future)
