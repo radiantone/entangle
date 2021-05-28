@@ -7,6 +7,11 @@ A lightweight (serverless) native python parallel processing framework based on 
 
 > For a quick look at what makes Entangle special, take a look at [Design Goals](#design-goals).
 
+## New In This Release
+
+- Workflows can now return the call graph structure upon completion. See [Graph Example](#...)
+- Support for workflow futures (if that's your thing) See [Workflow Futures](#...)
+
 ## Quick Usage
 
 With Entangle you can run simple, hardware parallelized code with conditional logic that looks like this.

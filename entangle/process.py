@@ -118,7 +118,6 @@ class ProcessMonitor:
         self.execute = kwargs['execute'] if 'execute' in kwargs else True
         self.source = None
         self.result_queue = Queue()
-        print("RESULT QUEUE: ", self.result_queue)
 
     def get_func(self):
         """
@@ -127,6 +126,9 @@ class ProcessMonitor:
         return self.func
 
     def future(self, callback=None):
+        """
+        Desc
+        """
         asyncio.set_event_loop(asyncio.new_event_loop())
         loop = asyncio.get_event_loop()
 
@@ -422,6 +424,11 @@ class ProcessMonitor:
                 cpu_mask = [int(cpu)]
                 os.sched_setaffinity(pid, cpu_mask)
 
+            is_proc = False
+            if 'proc' in kwargs and kwargs['proc'] is True:
+                del kwargs['proc']
+                is_proc = True
+
             event = None
             if 'event' in kwargs:
                 event = kwargs['event']
@@ -449,9 +456,41 @@ class ProcessMonitor:
                     del kwargs['scheduler']
 
                 try:
-                    logging.debug("process: execute: %s", self.execute)
                     if self.execute:
-                        result = func(*args, **kwargs)
+                        logging.debug("process: execute: %s", self.execute)
+
+                        if is_proc:
+
+                            logging.debug(
+                                "self.execute: proc: creating process")
+                            _mq = Queue()
+
+                            def func_wrapper(_wf, _wq):
+                                logging.debug("func_wrapper: %s", _wf)
+                                result = _wf()
+                                logging.debug("func_wrapper: result: %s", result)
+
+                                # Unwrap any partials built up by stacked decorators
+                                if callable(result):
+                                    return func_wrapper(result, _wq)
+                                try:
+                                    logging.debug("func_wrapper: putting result on queue")
+                                    # TODO: Put (graph,result) tuple here
+                                    _wq.put(
+                                        {'graph': [(func.__name__, _wf.__name__)], 'result': result})
+                                    logging.debug("func_wrapper: done putting queue")
+                                except Exception:
+                                    with open('error.out', 'w') as errfile:
+                                        errfile.write(traceback.format_exc())
+
+                                return None
+
+                            _pfunc = partial(func, *args, **kwargs)
+                            proc = multiprocessing.Process(
+                                target=func_wrapper, args=(_pfunc, _mq, ))
+                            proc.start()
+                        else:
+                            result = func(*args, **kwargs)
                     else:
                         if event:
                             logging.debug(
@@ -481,6 +520,7 @@ class ProcessMonitor:
                     event.set()
             else:
                 # Pass in shared memory handles
+
                 if self.shared_memory:
                     kwargs['smm'] = SMM
                     kwargs['sm'] = SharedMemory
@@ -503,6 +543,8 @@ class ProcessMonitor:
                         # TODO: Put (graph,result) tuple here
                         _wq.put(
                             {'graph': [(func.__name__, _wf.__name__)], 'result': result})
+                        if is_proc:
+                            future_queue.put(result)
                         logging.debug("func_wrapper: done putting queue")
                     except Exception:
                         with open('error.out', 'w') as errfile:
@@ -513,17 +555,17 @@ class ProcessMonitor:
                 pfunc = partial(func, *args, **kwargs)
                 pfunc.__name__ = func.__name__
 
-                logging.debug("process: execute: %s", self.execute)
-
                 try:
                     if self.execute:
+                        logging.debug("process: execute2: %s", self.execute)
                         proc = multiprocessing.Process(
-                            target=func_wrapper, args=(pfunc, _mq, ))
+                            target=func_wrapper, args=(pfunc, _mq,))
                         proc.start()
 
                         logging.debug(
                             "Executing function %s with timeout %s", func, self.timeout)
-                        proc.join(self.timeout)
+                        if not is_proc:
+                            proc.join(self.timeout)
                     else:
                         if event:
                             logging.debug(
@@ -540,22 +582,27 @@ class ProcessMonitor:
                 logging.debug("process: waiting for result on queue")
 
                 sys.path.append(os.getcwd())
-                response = _mq.get()
+
+                if not is_proc:
+                    response = _mq.get()
+                    result = response['result']
 
                 if len(json_graphs) > 0:
                     callgraph = {func.__name__: json_graphs}
                     graph_queue.put(callgraph)
                     self.graph = json.dumps(callgraph)
 
-                result = response['result']
                 logging.debug("process: got result from queue")
 
-                if proc.is_alive():
+                if not is_proc and proc.is_alive():
                     proc.terminate()
                     proc.join()
                     raise ProcessTimeoutException()
 
-            print("WRITING RESULT TO:", future_queue)
+            if is_proc:
+                # return future
+                return True
+
             future_queue.put(result)
 
             return result

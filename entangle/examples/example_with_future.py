@@ -73,9 +73,9 @@ if __name__ == '__main__':
 
     # set up future callbacks
     future = workflow.future(callback=callback)
+    print('Future:', future)
+    # Trigger workflow. Does not block
+    workflow(proc=True)
 
-    # Trigger workflow. Blocks
-    workflow()
-    
     # Notify all the futures
-    future.entangle()
+    future.entangle() # Does not block
