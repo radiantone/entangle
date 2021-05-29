@@ -10,7 +10,7 @@ A lightweight (serverless) native python parallel processing framework based on 
 ## New In This Release
 
 - Workflows can now return the call graph structure upon completion. See [Graph Example](#graph-example)
-- Support for workflow futures (if that's your thing) See [Workflow Future Example](#workflow-futures)
+- Support for workflow futures (if that's your thing) See [Workflow Future Example](#workflow-future-example)
 
 ## Quick Usage
 
@@ -1244,6 +1244,37 @@ if __name__ == '__main__':
 
     graph = workflow.graph(wait=True)
     print("GRAPH:",json.dumps(graph, indent=4))
+```
+
+Which outputs this graph structure
+
+```python
+GRAPH: {
+    "add": [
+        {
+            "add": {
+                "num": {
+                    "6": []
+                },
+                "one": []
+            }
+        },
+        {
+            "subtract": {
+                "five": [],
+                "add": {
+                    "subtract": {
+                        "num": {
+                            "8": []
+                        },
+                        "two": []
+                    },
+                    "one": []
+                }
+            }
+        }
+    ]
+}
 ```
 
 We can also use futures to wait for the graph data to arrive as a callback.
