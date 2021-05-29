@@ -2,11 +2,9 @@
 """
 TBD
 """
-import json
-import time
-import asyncio
 from entangle.logging.debug import logging
 from entangle.process import process
+from multiprocessing import Process
 
 
 @process
@@ -52,6 +50,7 @@ if __name__ == '__main__':
     _add1 = add(_num,_two2)
     result = add(_add1,_sub)
     """
+
     workflow = add(
         add(
             num(6),
@@ -68,5 +67,15 @@ if __name__ == '__main__':
             )
         )
     )
-    result = workflow()
-    print(result)
+
+    def callback(result):
+        print("CALLBACK:", result.result())
+
+    # set up future callbacks
+    future = workflow.future(callback=callback)
+    print('Future:', future)
+    # Trigger workflow. Does not block
+    workflow(proc=True)
+
+    # Notify all the futures
+    future.entangle() # Does not block

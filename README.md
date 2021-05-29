@@ -1,4 +1,4 @@
-*This version: 0.1.9*
+*This version: 0.1.10*
 
 ![logo](./images/logo.png)
 
@@ -6,6 +6,11 @@
 A lightweight (serverless) native python parallel processing framework based on simple decorators and call graphs, supporting both *control flow* and *dataflow* execution paradigms as well as de-centralized CPU & GPU scheduling. 
 
 > For a quick look at what makes Entangle special, take a look at [Design Goals](#design-goals).
+
+## New In This Release
+
+- Workflows can now return the call graph structure upon completion. See [Graph Example](#graph-example)
+- Support for workflow futures (if that's your thing) See [Workflow Future Example](#workflow-futures)
 
 ## Quick Usage
 
@@ -55,6 +60,8 @@ print(result())
       * [Data-Driven Branching](#data-driven-branching)
     * [Docker Example](#docker-example)
     * [Scheduler Example](#scheduler-example)
+    * [Graph Example](#graph-example)
+    * [Workflow Future Example](#workflow-future-example)
 * [Logging](#logging)
 * [Design Tool](#design-tool)  
 
@@ -122,7 +129,7 @@ Try the following remedy (for ubuntu systems)
 ```bash
 $ sudo apt-get install -y --no-install-recommends  llvm-10 llvm-10-dev
 $ export LLVM_CONFIG=/usr/bin/llvm-config-10
-$ pip3 install --upgrade py-entangle
+$ pip3 install numba
 ```
 
 ### Testing
@@ -713,6 +720,8 @@ Since the `add()` function has two dependencies that can run in parallel the `@s
 * [Dataflow Examples](#dataflow-examples)  
   * [Data-Driven Branching](#data-driven-branching)
 * [Scheduler Example](#scheduler-example)  
+* [Graph Example](#graph-example)
+* [Workflow Future Example](#workflow-future-example)
 * [General Example](#general-example)
 
 There are a variety of example workflows and dataflows you can run. In addition to the sample code provided below you can run these using the following commands.
@@ -1174,6 +1183,105 @@ result = workflow2()
 
 print(result())
 ```
+
+### Graph Example
+
+The follow example code shows how we can collect the call graph trace for our workflow and display it.
+
+```python
+import json
+import time
+import asyncio
+from entangle.logging.debug import logging
+from entangle.process import process
+
+@process
+def one():
+    return 1
+
+@process
+def two():
+    return 2
+
+@process
+def five():
+    return 5
+
+@process
+def num(n):
+    return n
+
+@process
+def add(a, b):
+    v = int(a) + int(b)
+    print("ADD: *"+str(v)+"*")
+    return v
+
+@process
+def subtract(a, b):
+    return int(a) - int(b)
+
+if __name__ == '__main__':
+
+    workflow = add(
+        add(
+            num(6),
+            two() if False else one()
+        ),
+        subtract(
+            five(),
+            add(
+                subtract(
+                    num(8),
+                    two()
+                ),
+                one()
+            )
+        )
+    )
+    result = workflow()
+    print(result)
+
+    graph = workflow.graph(wait=True)
+    print("GRAPH:",json.dumps(graph, indent=4))
+```
+
+We can also use futures to wait for the graph data to arrive as a callback.
+
+```python
+future = workflow.graph(wait=False)
+
+def show_graph(graph):
+    print("GRAPH:", graph.result())
+
+future.add_done_callback(show_graph)
+
+loop = asyncio.get_event_loop()
+print("WAITING ON RESULT")
+loop.run_until_complete(future)
+print("GOT RESULT")
+```
+
+### Workflow Future Example
+
+Entangle allows you to use future results for workflows if the blocking method doesn't meet your use case.
+To do this, we alter the invocation of the workflow slightly.
+
+```python
+def callback(result):
+    print("CALLBACK:", result.result())
+
+# set up future callbacks
+future = workflow.future(callback=callback)
+print('Future:', future)
+
+# Trigger workflow. Does not block
+workflow(proc=True)
+
+# Notify results when available
+future.entangle() # Does not block
+```
+
 ### General Example
 An example of how entangle will be used (still in development)
 ```python

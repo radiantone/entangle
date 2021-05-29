@@ -1,11 +1,12 @@
 """
-thread.py - 
+thread.py - Module that provides native OS thread implementation of function tasks with support for shared memory
 """
 import asyncio
 import logging
 import sys
 import os
 import inspect
+import threading
 import multiprocessing
 import time
 import json
@@ -16,10 +17,9 @@ import signal
 from typing import Callable
 from functools import partial
 from multiprocessing import Queue
-from threading import Thread
 from multiprocessing.shared_memory import SharedMemory
 from multiprocessing.managers import SharedMemoryManager
-from concurrent.futures import Future
+from threading import Thread
 
 SMM = SharedMemoryManager()
 SMM.start()
@@ -27,15 +27,15 @@ SMM.start()
 graph_queue = Queue()
 
 
-def handler(signum, frame):
-    # Handle any cleanup here
+def handler():
+    """
+    Handle any cleanup here
+    """
     SMM.shutdown()
 
 
 signal.signal(signal.SIGINT, handler)
 signal.signal(signal.SIGTERM, handler)
-
-# Get shared memory list for adding call graph tuples
 
 
 def thread(function=None,
@@ -118,12 +118,47 @@ class ThreadMonitor:
         self.wait = kwargs['wait']
         self.execute = kwargs['execute'] if 'execute' in kwargs else True
         self.source = None
+        self.result_queue = Queue()
 
     def get_func(self):
         """
         Desc
         """
         return self.func
+
+    def future(self, callback=None):
+        """
+        Desc
+        """
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        loop = asyncio.get_event_loop()
+
+        @asyncio.coroutine
+        def wait_for_done(future_queue):
+
+            logging.debug(
+                "wait_for_done: looping: result queue: %s", future_queue)
+            while True:
+                try:
+                    logging.debug("wait_for_done: checking queue")
+                    result = future_queue.get_nowait()
+                    logging.debug("wait_for_done: got result")
+                    return result
+                except:
+                    yield
+
+        _future = loop.create_task(wait_for_done(self.result_queue))
+
+        def entangle():
+            loop.run_until_complete(_future)
+
+        _future.loop = loop
+        _future.entangle = entangle
+
+        if callback:
+            _future.add_done_callback(callback)
+
+        return _future
 
     def __call__(self, *args, **kwargs) -> Callable:
         """
@@ -171,6 +206,8 @@ class ThreadMonitor:
             graphs = []
             json_graph = "{}"
             json_graphs = []
+            future_queue = kwargs['future_queue']
+            del kwargs['future_queue']
 
             @asyncio.coroutine
             def get_result(_queue, func, sleep, now, thread, event, wait, timeout):
@@ -314,7 +351,6 @@ class ThreadMonitor:
                     else:
                         logging.info("Value: %s", aname)
 
-                        # TODO: Put (graph,result) tuple here
                         _queue.put(
                             {'graph': [(func.__name__, aname)], 'result': arg})
                         event.set()
@@ -336,11 +372,15 @@ class ThreadMonitor:
                 # Ensure we have joined all spawned threads
 
                 _args = loop.run_until_complete(tasks)
-                args = [_arg['result'] for _arg in _args]
-
-                arg_graph = [_arg['graph'] for _arg in _args]
-                json_graphs = [_arg['json']
-                               for _arg in _args if 'json' in _arg]
+                try:
+                    args = [_arg['result'] for _arg in _args]
+                    arg_graph = [_arg['graph'] for _arg in _args]
+                    json_graphs = [_arg['json']
+                                   for _arg in _args if 'json' in _arg]
+                except:
+                    args = [_arg for _arg in _args]
+                    arg_graph = []
+                    json_graphs = []
 
                 logging.debug("JSON GRAPHs: %s", json_graphs)
                 logging.debug("ARG GRAPH: %s", arg_graph)
@@ -385,6 +425,11 @@ class ThreadMonitor:
                 cpu_mask = [int(cpu)]
                 os.sched_setaffinity(pid, cpu_mask)
 
+            is_proc = False
+            if 'proc' in kwargs and kwargs['proc'] is True:
+                del kwargs['proc']
+                is_proc = True
+
             event = None
             if 'event' in kwargs:
                 event = kwargs['event']
@@ -412,9 +457,44 @@ class ThreadMonitor:
                     del kwargs['scheduler']
 
                 try:
-                    logging.debug("thread: execute: %s", self.execute)
                     if self.execute:
-                        result = func(*args, **kwargs)
+                        logging.debug("thread: execute: %s", self.execute)
+
+                        if is_proc:
+
+                            logging.debug(
+                                "self.execute: proc: creating thread")
+                            _mq = Queue()
+
+                            def func_wrapper(_wf, _wq):
+                                logging.debug("func_wrapper: %s", _wf)
+                                result = _wf()
+                                logging.debug(
+                                    "func_wrapper: result: %s", result)
+
+                                # Unwrap any partials built up by stacked decorators
+                                if callable(result):
+                                    return func_wrapper(result, _wq)
+                                try:
+                                    logging.debug(
+                                        "func_wrapper: putting result on queue")
+                                    # TODO: Put (graph,result) tuple here
+                                    _wq.put(
+                                        {'graph': [(func.__name__, _wf.__name__)], 'result': result})
+                                    logging.debug(
+                                        "func_wrapper: done putting queue")
+                                except Exception:
+                                    with open('error.out', 'w') as errfile:
+                                        errfile.write(traceback.format_exc())
+
+                                return None
+
+                            _pfunc = partial(func, *args, **kwargs)
+                            proc = threading.Thread(
+                                target=func_wrapper, args=(_pfunc, _mq, ))
+                            proc.start()
+                        else:
+                            result = func(*args, **kwargs)
                     else:
                         if event:
                             logging.debug(
@@ -432,7 +512,6 @@ class ThreadMonitor:
                 if self.cache:
                     pass
 
-                # TODO: Embed arg graphs
                 logging.debug("PUT GRAPH [%s]: %s", func.__name__, graphs)
                 logging.debug(
                     "PUT GRAPH JSON [%s]: %s", func.__name__, json_graph)
@@ -445,6 +524,7 @@ class ThreadMonitor:
                     event.set()
             else:
                 # Pass in shared memory handles
+
                 if self.shared_memory:
                     kwargs['smm'] = SMM
                     kwargs['sm'] = SharedMemory
@@ -452,9 +532,6 @@ class ThreadMonitor:
                 logging.debug(
                     "Calling function %s with: %s", func.__name__, str(args))
 
-                # Wrap with Thread and queue with timeout
-                #logging.debug("Executing function {} in MainThread".format(func))
-                #result = func(*args, **kwargs)
                 _mq = Queue()
 
                 def func_wrapper(_wf, _wq):
@@ -470,6 +547,8 @@ class ThreadMonitor:
                         # TODO: Put (graph,result) tuple here
                         _wq.put(
                             {'graph': [(func.__name__, _wf.__name__)], 'result': result})
+                        if is_proc:
+                            future_queue.put(result)
                         logging.debug("func_wrapper: done putting queue")
                     except Exception:
                         with open('error.out', 'w') as errfile:
@@ -480,18 +559,17 @@ class ThreadMonitor:
                 pfunc = partial(func, *args, **kwargs)
                 pfunc.__name__ = func.__name__
 
-                logging.debug("thread: execute: %s", self.execute)
-
                 try:
                     if self.execute:
-                        proc = Thread(
-                            target=func_wrapper, args=(pfunc, _mq, ))
+                        logging.debug("thread: execute2: %s", self.execute)
+                        proc = threading.Thread(
+                            target=func_wrapper, args=(pfunc, _mq,))
                         proc.start()
 
-                        # Wait for 10 seconds or until process finishes
                         logging.debug(
                             "Executing function %s with timeout %s", func, self.timeout)
-                        proc.join(self.timeout)
+                        if not is_proc:
+                            proc.join(self.timeout)
                     else:
                         if event:
                             logging.debug(
@@ -508,24 +586,33 @@ class ThreadMonitor:
                 logging.debug("thread: waiting for result on queue")
 
                 sys.path.append(os.getcwd())
-                response = _mq.get()
+
+                if not is_proc:
+                    response = _mq.get()
+                    result = response['result']
 
                 if len(json_graphs) > 0:
                     callgraph = {func.__name__: json_graphs}
                     graph_queue.put(callgraph)
                     self.graph = json.dumps(callgraph)
 
-                result = response['result']
                 logging.debug("thread: got result from queue")
 
-                # If thread is still active
-                if proc.is_alive():
-                    proc.terminate()
+                if not is_proc and proc.is_alive():
+                    #proc.terminate()
                     proc.join()
                     raise ThreadTimeoutException()
 
+            if is_proc:
+                # return future
+                return True
+
+            future_queue.put(result)
+
             return result
 
+        # Need to pass in a queue here that the future coroutine can listen on
+        kwargs['future_queue'] = self.result_queue
         pfunc = partial(invoke, self.func, *args, **kwargs)
 
         if hasattr(self.func, '__name__'):
@@ -548,7 +635,6 @@ class ThreadMonitor:
                             logging.debug("wait_for_graph: got result")
                             return graph
                         except:
-                            logging.debug("wait_for_graph: yielding")
                             yield
 
                 loop = asyncio.get_event_loop()
@@ -556,5 +642,6 @@ class ThreadMonitor:
                 return task
 
         pfunc.graph = get_graph
+        pfunc.future = self.future
 
-        return pfunc
+        return pfunc  # InvokeProxy(pfunc)
