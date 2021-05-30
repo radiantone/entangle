@@ -732,6 +732,9 @@ $ python -m entangle.examples.example3
 $ python -m entangle.examples.example4
 $ python -m entangle.examples.example5
 $ python -m entangle.examples.example6
+$ python -m entangle.examples.example_graph.py
+$ python -m entangle.examples.example_graph_future.py
+$ python -m entangle.examples.example_with_future.py
 $ python -m entangle.examples.lambdaexample
 $ python -m entangle.examples.listexample
 $ python -m entangle.examples.listexample2
@@ -744,6 +747,8 @@ $ python -m entangle.examples.schedulerexample2
 $ python -m entangle.examples.sshschedulerexample
 $ python -m entangle.examples.timeoutexample
 ```
+For a complete list of the examples source code and binders to run them please visit the wiki.
+
 ### GPU Example
 This example assumes you have installed `nvidia-cuda-toolkit` and associated python packages along with `numba`.
 
@@ -1287,10 +1292,7 @@ def show_graph(graph):
 
 future.add_done_callback(show_graph)
 
-loop = asyncio.get_event_loop()
-print("WAITING ON RESULT")
-loop.run_until_complete(future)
-print("GOT RESULT")
+future.entangle()
 ```
 
 ### Workflow Future Example
