@@ -635,6 +635,12 @@ class ProcessMonitor:
 
                 loop = asyncio.get_event_loop()
                 task = loop.create_task(wait_for_graph())
+
+                def entangle():
+                    loop.run_until_complete(task)
+                
+                task.entangle = entangle
+                
                 return task
 
         pfunc.graph = get_graph
