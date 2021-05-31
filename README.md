@@ -1,4 +1,4 @@
-*This version: 0.1.11*
+*This version: 0.1.12*
 
 ![logo](./images/logo.png)
 
@@ -9,6 +9,7 @@ A lightweight (serverless) native python parallel processing framework based on 
 
 ## New In This Release
 
+- Dockerfile provided for quick and easy experimentation.
 - Workflows can now return the call graph structure upon completion. See [Graph Example](#graph-example)
 - Support for workflow futures (if that's your thing) See [Workflow Future Example](#workflow-future-example)
 
@@ -29,6 +30,16 @@ result = add(
 )
 print(result())
 ```
+
+### Docker
+To quickly get started with Entangle, build and run a docker container from the included Dockerfile.
+
+```bash
+$ docker build -t entangle .
+$ docker run -it entangle:latest
+root@9579336b3e34:/# python -m entangle.examples.example
+```
+
 ## Outline
 
 * [Overview](#overview)
@@ -423,7 +434,6 @@ from entangle.process import process
 from entangle.http import request
 from entangle.workflow import workflow
 
-
 @process
 @request(url='https://datausa.io/api/data', method='GET')
 def mydata(data):
@@ -431,18 +441,15 @@ def mydata(data):
     data = json.loads(data)
     return int(data['data'][0]['Year'])
 
-
 @process
 def two():
     return 2
-
 
 @process
 def add(a, b):
     v = int(a) + int(b)
     print("ADD: *"+str(v)+"*")
     return v
-
 
 @workflow
 def workflow1():
@@ -451,7 +458,6 @@ def workflow1():
         two()
     )
 
-
 @workflow
 def workflow2(value):
     return add(
@@ -459,11 +465,9 @@ def workflow2(value):
         two()
     )
 
-
 result = workflow2(workflow1)
 
 print(result())
-
 ```
 
 The key to making this work is the *deferring of execution* trait of Entangle which we will discuss in a later post.
@@ -732,6 +736,9 @@ $ python -m entangle.examples.example3
 $ python -m entangle.examples.example4
 $ python -m entangle.examples.example5
 $ python -m entangle.examples.example6
+$ python -m entangle.examples.example_graph.py
+$ python -m entangle.examples.example_graph_future.py
+$ python -m entangle.examples.example_with_future.py
 $ python -m entangle.examples.lambdaexample
 $ python -m entangle.examples.listexample
 $ python -m entangle.examples.listexample2
@@ -744,6 +751,8 @@ $ python -m entangle.examples.schedulerexample2
 $ python -m entangle.examples.sshschedulerexample
 $ python -m entangle.examples.timeoutexample
 ```
+For a complete list of the examples source code and binders to run them please visit the wiki.
+
 ### GPU Example
 This example assumes you have installed `nvidia-cuda-toolkit` and associated python packages along with `numba`.
 
@@ -825,7 +834,6 @@ from entangle.process import process
 from timeit import default_timer as timer
 from numba import vectorize
 
-
 @process(shared_memory=True)
 def dopow(names, smm=None, sm=None):
     (namea, nameb, shapea, shapeb, typea, typeb) = names
@@ -834,7 +842,6 @@ def dopow(names, smm=None, sm=None):
     shma = sm(namea)
     shmb = sm(nameb)
 
-    
     # Get matrixes from shared memory
     np_shma = np.frombuffer(shma.buf, dtype=typea)
     np_shmb = np.frombuffer(shmb.buf, dtype=typeb)
@@ -846,7 +853,6 @@ def dopow(names, smm=None, sm=None):
     pow(np_shma, np_shmb)
     duration = timer() - start
     print("Powers Time: ", duration)
-
 
 @process(shared_memory=True)
 def createvectors(smm=None, sm=None):
@@ -866,7 +872,6 @@ def createvectors(smm=None, sm=None):
     duration = timer() - start
     print("Create Vectors Time: ", duration)
     return names
-
 
 dp = dopow(
     createvectors()
@@ -959,7 +964,6 @@ def train():
 
     return model.summary()
 
-
 model = train()
 print(model())
 
@@ -975,7 +979,6 @@ from entangle.process import process
 import logging
 logging.basicConfig(
     format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-
 
 @process
 @docker(image="tensorflow/tensorflow:latest-gpu")
@@ -1015,13 +1018,11 @@ from entangle.dataflow import dataflow
 def triggered(func, result):
     print("triggered: {} {}".format(func.__name__, result))
 
-
 @dataflow(callback=triggered)
 @thread
 def printx(x):
     print('printx: {}'.format(threading.current_thread().name))
     return("X: {}".format(x))
-
 
 @dataflow(callback=triggered)
 @thread
@@ -1029,20 +1030,17 @@ def printy(y):
     print('printy: {}'.format(threading.current_thread().name))
     return("Y: {}".format(y))
 
-
 @dataflow(callback=triggered)
 @thread
 def printz(z):
     print('printz: {}'.format(threading.current_thread().name))
     return("Z: {}".format(z))
 
-
 @dataflow(callback=triggered)
 @thread
 def echo(e):
     print('echo: {}'.format(threading.current_thread().name))
     return "Echo! {}".format(e)
-
 
 @dataflow(executor='thread', callback=triggered, maxworkers=3)
 def emit(a, **kwargs):
@@ -1287,10 +1285,7 @@ def show_graph(graph):
 
 future.add_done_callback(show_graph)
 
-loop = asyncio.get_event_loop()
-print("WAITING ON RESULT")
-loop.run_until_complete(future)
-print("GOT RESULT")
+future.entangle()
 ```
 
 ### Workflow Future Example

@@ -78,7 +78,4 @@ if __name__ == '__main__':
 
     future.add_done_callback(show_graph)
 
-    loop = asyncio.get_event_loop()
-    print("WAITING ON RESULT")
-    loop.run_until_complete(future)
-    print("GOT RESULT")
+    future.entangle()
