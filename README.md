@@ -39,6 +39,13 @@ $ docker build -t entangle .
 $ docker run -it entangle:latest
 root@9579336b3e34:/# python -m entangle.examples.example
 ```
+Or if you have the [NVIDIA Docker Environment](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker) setup you can test the numba GPU vector example.
+
+```bash
+$ docker run -it --gpus all entangle
+root@13428af4a37b:/# python -m entangle.examples.example3
+(0.2957176749914652, 0.41134210501331836)
+```
 
 ## Outline
 
@@ -82,7 +89,7 @@ Entangle is a *different* kind of parallel compute framework for multi-CPU/GPU e
 It allows for simple workflow design using *plain old python* and special decorators that control the type of parallel compute and infrastructure needed.
 
 One key feature of entangle is fine-grained control over individual functions in a workflow. You could easily describe multiple functions running across multiple compute environments all interacting as if they were simple local python functions.
-No central scheduler or workflow manager is needed.
+No central scheduler or workflow manager is needed. Choosing where and how functions operate with *declarative infrastructure*.
 
 Another unique quality is the use of composition to build parallel workflows dynamically.
 
