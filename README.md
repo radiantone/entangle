@@ -423,7 +423,6 @@ from entangle.process import process
 from entangle.http import request
 from entangle.workflow import workflow
 
-
 @process
 @request(url='https://datausa.io/api/data', method='GET')
 def mydata(data):
@@ -431,18 +430,15 @@ def mydata(data):
     data = json.loads(data)
     return int(data['data'][0]['Year'])
 
-
 @process
 def two():
     return 2
-
 
 @process
 def add(a, b):
     v = int(a) + int(b)
     print("ADD: *"+str(v)+"*")
     return v
-
 
 @workflow
 def workflow1():
@@ -451,7 +447,6 @@ def workflow1():
         two()
     )
 
-
 @workflow
 def workflow2(value):
     return add(
@@ -459,11 +454,9 @@ def workflow2(value):
         two()
     )
 
-
 result = workflow2(workflow1)
 
 print(result())
-
 ```
 
 The key to making this work is the *deferring of execution* trait of Entangle which we will discuss in a later post.
@@ -830,7 +823,6 @@ from entangle.process import process
 from timeit import default_timer as timer
 from numba import vectorize
 
-
 @process(shared_memory=True)
 def dopow(names, smm=None, sm=None):
     (namea, nameb, shapea, shapeb, typea, typeb) = names
@@ -839,7 +831,6 @@ def dopow(names, smm=None, sm=None):
     shma = sm(namea)
     shmb = sm(nameb)
 
-    
     # Get matrixes from shared memory
     np_shma = np.frombuffer(shma.buf, dtype=typea)
     np_shmb = np.frombuffer(shmb.buf, dtype=typeb)
@@ -851,7 +842,6 @@ def dopow(names, smm=None, sm=None):
     pow(np_shma, np_shmb)
     duration = timer() - start
     print("Powers Time: ", duration)
-
 
 @process(shared_memory=True)
 def createvectors(smm=None, sm=None):
@@ -871,7 +861,6 @@ def createvectors(smm=None, sm=None):
     duration = timer() - start
     print("Create Vectors Time: ", duration)
     return names
-
 
 dp = dopow(
     createvectors()
@@ -964,7 +953,6 @@ def train():
 
     return model.summary()
 
-
 model = train()
 print(model())
 
@@ -980,7 +968,6 @@ from entangle.process import process
 import logging
 logging.basicConfig(
     format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-
 
 @process
 @docker(image="tensorflow/tensorflow:latest-gpu")
@@ -1020,13 +1007,11 @@ from entangle.dataflow import dataflow
 def triggered(func, result):
     print("triggered: {} {}".format(func.__name__, result))
 
-
 @dataflow(callback=triggered)
 @thread
 def printx(x):
     print('printx: {}'.format(threading.current_thread().name))
     return("X: {}".format(x))
-
 
 @dataflow(callback=triggered)
 @thread
@@ -1034,20 +1019,17 @@ def printy(y):
     print('printy: {}'.format(threading.current_thread().name))
     return("Y: {}".format(y))
 
-
 @dataflow(callback=triggered)
 @thread
 def printz(z):
     print('printz: {}'.format(threading.current_thread().name))
     return("Z: {}".format(z))
 
-
 @dataflow(callback=triggered)
 @thread
 def echo(e):
     print('echo: {}'.format(threading.current_thread().name))
     return "Echo! {}".format(e)
-
 
 @dataflow(executor='thread', callback=triggered, maxworkers=3)
 def emit(a, **kwargs):
