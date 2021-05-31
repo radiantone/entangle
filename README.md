@@ -9,6 +9,7 @@ A lightweight (serverless) native python parallel processing framework based on 
 
 ## New In This Release
 
+- Dockerfile provided for quick and easy experimentation.
 - Workflows can now return the call graph structure upon completion. See [Graph Example](#graph-example)
 - Support for workflow futures (if that's your thing) See [Workflow Future Example](#workflow-future-example)
 
@@ -29,6 +30,16 @@ result = add(
 )
 print(result())
 ```
+
+### Docker
+To quickly get started with Entangle, build and run a docker container from the included Dockerfile.
+
+```bash
+$ docker build -t entangle .
+$ docker run -it entangle:latest
+root@9579336b3e34:/# python -m entangle.examples.example
+```
+
 ## Outline
 
 * [Overview](#overview)
