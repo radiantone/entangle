@@ -6,14 +6,13 @@ import logging
 import sys
 import os
 import inspect
-import threading
 import multiprocessing
 import time
 import json
 import traceback
 import queue as que
 import signal
-
+import builtins
 from typing import Callable
 from functools import partial
 from multiprocessing import Queue, Process
@@ -41,6 +40,7 @@ def process(function=None,
             timeout=None,
             wait=None,
             cache=False,
+            retry=0,
             shared_memory=False,
             sleep=0) -> Callable:
     """
@@ -71,6 +71,7 @@ def process(function=None,
             return ProcessMonitor(f_func,
                                   timeout=timeout,
                                   wait=wait,
+                                  retry=retry,
                                   shared_memory=shared_memory,
                                   cache=cache,
                                   sleep=sleep)
@@ -169,6 +170,7 @@ class ProcessMonitor:
 
         logging.info("Process:invoke: %s", self.func.__name__)
         _func = self.func
+
         if isinstance(self.func, partial):
 
             def find_func(pfunc):
@@ -192,7 +194,12 @@ class ProcessMonitor:
             cpu_mask = [int(cpu)]
             os.sched_setaffinity(pid, cpu_mask)
 
-            func(**kwargs)
+            # TODO: Retry logic here
+            try:
+                func(**kwargs)
+            except Exception:
+                with open('error3.out', 'a') as errfile:
+                    errfile.write(traceback.format_exc())
 
         def invoke(func, *args, **kwargs):
             """
@@ -205,7 +212,10 @@ class ProcessMonitor:
             graphs = []
             json_graph = "{}"
             json_graphs = []
+
+            error_messages = []
             future_queue = kwargs['future_queue']
+
             del kwargs['future_queue']
 
             @asyncio.coroutine
@@ -252,12 +262,23 @@ class ProcessMonitor:
                             logging.debug(
                                 "Pre get(timeout=%s)", timeout)
                             _response = _queue.get(timeout=timeout)
+
+                            if not _response['result']:
+                                raise Exception(_response['error'])
+
                             _result = _response['result']
                             logging.debug(
                                 "Post get(timeout=%s)", timeout)
                         else:
                             _response = _queue.get()
-                            _result = _response['result']
+
+                            if not _response['result']:
+                                logging.error(_response['error'])
+                                event.set()
+                                raise Exception(_response['error'])
+
+                            else:
+                                _result = _response['result']
 
                         logging.debug("Got result for[%s] %s",
                                       name, str(_result))
@@ -296,6 +317,7 @@ class ProcessMonitor:
 
                 _tasks = []
                 processes = []
+                error = False
 
                 for arg in args:
 
@@ -338,8 +360,18 @@ class ProcessMonitor:
                             logging.debug('NO CPU SET')
 
                             # Update sharedlist with func to arg names
+                            # TODO: Wrap arg in retry function
+
+                            def error_wrapper(arg, **kwargs):
+                                try:
+                                    arg(**kwargs)
+                                except Exception as ex:
+                                    with open('error2.out', 'a') as errfile:
+                                        errfile.write(traceback.format_exc())
+                                        errfile.write(str(arg))
+
                             _process = Process(
-                                target=arg, kwargs=kargs)
+                                target=error_wrapper, args=(arg,), kwargs=kargs)
 
                         if self.shared_memory:
                             _process.shared_memory = True
@@ -362,15 +394,24 @@ class ProcessMonitor:
                         graphs += [(func.__name__, arg.__name__)]
                     else:
                         graphs += [(func.__name__, arg)]
-                    _tasks += [get_result(_queue, arg,
-                                          self.sleep, now, _process, event, self.wait, self.timeout)]
 
-                    # Wait until all the processes report results
-                    tasks = asyncio.gather(*_tasks)
+                    try:
+                        _tasks += [get_result(_queue, arg,
+                                              self.sleep, now, _process, event, self.wait, self.timeout)]
+
+                        # Wait until all the processes report results
+                        tasks = asyncio.gather(*_tasks)
+                    except Exception as ex:
+                        logging.error("Got exception during get_result gather")
+                        error = True
+                        break
 
                 # Ensure we have joined all spawned processes
+                if error:
+                    raise Exception("Got exception during get_result gather")
 
                 _args = loop.run_until_complete(tasks)
+
                 try:
                     args = [_arg['result'] for _arg in _args]
                     arg_graph = [_arg['graph'] for _arg in _args]
@@ -455,6 +496,8 @@ class ProcessMonitor:
                     scheduler = kwargs['scheduler']
                     del kwargs['scheduler']
 
+                result = None
+
                 try:
                     if self.execute:
                         logging.debug("process: execute: %s", self.execute)
@@ -468,19 +511,24 @@ class ProcessMonitor:
                             def func_wrapper(_wf, _wq):
                                 logging.debug("func_wrapper: %s", _wf)
                                 result = _wf()
-                                logging.debug("func_wrapper: result: %s", result)
+                                logging.debug(
+                                    "func_wrapper: result: %s", result)
 
                                 # Unwrap any partials built up by stacked decorators
-                                if callable(result):
-                                    return func_wrapper(result, _wq)
+
                                 try:
-                                    logging.debug("func_wrapper: putting result on queue")
+                                    if callable(result):
+                                        # TODO: Retry logic here
+                                        return func_wrapper(result, _wq)
+                                    logging.debug(
+                                        "func_wrapper: putting result on queue")
                                     # TODO: Put (graph,result) tuple here
                                     _wq.put(
                                         {'graph': [(func.__name__, _wf.__name__)], 'result': result})
-                                    logging.debug("func_wrapper: done putting queue")
+                                    logging.debug(
+                                        "func_wrapper: done putting queue")
                                 except Exception:
-                                    with open('error.out', 'w') as errfile:
+                                    with open('error4.out', 'a') as errfile:
                                         errfile.write(traceback.format_exc())
 
                                 return None
@@ -490,7 +538,14 @@ class ProcessMonitor:
                                 target=func_wrapper, args=(_pfunc, _mq, ))
                             proc.start()
                         else:
-                            result = func(*args, **kwargs)
+                            try:
+                                # TODO: Retry logic here
+                                result = func(*args, **kwargs)
+                            except Exception as ex:
+                                event.set()
+                                error_messages += [str(ex)]
+                                with open('error5.out', 'a') as errfile:
+                                    errfile.write(traceback.format_exc())
                     else:
                         if event:
                             logging.debug(
@@ -511,8 +566,13 @@ class ProcessMonitor:
                 logging.debug("PUT GRAPH [%s]: %s", func.__name__, graphs)
                 logging.debug(
                     "PUT GRAPH JSON [%s]: %s", func.__name__, json_graph)
-                queue.put(
-                    {'graph': graphs, 'json': json.loads(json_graph), 'result': result})
+
+                if result is not None:
+                    queue.put(
+                        {'graph': graphs, 'json': json.loads(json_graph), 'result': result})
+                else:
+                    queue.put(
+                        {'graph': graphs, 'json': json.loads(json_graph), 'result': None, 'error': ' '.join(error_messages)})
 
                 if event:
                     logging.debug(
@@ -536,9 +596,9 @@ class ProcessMonitor:
                     logging.debug("func_wrapper: result: %s", result)
 
                     # Unwrap any partials built up by stacked decorators
-                    if callable(result):
-                        return func_wrapper(result, _wq)
                     try:
+                        if callable(result):
+                            return func_wrapper(result, _wq)
                         logging.debug("func_wrapper: putting result on queue")
                         # TODO: Put (graph,result) tuple here
                         _wq.put(
@@ -547,7 +607,7 @@ class ProcessMonitor:
                             future_queue.put(result)
                         logging.debug("func_wrapper: done putting queue")
                     except Exception:
-                        with open('error.out', 'w') as errfile:
+                        with open('error2.out', 'a') as errfile:
                             errfile.write(traceback.format_exc())
 
                     return None
@@ -585,6 +645,10 @@ class ProcessMonitor:
 
                 if not is_proc:
                     response = _mq.get()
+
+                    if 'error' in response and not response['result']:
+                        raise Exception(response['error'])
+
                     result = response['result']
 
                 if len(json_graphs) > 0:
@@ -638,9 +702,9 @@ class ProcessMonitor:
 
                 def entangle():
                     loop.run_until_complete(task)
-                
+
                 task.entangle = entangle
-                
+
                 return task
 
         pfunc.graph = get_graph
