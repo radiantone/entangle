@@ -90,6 +90,11 @@ class ProcessTerminatedException(Exception):
     """
 
 
+class ProcessRetryException(Exception):
+    """
+    Description
+    """
+
 class ProcessTimeoutException(Exception):
     """
     Description
@@ -119,6 +124,7 @@ class ProcessMonitor:
         self.execute = kwargs['execute'] if 'execute' in kwargs else True
         self.source = None
         self.result_queue = Queue()
+        self.retry = kwargs['retry'] if 'retry' in kwargs else None
 
     def get_func(self):
         """
@@ -201,7 +207,7 @@ class ProcessMonitor:
                 with open('error3.out', 'a') as errfile:
                     errfile.write(traceback.format_exc())
 
-        def invoke(func, *args, **kwargs):
+        def invoke(func, retry, *args, **kwargs):
             """
 
             :param func:
@@ -275,6 +281,7 @@ class ProcessMonitor:
                             if not _response['result']:
                                 logging.error(_response['error'])
                                 event.set()
+                                print(_response['error'])
                                 raise Exception(_response['error'])
 
                             else:
@@ -410,7 +417,11 @@ class ProcessMonitor:
                 if error:
                     raise Exception("Got exception during get_result gather")
 
-                _args = loop.run_until_complete(tasks)
+                try:
+                    _args = loop.run_until_complete(tasks)
+                except Exception as ex:
+                    logging.error(ex)
+                    return
 
                 try:
                     args = [_arg['result'] for _arg in _args]
@@ -538,14 +549,28 @@ class ProcessMonitor:
                                 target=func_wrapper, args=(_pfunc, _mq, ))
                             proc.start()
                         else:
-                            try:
-                                # TODO: Retry logic here
-                                result = func(*args, **kwargs)
-                            except Exception as ex:
-                                event.set()
-                                error_messages += [str(ex)]
-                                with open('error5.out', 'a') as errfile:
-                                    errfile.write(traceback.format_exc())
+                            ex_msg = None
+                            if retry > 0:
+                                for i in range(retry):
+                                    logging.debug("RETRY: {}".format(i))
+                                    try:
+                                        result = func(*args, **kwargs)
+                                        break
+                                    except Exception as ex:
+                                        import traceback
+                                        ex_msg = str(ex)
+                                        error_messages = [traceback.format_exc()]
+                                        continue
+
+                                if i == retry-1:
+                                    event.set()
+                                    error_messages += ["maximum retries reached {}".format(retry)]
+                            else:
+                                try:
+                                    result = func(*args, **kwargs)
+                                except Exception as ex:
+                                    for msg in error_messages:
+                                        logging.error(msg)
                     else:
                         if event:
                             logging.debug(
@@ -559,6 +584,11 @@ class ProcessMonitor:
                             "Putting CPU: %s back on scheduler queue.", cpu)
 
                         scheduler.put(['0', cpu, 'N'])
+
+                    if len(error_messages) > 0:
+                        for msg in error_messages:
+                            logging.error(msg)
+                        result = None
 
                 if self.cache:
                     pass
@@ -673,7 +703,7 @@ class ProcessMonitor:
 
         # Need to pass in a queue here that the future coroutine can listen on
         kwargs['future_queue'] = self.result_queue
-        pfunc = partial(invoke, self.func, *args, **kwargs)
+        pfunc = partial(invoke, self.func, self.retry, *args, **kwargs)
 
         if hasattr(self.func, '__name__'):
             pfunc.__name__ = self.func.__name__
