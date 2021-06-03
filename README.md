@@ -1,7 +1,7 @@
 *This version: 0.1.13*
-*Development version: [0.1.14](https://github.com/radiantone/entangle/tree/0.1.14)*
 
 ![logo](./images/logo.png)
+*Development version: [0.1.14](https://github.com/radiantone/entangle/tree/0.1.14)*
 
 
 A lightweight (serverless) native python parallel processing framework based on simple decorators and call graphs, supporting both *control flow* and *dataflow* execution paradigms as well as de-centralized CPU & GPU scheduling. 
