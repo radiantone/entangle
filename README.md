@@ -9,6 +9,7 @@ A lightweight (serverless) native python parallel processing framework based on 
 
 ## New In This Release
 
+- Retry usage example (partially working but unfinished feature)
 - Dockerfile provided for quick and easy experimentation.
 - Workflows can now return the call graph structure upon completion. See [Graph Example](#graph-example)
 - Support for workflow futures (if that's your thing) See [Workflow Future Example](#workflow-future-example)
@@ -101,7 +102,7 @@ In this context, it is a metaphor for how tasks send data (particles) to one ano
 
 ### IMPORTANT NOTES!
 
-Please keep in mind that Entangle is *in development* and is classified as `Pre-Alpha`. Some of the functionality shown here is incomplete. If you clone this repo and want to experiment be sure to update often as things break, improve, get fixed etc. quite frequently. The `main` branch will always contain the most current release. All development for the next version is done on that branch (e.g. 0.1.4). If you want the current development version, look for the latest semantic version numbered branch.
+Please keep in mind that Entangle is *in development* and is classified as `Pre-Alpha`. Some of the functionality shown here is incomplete. If you clone this repo and want to experiment be sure to update often as things break, improve, get fixed etc. quite frequently. The `main` branch will always contain the most current release. All development for the next version is done on a release specific branch (e.g. 0.1.14). If you want the current development version, look for the latest numbered branch.
 
 ## Installation
 
@@ -159,6 +160,10 @@ or if you don't have GPU
 ```shell
 $ pytest --verbose --color=yes --pyargs entangle.tests.test_entangle
 ```
+or just do this
+```shell
+$ python setup.py test
+```
 ### Cleaning
 Clean all build files, directories, temp files and any files created by examples and tests.
 
@@ -199,7 +204,7 @@ This makes the workflow a truly emergent, dynamic computing construct vs a monol
 
 ### Tradeoffs
 
-Every design approach is a balance of tradeoffs. Entangle favors CPU utilization and *true* parallelism over resource managers, schedulers or other shared services.
+Every design approach is a balance of tradeoffs. Entangle favors CPU utilization and *true* parallelism over resource managers, centralized (which is to say network centric) schedulers or other shared services.
 It favors simplicity over behavior, attempting to be minimal and un-opinionated. It tries to be *invisible* to the end user as much as possible. It strives for the basic principle that, *"if it looks like it should work, it should work."*
 
 Entangle leans on the OS scheduler to prioritize processes based on the behavior of those processes and underlying resource utilizations. It therefore does not provide its own redundant scheduler or task manager. Because of this, top-down visibility or control of workflow processes is not as easy as with centralized task managers.
@@ -246,14 +251,14 @@ Another use case is the need to run multiple parallel tasks that operate on matr
 Entangle makes this quite easy as seen in [GPU Example](#gpu-example), [Docker Example](#docker-example) and [Shared Memory Example](#shared-memory-example)
 
 #### DevOps
-For devops use cases Entangle allows you to write simple, parallel workflow graphs using *plain old python*. This let's you write efficient parallel devops pipelines with ease.
+For devops use cases Entangle allows you to write simple, parallel workflow graphs using *plain old python*. This let's you write efficient parallel devops pipelines with ease. Build simple workflows that do powerful things like orchestrating across multiple clouds, services, repositories etc in an efficient dataflow parallel design.
 
 
 ### What Entangle is not
 Here are some things entangle is not, *out-of-the-box*. This isn't to say entangle can't do these things. In fact, entangle is designed to be a low level framework for implementing these kinds of things.
 
-* Entangle does not yet perform fail over or retries
-* Entangle is not a batch process framework
+* Entangle does not yet perform fail over or retries (underway)
+* Entangle is not a batch process framework (TBD)
 * Entangle is not map/reduce
 * Entangle is not a centralized task manager
 
@@ -414,6 +419,7 @@ When a process times out, a `ProcessTimeoutException` will be thrown by Entangle
 ## Composition
 
 Entangle offers a couple different ways to use composition effectively: with *decorators* and with *workflows*.
+
 ### Decorator Composition
 
 You can compose your tasks by combining process and infrastructure decorators.
@@ -482,7 +488,7 @@ But essentially it allows for separation of workflow *declaration* from *executi
 
 ## Containers
 
-Entangle supports two container technologies: *docker* and *singularity*. These are used with the associated decorators `@docker` and `@singularity`. 
+Entangle supports two container technologies: *docker* and *singularity*(TBD). These are used with the associated decorators `@docker` and `@singularity`. 
 Using containers allows you to run functions that have complex OS or python depdendencies not native to your hosting environment.
 
 For a complete example, please see [Docker Example](#docker-example)
@@ -753,6 +759,7 @@ $ python -m entangle.examples.dataflowexample
 $ python -m entangle.examples.dataflowexample2
 $ python -m entangle.examples.dockerexample
 $ python -m entangle.examples.aiexample
+$ python -m entangle.examples.retry_example
 $ python -m entangle.examples.schedulerexample
 $ python -m entangle.examples.schedulerexample2
 $ python -m entangle.examples.sshschedulerexample
