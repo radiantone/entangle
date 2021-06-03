@@ -32,6 +32,7 @@ def num(n):
 
 @process
 def add(a, b):
+    print(a,b)
     v = int(a) + int(b)
     print("ADD: *"+str(v)+"*")
     return v

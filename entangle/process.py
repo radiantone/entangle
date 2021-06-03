@@ -95,6 +95,7 @@ class ProcessRetryException(Exception):
     Description
     """
 
+
 class ProcessTimeoutException(Exception):
     """
     Description
@@ -141,7 +142,7 @@ class ProcessMonitor:
 
         @asyncio.coroutine
         def wait_for_done(future_queue):
-
+            import time
             logging.debug(
                 "wait_for_done: looping: result queue: %s", future_queue)
             while True:
@@ -151,6 +152,9 @@ class ProcessMonitor:
                     logging.debug("wait_for_done: got result")
                     return result
                 except:
+                    logging.debug("Waiting...")
+                    time.sleep(2)
+                    logging.debug("Yielding...")
                     yield
 
         _future = loop.create_task(wait_for_done(self.result_queue))
@@ -259,7 +263,10 @@ class ProcessMonitor:
                                 raise ProcessTimeoutException()
                         else:
                             logging.debug("Waiting until complete.")
-                            event.wait()
+                            try:
+                                event.wait()
+                            except:
+                                logging.debug("process: event.wait() excepted")
 
                         logging.debug("Got event for %s", name)
 
@@ -291,15 +298,15 @@ class ProcessMonitor:
                                       name, str(_result))
 
                         yield
-
-                        # Unwrap graph data list, and result (graph, result)
-
+                        event.set()
                         return _response
                     except multiprocessing.TimeoutError as ex:
-                        logging.debug("Timeout exception")
+                        logging.debug("ProcessTimeoutException exception")
                         raise ProcessTimeoutException() from ex
                     except que.Empty as ex:
                         if process and not process.is_alive():
+                            logging.debug(
+                                "ProcessTerminatedException exception")
                             raise ProcessTerminatedException() from ex
 
                         yield time.sleep(sleep)
@@ -407,7 +414,7 @@ class ProcessMonitor:
                                               self.sleep, now, _process, event, self.wait, self.timeout)]
 
                         # Wait until all the processes report results
-                        tasks = asyncio.gather(*_tasks)
+                        tasks = asyncio.gather(*_tasks, return_exceptions=True)
                     except Exception as ex:
                         logging.error("Got exception during get_result gather")
                         error = True
@@ -418,8 +425,11 @@ class ProcessMonitor:
                     raise Exception("Got exception during get_result gather")
 
                 try:
+                    logging.debug("Running loop.run_until_complete(tasks)")
                     _args = loop.run_until_complete(tasks)
+                    logging.debug("loop.run_until_complete(tasks) Done")
                 except Exception as ex:
+                    logging.debug("Got an error")
                     logging.error(ex)
                     return
 
@@ -429,6 +439,12 @@ class ProcessMonitor:
                     json_graphs = [_arg['json']
                                    for _arg in _args if 'json' in _arg]
                 except:
+                    import traceback
+                    logging.debug("_ARGS: %s",_args)
+                    logging.debug("ERROR: Exception building args: %s", traceback.format_exc())
+                    for _arg in _args:
+                        if isinstance(_arg, Exception):
+                            raise _arg
                     args = [_arg for _arg in _args]
                     arg_graph = []
                     json_graphs = []
@@ -451,7 +467,6 @@ class ProcessMonitor:
                 _G[func.__name__] = {}
                 G = _G[func.__name__]
                 for node in graphs:
-                    print("NODE:",node)
                     if len(node) < 2:
                         continue
                     if node[1] not in G:
@@ -461,7 +476,11 @@ class ProcessMonitor:
                         if node[1] in graphnode:
                             G[node[1]] = graphnode[node[1]]
 
-                json_graph = json.dumps(_G, indent=4)
+                logging.debug("Dumping graph json")
+                try:
+                    json_graph = json.dumps(_G, indent=4)
+                except:
+                    logging.debug("Error occurred")
                 logging.debug("JSON: %s", json_graph)
                 _ = [process.join() for process in processes]
 
@@ -469,7 +488,7 @@ class ProcessMonitor:
                 if scheduler:
                     for _process in processes:
                         logging.debug(
-                            "Putting CPU: %s  back on scheduler queue.", _process.cookie)
+                            "Putting CPU1: %s  back on scheduler queue.", _process.cookie)
                         scheduler.put(('0', _process.cookie, 'Y'))
 
             if cpu:
@@ -556,20 +575,26 @@ class ProcessMonitor:
                                     logging.debug("RETRY: {}".format(i))
                                     try:
                                         result = func(*args, **kwargs)
+                                        logging.debug("RESULT IS: %s", result)
                                         break
                                     except Exception as ex:
                                         import traceback
                                         ex_msg = str(ex)
-                                        error_messages = [traceback.format_exc()]
+                                        error_messages = [
+                                            traceback.format_exc()]
                                         continue
 
                                 if i == retry-1:
                                     event.set()
-                                    error_messages += ["maximum retries reached {}".format(retry)]
+                                    error_messages += [
+                                        "maximum retries reached {}".format(retry)]
                             else:
                                 try:
                                     result = func(*args, **kwargs)
                                 except Exception as ex:
+                                    import traceback
+                                    logging.debug(
+                                        "GOT EXCEPTION: %s", traceback.format_exc())
                                     for msg in error_messages:
                                         logging.error(msg)
                     else:
@@ -582,11 +607,12 @@ class ProcessMonitor:
                     # Put own cpu back on queue
                     if scheduler and cpu:
                         logging.debug(
-                            "Putting CPU: %s back on scheduler queue.", cpu)
+                            "Putting CPU2: %s back on scheduler queue.", cpu)
 
                         scheduler.put(['0', cpu, 'N'])
 
                     if len(error_messages) > 0:
+                        logging.debug("GOT ERROR MESSAGES")
                         for msg in error_messages:
                             logging.error(msg)
                         result = None
@@ -629,11 +655,14 @@ class ProcessMonitor:
                     # Unwrap any partials built up by stacked decorators
                     try:
                         if callable(result):
+                            logging.debug("func_wrapper: return result of %s",result)
                             return func_wrapper(result, _wq)
+
                         logging.debug("func_wrapper: putting result on queue")
-                        # TODO: Put (graph,result) tuple here
+
                         _wq.put(
                             {'graph': [(func.__name__, _wf.__name__)], 'result': result})
+
                         if is_proc:
                             future_queue.put(result)
                         logging.debug("func_wrapper: done putting queue")
@@ -666,7 +695,7 @@ class ProcessMonitor:
                 finally:
                     if scheduler and cpu:
                         logging.debug(
-                            "Putting CPU: %s back on scheduler queue.", cpu)
+                            "Putting CPU3: %s back on scheduler queue.", cpu)
 
                         scheduler.put(('0', cpu, 'Y'))
 
@@ -675,31 +704,45 @@ class ProcessMonitor:
                 sys.path.append(os.getcwd())
 
                 if not is_proc:
+                    logging.debug("process: not is_proc, getting response")
                     response = _mq.get()
+                    logging.debug(
+                        "process: not is_proc, got response %s", response)
 
                     if 'error' in response and not response['result']:
+                        logging.debug("ERROR OCCURRED %s", response['error'])
                         raise Exception(response['error'])
 
+                    logging.debug("process: result = response['result']")
                     result = response['result']
 
                 if len(json_graphs) > 0:
                     callgraph = {func.__name__: json_graphs}
+                    logging.debug("process: putting callgraph on graph_queue")
                     graph_queue.put(callgraph)
+                    logging.debug(
+                        "process: putting callgraph on graph_queue: done")
                     self.graph = json.dumps(callgraph)
+                    logging.debug(
+                        "process: putting dumping callgraph")
 
                 logging.debug("process: got result from queue")
 
                 if not is_proc and proc.is_alive():
+                    logging.debug("process: Terminating process")
                     proc.terminate()
                     proc.join()
                     raise ProcessTimeoutException()
 
+            logging.debug("process: is_proc %s", is_proc)
             if is_proc:
                 # return future
                 return True
 
+            logging.debug(
+                "process: putting result on future_queue: %s", result)
             future_queue.put(result)
-
+            logging.debug("process: return result")
             return result
 
         # Need to pass in a queue here that the future coroutine can listen on
@@ -732,7 +775,9 @@ class ProcessMonitor:
                 task = loop.create_task(wait_for_graph())
 
                 def entangle():
+                    logging.debug("entangle: run_until_complete")
                     loop.run_until_complete(task)
+                    logging.debug("entangle: run_until_complete done")
 
                 task.entangle = entangle
 
