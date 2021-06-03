@@ -1,6 +1,6 @@
 *This version: 0.1.13*
-
 *Development version: [0.1.14](https://github.com/radiantone/entangle/tree/0.1.14)*
+
 ![logo](./images/logo.png)
 
 
