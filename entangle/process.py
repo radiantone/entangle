@@ -400,7 +400,7 @@ class ProcessMonitor:
                     if hasattr(arg, '__name__'):
                         graphs += [(func.__name__, arg.__name__)]
                     else:
-                        graphs += [(func.__name__, arg)]
+                        graphs += [(func.__name__, str(arg))]
 
                     try:
                         _tasks += [get_result(_queue, arg,
@@ -451,6 +451,7 @@ class ProcessMonitor:
                 _G[func.__name__] = {}
                 G = _G[func.__name__]
                 for node in graphs:
+                    print("NODE:",node)
                     if len(node) < 2:
                         continue
                     if node[1] not in G:
