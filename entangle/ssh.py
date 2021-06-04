@@ -225,6 +225,8 @@ def ssh(function=None, **kwargs):
                     python, appuuid)
 
                 result = None
+                with open('/tmp/command','w') as cmd:
+                    cmd.write(command)
 
                 logging.debug("SSH: executing %s %s@%s",command, username, hostname)
                 _, stdout, _ = _ssh.exec_command(command)

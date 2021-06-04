@@ -45,12 +45,11 @@ def add(a, b):
     return v
 
 
-@ssh(user='darren', host='miko', key='/home/darren/.ssh/id_rsa.pub', env="venv", python='/home/darren/venv/bin/python')
+@ssh(user='darren', host='miko', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
 @scheduler(**scheduler_config)
 @process
 def two():
     logging.info("Returning 2")
-    raise Exception("big exception!")
     return 2
 
 
