@@ -1,4 +1,4 @@
-*This version: 0.1.15 (development)*
+*This version: 0.1.15*
 
 ![logo](./images/logo.png)
 
