@@ -50,6 +50,7 @@ def add(a, b):
 @process
 def two():
     logging.info("Returning 2")
+    raise Exception("big exception!")
     return 2
 
 
