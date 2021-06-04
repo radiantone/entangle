@@ -570,7 +570,7 @@ class ProcessMonitor:
                             proc.start()
                         else:
                             ex_msg = None
-                            if retry > 0:
+                            if retry and retry > 0:
                                 for i in range(retry):
                                     logging.debug("RETRY: {}".format(i))
                                     try:
