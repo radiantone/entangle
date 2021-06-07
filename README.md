@@ -758,7 +758,7 @@ $ python -m entangle.examples.listexample
 $ python -m entangle.examples.listexample2
 $ python -m entangle.examples.dataflowexample
 $ python -m entangle.examples.dataflowexample2
-$ python -m [entangle.examples.dockerexample](https://github.com/radiantone/entangle/blob/main/entangle/examples/dockerexample.py)
+$ python -m entangle.examples.dockerexample
 $ python -m entangle.examples.aiexample
 $ python -m entangle.examples.retry_example
 $ python -m entangle.examples.schedulerexample
