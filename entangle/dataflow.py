@@ -2,14 +2,14 @@
 workflow.py - Module that provides workflow decorator
 """
 import logging
-
+import inspect
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import ProcessPoolExecutor
 
 global PROCESSPOOL, THREADPOOL
 PROCESSPOOL = None
-THREADPOOL = None   
+THREADPOOL = None
 
 
 def process(func):
@@ -31,6 +31,9 @@ def process(func):
 
     inner.thread = False
     inner.func = func
+    inner.userfunc = func
+    source = inspect.getsource(func)
+    inner.source = source
     return inner
 
 
@@ -48,12 +51,15 @@ def thread(func):
         :param kwargs:
         :return:
         """
-        _workflow = func(*args, **kwargs)
+        _result = func(*args, **kwargs)
 
-        return _workflow
+        return _result
 
     inner.thread = True
     inner.func = func
+    inner.userfunc = func
+    source = inspect.getsource(func)
+    inner.source = source
     return inner
 
 
@@ -87,77 +93,55 @@ class DataflowNode:
     def __call__(self, *args, **kwargs):
 
         logging.debug("Inside dataflow: %s",
-            self.func.__name__)
+                      self.func.__name__)
+        # TODO: Put arg loop here and check each arg for partial of DataflowNode
 
-        if len(self.args) > 0 and not isinstance(self.args[0], DataflowNode):
-            logging.debug("Calling partial")
+        # self.args if partials, get invoked passing *args, **kwargs to it
+        # for each self.arg
 
-            if callable(self.args[0]) and self.args[0].__name__ == "<lambda>":
-                result = self.args[0](*args)
-                if isinstance(result, list):
-                    for _r in result:
-                        _r.__name__ = 'lambda'
-                        _df = DataflowNode(_r,*args)
-                        _df(*args)
-                    return self
-                else:
-                    result(*args)
-                    return self
-            else:
-                result = self.partial()
+        
+        result = self.func(*args, **kwargs)
 
-            logging.debug("Result %s",result)
+        if len(self.args) == 0:
+            logging.debug("Passing %s to myself %s", args, self.func)
 
             if self.callback:
-                logging.debug('Calling callback %s',self.partial.__name__)
-                THREADPOOL.submit(self.callback, self.partial.func, result)
-
-            for arg in args:
-                if isinstance(arg, DataflowNode):
-                    if isinstance(arg, partial):
-                        logging.debug("Sending %s to %s",
-                            result, arg.func.__name__)
-
-            for arg in args:
-
-                if hasattr(arg,'func'):
-                    logging.debug('   LAUNCHING: %s %s',
-                        arg.func.__name__, result)
-                    logging.debug('     Thread: %s',arg.thread)
-                    logging.debug("Calling %s('%s')",
-                        arg.func.__name__, result)
-
-                if hasattr(arg,'thread') and arg.thread:
-                    THREADPOOL.submit(arg, result, **{'result': self.result})
-                else:
-                    PROCESSPOOL.submit(arg, result, **{'result': self.result})
-        else:
-            logging.debug("Calling with args %s %s",
-                self.func.__name__, *args)
-
-            result = self.func(*args)
-
-            if self.callback:
-                logging.debug('Calling callback %s',self.func.__name__)
+                logging.debug('Calling callback %s', self.func.__name__)
                 THREADPOOL.submit(self.callback, self.func, result)
-
-            logging.debug("Result %s",result)
-            for arg in self.args:
-                if isinstance(arg, DataflowNode):
-                    logging.debug("Sending %s to %s",
-                        result, arg.func.__name__)
-
-            for arg in self.args:
-                logging.debug('   LAUNCHING: %s %s',
-                    arg.func.__name__, result)
-                logging.debug('     Thread: %s',arg.thread)
-                logging.debug("Calling %s('%s')",
-                    arg.func.__name__, result)
-
-                if arg.thread:
-                    THREADPOOL.submit(arg, result)
+        else:
+            for _arg in self.args:
+                logging.debug("Passing %s to %s", result, _arg)
+                if (callable(_arg) and (hasattr(_arg,'__name__') and _arg.__name__ == "<lambda>")):
+                    logging.debug("dataflow: Calling lambda %s", _arg)
+                    result = _arg(*args)
+                    logging.debug("dataflow: lambda result: %s", result)
+                    if isinstance(result, list):
+                        for _r in result:
+                            _r.__name__ = 'lambda'
+                            _df = DataflowNode(_r, *args)
+                            _df(*args)
+                        return self
+                    else:
+                        if result:
+                            logging.debug(
+                                "dataflow: Invoking result %s(%s)", result, args)
+                            try:
+                                _rr = result(*args)
+                                logging.debug(
+                                    "dataflow: got result(%s)", _rr)
+                            except:
+                                import traceback
+                                print(traceback.format_exc())
+                                logging.debug("RESULT EXCEPTION!")
+                        return self
                 else:
-                    PROCESSPOOL.submit(arg, result)
+                    try:
+                        if callable(_arg):
+                            _rr = _arg(result,**kwargs)
+                            logging.debug("_rr is %s", _rr)
+                    except:
+                        pass
+                #PROCESSPOOL.submit(_arg, result)
 
         return self
 
@@ -176,24 +160,41 @@ def dataflow(function=None,
 
     def decorator(func):
         def wrapper(f_func, *dargs, **dkwargs):
-            logging.debug("Calling decorator %s", f_func.__name__)
-            logging.debug("dargs %s",str(dargs))
+            logging.debug("decorator: Calling decorator %s", f_func.__name__)
+            logging.debug("decorator: dargs %s", str(dargs))
 
             def invoke(*args, **kwargs):
-                logging.debug("invoke f %s %s", f_func, args)
+                logging.debug("decorator: invoke f %s %s", f_func, args)
                 kwargs['callback'] = callback
                 return DataflowNode(f_func, *args, **kwargs)
 
             return invoke
 
-        return wrapper(func)
+        #if hasattr(func, 'func'):
+        #    wrap = wrapper(func.func)
+        #else:
+        wrap = wrapper(func)
+        try:
+            print("decorator: WRAP FUNC:", func)
+            wrap.func = func.func
+            wrap.userfunc = func
+            wrap.source = inspect.getsource(func.func)
+        except:
+            print("decorator: EXCEPT FUNC:", func)
+            wrap.func = func
+            wrap.userfunc = func
+            wrap.source = inspect.getsource(func)
+        return wrap
 
     try:
         PROCESSPOOL = ProcessPoolExecutor(max_workers=maxworkers)
         THREADPOOL = ThreadPoolExecutor(max_workers=maxworkers)
 
         if function is not None:
-            return decorator(function)
+            dec = decorator(function)
+
+            dec.func = function.func
+            return dec
 
         return decorator
     finally:
