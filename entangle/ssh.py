@@ -10,6 +10,7 @@ import re
 import codecs
 import pickle
 import importlib
+import inspect
 from functools import partial
 from ast import FunctionDef
 from uuid import uuid4
@@ -36,18 +37,15 @@ def ssh(function=None, **kwargs):
         :param kwargs:
         :return:
         """
-
-        def find_func(p_func):
-            if isinstance(p_func, partial):
-                return find_func(p_func.func)
-            return p_func
-
         hostname = kwargs['host']
         username = kwargs['user']
         sshkey = kwargs['key']
         python = kwargs['python'] if 'python' in kwargs else "python3.8"
 
         logging.debug("ssh: func: %s", func.func)
+        if not func.source:
+            func.source = inspect.getsource(func.func)
+            func.func.userfunc = True
         logging.debug("ssh: func source:\n%s", func.source)
 
         _ast = ast.parse(func.source)
@@ -64,9 +62,9 @@ def ssh(function=None, **kwargs):
             decorators.remove(ssh_decorator)
 
         logging.debug("ssh: func new source: %s", astunparse.unparse(_ast))
-        logging.debug("ssh args: %s %s",str(args), str(kwargs))
+        logging.debug("ssh args: %s %s", str(args), str(kwargs))
 
-        logging.debug("SSH: Calling function: %s",str(func))
+        logging.debug("SSH: Calling function: %s", str(func))
 
         def wrapper(f_func, *args, **kwargs):
             """
@@ -76,6 +74,14 @@ def ssh(function=None, **kwargs):
             :param kwargs:
             :return:
             """
+            def find_func(pfunc):
+                logging.debug("find_func: %s", pfunc.__name__)
+                if hasattr(pfunc, 'userfunc') and pfunc.userfunc:
+                    return pfunc.userfunc
+                elif isinstance(pfunc, partial):
+                    return find_func(pfunc.func)
+                return pfunc
+
             def remove_ssh_decorator(fsource, username, hostname):
                 """
                 Description
@@ -106,7 +112,7 @@ def ssh(function=None, **kwargs):
                                     ssh_decorators += [decorator]
 
                 for ssh_decorator in ssh_decorators:
-                    logging.debug("SSH: Removing decorator: %s",ssh_decorator)
+                    logging.debug("SSH: Removing decorator: %s", ssh_decorator)
                     decorators.remove(ssh_decorator)
 
                 return astunparse.unparse(_ast)
@@ -117,17 +123,16 @@ def ssh(function=None, **kwargs):
                 sourcefile = sys.argv[0]
 
             with open(sourcefile) as source:
-                logging.debug("SOURCE:%s",source.read())
+                logging.debug("SOURCE:%s", source.read())
 
             logging.debug("SSH: user:%s host:%s key: %s",
-                kwargs['user'], kwargs['host'], kwargs['key'])
-
+                          kwargs['user'], kwargs['host'], kwargs['key'])
 
             def setup_virtualenv(host, user, key, env):
                 _ssh = paramiko.SSHClient()
                 _ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 _ssh.connect(hostname=hostname, username=username,
-                            key_filename=sshkey)
+                             key_filename=sshkey)
                 command = "python3.8 -m venv {}; export LLVM_CONFIG=/usr/bin/llvm-config-10; {}/bin/pip install --upgrade py-entangle".format(
                     env, env)
                 _, stdout, _ = _ssh.exec_command(command)
@@ -136,7 +141,8 @@ def ssh(function=None, **kwargs):
 
             if 'env' in kwargs:
                 # Set up virtualenv
-                setup_virtualenv(kwargs['host'],kwargs['user'],kwargs['key'],kwargs['env'])
+                setup_virtualenv(
+                    kwargs['host'], kwargs['user'], kwargs['key'], kwargs['env'])
                 #python = "{}/bin/python".format(kwargs['env'])
                 del kwargs['env']
 
@@ -145,7 +151,7 @@ def ssh(function=None, **kwargs):
             del kwargs['key']
 
             logging.debug("Run function: %s(%s,%s)",
-                func.__name__, args, kwargs)
+                          func.__name__, args, kwargs)
 
             vargs = []
 
@@ -163,37 +169,44 @@ def ssh(function=None, **kwargs):
                                  hostname), "#@ssh(user='{}', host='{}'".format(username,
                                  hostname), _source).strip()
 
+
+                _source = re.sub(r"@dataflow","#@dataflow", _source).strip()
+
                 with open('{}.py'.format(sourceuuid), 'w') as appsource:
                     appsource.write(_source)
 
             appuuid = "sshapp"+hashlib.md5(uuid4().bytes).hexdigest()
 
-            with open('{}.py'.format(appuuid),'w') as app:
+            __func = find_func(func)
+
+            with open('{}.py'.format(appuuid), 'w') as app:
                 pargs = codecs.encode(pickle.dumps(vargs), "base64").decode()
                 pargs = re.sub(r'\n', "", pargs).strip()
-                app.write("import logging\n\n" \
-                          "logger=logging.getLogger()\n" \
-                          "logging.disabled=False\n" \
+                app.write("import logging\n\n"
+                          "logger=logging.getLogger()\n"
+                          "logging.disabled=False\n"
                           "logger.disabled=False\n")
                 app.write("import pickle, codecs, re\n")
-                app.write("from {} import {}\n\n".format(sourceuuid, func.__name__))
+                app.write("from {} import {}\n\n".format(
+                    sourceuuid, __func.__name__))
                 app.write("pargs = '{}'\n".format(pargs))
-                app.write("args = pickle.loads(codecs.decode(pargs.encode(), \"base64\"))\n")
+                app.write(
+                    "args = pickle.loads(codecs.decode(pargs.encode(), \"base64\"))\n")
                 app.write("print(\"ARGS: {}\".format(args))\n")
-                app.write("result = {}(*args)()\n".format(func.__name__))
+                app.write("result = {}(*args)()\n".format(__func.__name__))
                 app.write("print(\"RESULT:\", result)\n")
                 app.write(
                     "resultp = codecs.encode(pickle.dumps(result), \"base64\").decode()\n")
                 app.write("print('===BEGIN===')\n")
-                app.write("print(resultp)")
+                app.write("print(resultp)\n")
 
             p_func = partial(f_func, *args, **kwargs)
 
             p_func.__name__ = f_func.__name__
 
-            logging.debug("args: %s   kwargs: %s",args,kwargs)
+            logging.debug("args: %s   kwargs: %s", args, kwargs)
 
-            def ssh_function(remotefunc, username, hostname, sshkey, appuuid, sourceuuid):
+            def ssh_function(remotefunc, username, hostname, sshkey, appuuid, sourceuuid, *args):
                 """
                 Description
                 :param remotefunc:
@@ -204,14 +217,15 @@ def ssh(function=None, **kwargs):
                 :param sourceuuid:
                 :return:
                 """
+                logging.debug("ssh_function: remote function args: %s", *args)
                 files = [appuuid+".py", sourceuuid+".py"]
                 logging.debug(
                     "SCP files: %s to %s@%s:%s", files, username, hostname, '/tmp')
                 _ssh = paramiko.SSHClient()
                 _ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 _ssh.connect(hostname=hostname, username=username,
-                            key_filename=sshkey)
-                logging.debug("SSH FUNCTION: %s",remotefunc)
+                             key_filename=sshkey)
+                logging.debug("SSH FUNCTION: %s", remotefunc)
                 scp = SCPClient(_ssh.get_transport())
 
                 try:
@@ -222,17 +236,18 @@ def ssh(function=None, **kwargs):
                     #[os.remove(file) for file in files]
 
                 command = "export SOURCE={}.py; cd /tmp; {} /tmp/{}.py".format(sourceuuid,
-                    python, appuuid)
+                                                                               python, appuuid)
 
                 result = None
-                with open('/tmp/command','w') as cmd:
+                with open('/tmp/command', 'w') as cmd:
                     cmd.write(command)
 
-                logging.debug("SSH: executing %s %s@%s",command, username, hostname)
+                logging.debug("SSH: executing %s %s@%s",
+                              command, username, hostname)
                 _, stdout, _ = _ssh.exec_command(command)
 
-                logging.debug("SSH: CWD %s",os.getcwd())
-                logging.debug("SSH: importing module %s",sourceuuid)
+                logging.debug("SSH: CWD %s", os.getcwd())
+                logging.debug("SSH: importing module %s", sourceuuid)
                 sys.path.append(os.getcwd())
                 try:
                     importlib.import_module(sourceuuid)
@@ -242,40 +257,50 @@ def ssh(function=None, **kwargs):
                 result_next = False
                 resultlines = []
                 for line in stdout.read().splitlines():
-                    logging.debug("SSH: command stdout: %s",line)
+                    logging.debug("SSH: command stdout: %s", line)
                     if result_next:
                         if len(line.strip()) > 0:
                             resultlines += [line]
-                            logging.debug("SSH: got result line: %s",line)
+                            logging.debug("SSH: got result line: %s", line)
                     if line == b"===BEGIN===":
                         result_next = True
 
-                logging.debug("Unpickle: %s",b"".join(resultlines))
+                logging.debug("Unpickle: %s", b"".join(resultlines))
 
-                result = pickle.loads(
-                    codecs.decode(b"".join(resultlines), "base64"))
+                if len(resultlines) > 0:
+                    result = pickle.loads(
+                        codecs.decode(b"".join(resultlines), "base64"))
+                else:
+                    result = None
 
-                _ssh.exec_command("rm {}".format(" ".join(["/tmp/"+file for file in files])))
+                # _ssh.exec_command("rm {}".format(
+                #    " ".join(["/tmp/"+file for file in files])))
                 _ssh.close()
 
                 return result
 
+            _p_func = find_func(p_func)
+
+            logging.debug("_p_func: %s", _p_func)
+            logging.debug("p_func: %s", p_func)
             ssh_p = partial(ssh_function, p_func, username,
                             hostname, sshkey, appuuid, sourceuuid)
             ssh_p.__name__ = p_func.__name__
-
+            ssh_p.userfunc = f_func.func
+            result = ssh_p()
+            '''
             result = ProcessMonitor(ssh_p, timeout=None,
                                     wait=None,
                                     cache=False,
                                     shared_memory=False,
                                     sleep=0)
-
+            '''
             if callable(result):
                 _result = result()
             else:
                 _result = result
 
-            logging.debug("SSH RESULT: %s",_result)
+            logging.debug("SSH RESULT2: %s", _result)
 
             # files = [appuuid+".py", sourceuuid+".py"]
             # [os.remove(file) for file in files]
