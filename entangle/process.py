@@ -123,9 +123,9 @@ class ProcessMonitor:
         self.timeout = kwargs['timeout']
         self.wait = kwargs['wait']
         self.execute = kwargs['execute'] if 'execute' in kwargs else True
-        self.source = None
         self.result_queue = Queue()
         self.retry = kwargs['retry'] if 'retry' in kwargs else None
+        self.__name__ = func.__name__
 
     def get_func(self):
         """
@@ -184,8 +184,11 @@ class ProcessMonitor:
         if isinstance(self.func, partial):
 
             def find_func(pfunc):
-                if isinstance(pfunc, partial):
+                if hasattr(pfunc, 'userfunc') and pfunc.userfunc:
+                    return pfunc.userfunc
+                elif isinstance(pfunc, partial):
                     return find_func(pfunc.func)
+                #raise Exception()
                 return pfunc
 
             _func = find_func(self.func)
@@ -200,13 +203,33 @@ class ProcessMonitor:
             :param kwargs:
             :return:
             """
+            import time
+            import datetime
             pid = os.getpid()
             cpu_mask = [int(cpu)]
+            logging.debug("assign_cpu: setting affinity to %s", cpu_mask)
             os.sched_setaffinity(pid, cpu_mask)
 
             # TODO: Retry logic here
             try:
+                start = time.time()
+                if '_cpu' in kwargs:
+                    _cpu = kwargs['_cpu']
+                    del kwargs['_cpu']
+                event = kwargs['event']
+                del kwargs['event']
                 func(**kwargs)
+                end = time.time()
+                duration = str(
+                    datetime.timedelta(seconds=end-start))
+                logging.debug(
+                    "assign_cpu: DURATION: %s", duration)
+                
+                if 'scheduler' in kwargs:
+                    logging.debug(
+                        "assign_cpu: Putting CPU %s on queue", cpu_mask)
+                    kwargs['scheduler'].put((0, int(cpu), 1))
+                event.set()
             except Exception:
                 with open('error3.out', 'a') as errfile:
                     errfile.write(traceback.format_exc())
@@ -358,12 +381,14 @@ class ProcessMonitor:
                             kargs['sm'] = SharedMemory
 
                         if cpu:
+
                             arg_cpu = scheduler.get()
 
                             # TODO: Fix. This bypasses the scheduler logic of capping the CPU #'s.
                             logging.debug(
-                                'ARG CPU SET TO: %s', arg_cpu[1])
-
+                                'ARG CPU SET TO: %s', arg_cpu)
+                            kargs['event'] = event
+                            kargs['scheduler'] = scheduler
                             # Update sharedlist with func to arg names
                             _process = Process(
                                 target=assign_cpu, args=(
@@ -440,8 +465,9 @@ class ProcessMonitor:
                                    for _arg in _args if 'json' in _arg]
                 except:
                     import traceback
-                    logging.debug("_ARGS: %s",_args)
-                    logging.debug("ERROR: Exception building args: %s", traceback.format_exc())
+                    logging.debug("_ARGS: %s", _args)
+                    logging.debug(
+                        "ERROR: Exception building args: %s", traceback.format_exc())
                     for _arg in _args:
                         if isinstance(_arg, Exception):
                             raise _arg
@@ -484,13 +510,15 @@ class ProcessMonitor:
                 logging.debug("JSON: %s", json_graph)
                 _ = [process.join() for process in processes]
 
-                # Put CPU cookie back on scheduler queue
+                # This no longer needed because processes put their own cpu's back on the queue
+                # when they have complete, individually
+                
                 if scheduler:
                     for _process in processes:
                         logging.debug(
                             "Putting CPU1: %s  back on scheduler queue.", _process.cookie)
                         scheduler.put(('0', _process.cookie, 'Y'))
-
+                
             if cpu:
                 pid = os.getpid()
                 cpu_mask = [int(cpu)]
@@ -540,8 +568,17 @@ class ProcessMonitor:
                             _mq = Queue()
 
                             def func_wrapper(_wf, _wq):
+                                import time
+                                import datetime
+
                                 logging.debug("func_wrapper: %s", _wf)
+                                start = time.time()
                                 result = _wf()
+                                end = time.time()
+                                duration = str(
+                                    datetime.timedelta(seconds=end-start))
+                                logging.debug(
+                                    "func_wrapper: DURATION: %s", duration)
                                 logging.debug(
                                     "func_wrapper: result: %s", result)
 
@@ -590,7 +627,15 @@ class ProcessMonitor:
                                         "maximum retries reached {}".format(retry)]
                             else:
                                 try:
+                                    import datetime
+
+                                    start = time.time()
                                     result = func(*args, **kwargs)
+                                    end = time.time()
+                                    duration = str(
+                                        datetime.timedelta(seconds=end-start))
+                                    logging.debug(
+                                        "func: DURATION: %s", duration)
                                 except Exception as ex:
                                     import traceback
                                     logging.debug(
@@ -648,14 +693,22 @@ class ProcessMonitor:
                 _mq = Queue()
 
                 def func_wrapper(_wf, _wq):
+                    import time
+                    import datetime
+                    start = time.time()
                     logging.debug("func_wrapper: %s", _wf)
                     result = _wf()
                     logging.debug("func_wrapper: result: %s", result)
+                    end = time.time()
+                    duration = str(datetime.timedelta(seconds=end-start))
+                    logging.debug(
+                        "func_wrapper: DURATION: %s", duration)
 
                     # Unwrap any partials built up by stacked decorators
                     try:
                         if callable(result):
-                            logging.debug("func_wrapper: return result of %s",result)
+                            logging.debug(
+                                "func_wrapper: return result of %s", result)
                             return func_wrapper(result, _wq)
 
                         logging.debug("func_wrapper: putting result on queue")
@@ -676,8 +729,11 @@ class ProcessMonitor:
                 pfunc.__name__ = func.__name__
 
                 try:
+                    import datetime
+
                     if self.execute:
                         logging.debug("process: execute2: %s", self.execute)
+                        start = time.time()
                         proc = multiprocessing.Process(
                             target=func_wrapper, args=(pfunc, _mq,))
                         proc.start()
@@ -686,6 +742,11 @@ class ProcessMonitor:
                             "Executing function %s with timeout %s", func, self.timeout)
                         if not is_proc:
                             proc.join(self.timeout)
+                            end = time.time()
+                            duration = str(
+                                datetime.timedelta(seconds=end-start))
+                            logging.debug(
+                                "proc: DURATION: %s", duration)
                     else:
                         if event:
                             logging.debug(
