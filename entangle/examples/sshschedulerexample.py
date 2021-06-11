@@ -80,6 +80,8 @@ def workflow2():
 
 
 if __name__ == '__main__':
+    import json
+
     workflow = workflow2()
     result = workflow()
     print("WORKFLOW OBJ:", result)
