@@ -119,6 +119,7 @@ class ThreadMonitor:
         self.execute = kwargs['execute'] if 'execute' in kwargs else True
         self.source = None
         self.result_queue = Queue()
+        self.__name__ = func.__name__
 
     def get_func(self):
         """
