@@ -5,7 +5,7 @@ TBD
 import threading
 import time
 from entangle.logging.file import logging
-from entangle.dataflow import process
+from entangle.dataflow import thread
 from entangle.dataflow import dataflow
 from entangle.scheduler import scheduler
 
@@ -21,7 +21,7 @@ scheduler_config = {'cpus': 2,
 
 @scheduler(**scheduler_config)
 @dataflow(callback=triggered)
-@process
+@thread
 def printx(x):
     print('printx: {}'.format(threading.current_thread().name))
     return "X: {}".format(x)
@@ -29,7 +29,7 @@ def printx(x):
 
 @scheduler(**scheduler_config)
 @dataflow(callback=triggered)
-@process
+@thread
 def printy(y):
     print('printy: {}'.format(threading.current_thread().name))
     return "Y: {}".format(y)
@@ -37,7 +37,7 @@ def printy(y):
 
 @scheduler(**scheduler_config)
 @dataflow(callback=triggered)
-@process
+@thread
 def printz(z):
     print('printz: {}'.format(threading.current_thread().name))
     return "Z: {}".format(z)
@@ -45,7 +45,7 @@ def printz(z):
 
 @scheduler(**scheduler_config)
 @dataflow(callback=triggered)
-@process
+@thread
 def echo(e):
     print('echo: {}'.format(threading.current_thread().name))
     return "Echo! {}".format(e)
