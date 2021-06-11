@@ -24,7 +24,7 @@ def printx(x):
 @dataflow(callback=triggered)
 @thread
 def printy(y):
-    print('printy: {}'.format(threading.current_thread().name))
+    print('printy:  {} {}'.format(y, threading.current_thread().name))
     return "Y: {}".format(y)
 
 
