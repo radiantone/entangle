@@ -15,8 +15,8 @@ def triggered(func, result):
     print("triggered: {} {}".format(func.__name__, result))
 
 
-@ssh(user='darren', host='miko', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
 @dataflow(callback=triggered)
+@ssh(user='darren', host='miko', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
 @process
 def printz(z):
     print('printz: {}'.format(threading.current_thread().name))
@@ -24,8 +24,9 @@ def printz(z):
         pr.write("Z: {}".format(z))
     return "Z: {}".format(z)
 
-@ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
+
 @dataflow(callback=triggered)
+@ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
 @process
 def printx(x):
     print('printx: {}'.format(threading.current_thread().name))
@@ -33,16 +34,21 @@ def printx(x):
         pr.write("X: {}".format(x))
     return "X: {}".format(x)
 
+
 @dataflow(callback=triggered)
 @process
 def printy(y):
     print('printy: {}'.format(threading.current_thread().name))
     return "Y: {}".format(y)
 
+
 @dataflow(callback=triggered)
+@ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
 @process
 def echo(e):
     print('echo: {}'.format(threading.current_thread().name))
+    with open('/tmp/echo.out', 'w') as pr:
+        pr.write("Echo! {}".format(e))
     return "Echo! {}".format(e)
 
 
@@ -58,7 +64,9 @@ if __name__ == '__main__':
     # Create the dataflow graph
     flow = emit(
         printx(),
-        printz()
+        printz(
+            echo()
+        )
     )
 
     # Invoke the dataflow graph with initial input
