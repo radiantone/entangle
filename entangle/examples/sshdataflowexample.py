@@ -63,10 +63,15 @@ if __name__ == '__main__':
 
     # Create the dataflow graph
     flow = emit(
-        printx(),
-        printz(
-            echo()
-        )
+        printx(
+            printz(
+                echo()
+            )
+        ),
+        printy(
+            printz()
+        ),
+        printy()
     )
 
     # Invoke the dataflow graph with initial input

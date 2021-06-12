@@ -91,6 +91,7 @@ class DataflowNode:
         # Build dataflow DAG here
 
     def __call__(self, *args, **kwargs):
+        import sys
 
         logging.debug("Inside dataflow: %s",
                       self.func.__name__)
@@ -98,8 +99,12 @@ class DataflowNode:
 
         # self.args if partials, get invoked passing *args, **kwargs to it
         # for each self.arg
+        logging.debug("self.func %s",self.func)
+        ff = self.func
 
-        
+        if hasattr(self.func,'dataflow'):
+            frame = sys._getframe(0)
+            frame.f_locals['dataflow'] = True
         result = self.func(*args, **kwargs)
 
         if len(self.args) == 0:
@@ -111,7 +116,7 @@ class DataflowNode:
         else:
             for _arg in self.args:
                 logging.debug("Passing %s to %s", result, _arg)
-                if (callable(_arg) and (hasattr(_arg,'__name__') and _arg.__name__ == "<lambda>")):
+                if (callable(_arg) and (hasattr(_arg, '__name__') and _arg.__name__ == "<lambda>")):
                     logging.debug("dataflow: Calling lambda %s", _arg)
                     result = _arg(*args)
                     logging.debug("dataflow: lambda result: %s", result)
@@ -137,7 +142,7 @@ class DataflowNode:
                 else:
                     try:
                         if callable(_arg):
-                            _rr = _arg(result,**kwargs)
+                            _rr = _arg(result, **kwargs)
                             logging.debug("_rr is %s", _rr)
                     except:
                         pass
@@ -159,21 +164,28 @@ def dataflow(function=None,
     global PROCESSPOOL, THREADPOOL
 
     def decorator(func):
+
         def wrapper(f_func, *dargs, **dkwargs):
             logging.debug("decorator: Calling decorator %s", f_func.__name__)
             logging.debug("decorator: dargs %s", str(dargs))
 
             def invoke(*args, **kwargs):
+                import sys
                 logging.debug("decorator: invoke f %s %s", f_func, args)
                 kwargs['callback'] = callback
+                kwargs['dataflow'] = True
+                frame = sys._getframe(0)
+                dataflow = True
+                f_func.dataflow = True
+                #frame.f_locals['dataflow'] = True
                 return DataflowNode(f_func, *args, **kwargs)
 
             return invoke
 
-        #if hasattr(func, 'func'):
-        #    wrap = wrapper(func.func)
-        #else:
+        if hasattr(func,'func'):
+            func.func.dataflow = True
         wrap = wrapper(func)
+        wrap.dataflow = True
         try:
             print("decorator: WRAP FUNC:", func)
             wrap.func = func.func
@@ -184,6 +196,7 @@ def dataflow(function=None,
             wrap.func = func
             wrap.userfunc = func
             wrap.source = inspect.getsource(func)
+
         return wrap
 
     try:
