@@ -1,8 +1,8 @@
-*This version: 0.1.15*
+*This version: 0.2.0*
 
 ![logo](./images/logo.png)
 
-*Current development version is here: [0.1.16](https://github.com/radiantone/entangle/tree/0.1.16)*
+*Current development version is here: [0.2.1](https://github.com/radiantone/entangle/tree/0.2.1)*
 
 A lightweight (serverless) native python parallel processing framework based on simple decorators and call graphs, supporting both *control flow* and *dataflow* execution paradigms as well as de-centralized CPU & GPU scheduling. 
 
@@ -10,7 +10,8 @@ A lightweight (serverless) native python parallel processing framework based on 
 
 ## New In This Release
 
-- Retry usage example (partially working but unfinished feature)
+- Dataflow decorator re-write. Now works with ssh for distributed dataflow. Fixes prior issues with local dataflows.
+- Retry usage example 
 - Dockerfile provided for quick and easy experimentation.
 - Workflows can now return the call graph structure upon completion. See [Graph Example](#graph-example)
 - Support for workflow futures (if that's your thing) See [Workflow Future Example](#workflow-future-example)
@@ -48,6 +49,9 @@ $ docker run -it --gpus all entangle
 root@13428af4a37b:/# python -m entangle.examples.example3
 (0.2957176749914652, 0.41134210501331836)
 ```
+## Wiki Articles
+- [How Does Entangle Compare to Other Parallel Compute Frameworks?](https://github.com/radiantone/entangle/wiki)
+- [Development Roadmap & Contributions](https://github.com/radiantone/entangle/wiki/Development)
 
 ## Outline
 
@@ -91,7 +95,7 @@ Entangle is a *different* kind of parallel compute framework for multi-CPU/GPU e
 It allows for simple workflow design using *plain old python* and special decorators that control the type of parallel compute and infrastructure needed.
 
 One key feature of entangle is fine-grained control over individual functions in a workflow. You could easily describe multiple functions running across multiple compute environments all interacting as if they were simple local python functions.
-No central scheduler or workflow manager is needed. Choosing where and how functions operate with *declarative infrastructure*.
+No central scheduler or workflow manager is needed allowing you to choosing where and how functions operate with *declarative infrastructure*.
 
 Another unique quality is the use of composition to build parallel workflows dynamically.
 
@@ -103,7 +107,7 @@ In this context, it is a metaphor for how tasks send data (particles) to one ano
 
 ### IMPORTANT NOTES!
 
-Please keep in mind that Entangle is *in development* and is classified as `Pre-Alpha`. Some of the functionality shown here is incomplete. If you clone this repo and want to experiment be sure to update often as things break, improve, get fixed etc. quite frequently. The `main` branch will always contain the most current release. All development for the next version is done on a release specific branch (e.g. 0.1.14). If you want the current development version, look for the latest numbered branch.
+Please keep in mind that Entangle is *in development* and is classified as `Pre-Alpha`. Some of the functionality shown here is incomplete. If you clone this repo and want to experiment be sure to update often as things break, improve, get fixed etc. quite frequently. The `main` branch will always contain the most current release. All development for the next version is done on the development branch for the next released listed at the top of this document.
 
 ## Installation
 
@@ -188,6 +192,7 @@ If you are planning to run or use GPU enabled code it is recommended to set up a
 * Serverless & Threadless
 * True Dataflow Support
 * CPU/GPU Scheduling
+* Distributed dataflow
 
 ## Architecture
 
@@ -208,9 +213,10 @@ This makes the workflow a truly emergent, dynamic computing construct vs a monol
 Every design approach is a balance of tradeoffs. Entangle favors CPU utilization and *true* parallelism over resource managers, centralized (which is to say network centric) schedulers or other shared services.
 It favors simplicity over behavior, attempting to be minimal and un-opinionated. It tries to be *invisible* to the end user as much as possible. It strives for the basic principle that, *"if it looks like it should work, it should work."*
 
-Entangle leans on the OS scheduler to prioritize processes based on the behavior of those processes and underlying resource utilizations. It therefore does not provide its own redundant scheduler or task manager. Because of this, top-down visibility or control of workflow processes is not as easy as with centralized task managers.
+Entangle leans on the OS scheduler to prioritize processes based on the behavior of those processes and underlying resource utilizations. It therefore does not provide its own redundant (which is to say *centralized*) scheduler or task manager. Because of this, top-down visibility or control of workflow processes is not as easy as with centralized task managers.
 
 Entangle prefers the non-API approach, where it looks like regular python expressions, over strict API's or invocation idioms. This makes it easier to pick up and use and plays well with 3rd party frameworks too.
+
 ### Use Cases
 
 Because of these tradeoffs, there are certain use cases that align with entangle and others that probably do not.
@@ -220,9 +226,8 @@ If you want top-down visibility & control of workflows and tasks, Entangle is pr
 If you have lots of CPUs, entangle could be for you! If you want easy python workflows that span local and remote cloud resources, entangle could be for you.
 If you want to write custom handlers that enrich or execute code in custom ways for your needs, entangle makes this easy for you.
 
-Entangle benefits more with CPU intensive, longer running tasks than shorter, less CPU intensive tasks.
-
 #### Orchestration
+
 One focused use case for entangle is when you want to orchestrate across different compute nodes, remote APIs and other disparate endpoints in a single workflow, with inherent parallelism.
 
 ![workflow](./images/workflow.png)
@@ -258,7 +263,7 @@ For devops use cases Entangle allows you to write simple, parallel workflow grap
 ### What Entangle is not
 Here are some things entangle is not, *out-of-the-box*. This isn't to say entangle can't do these things. In fact, entangle is designed to be a low level framework for implementing these kinds of things.
 
-* Entangle does not yet perform fail over or retries (underway)
+* Entangle does not yet perform fail over (TBD)
 * Entangle is not a batch process framework (TBD)
 * Entangle is not map/reduce
 * Entangle is not a centralized task manager
@@ -740,6 +745,7 @@ Since the `add()` function has two dependencies that can run in parallel the `@s
 * [Scheduler Example](#scheduler-example)  
 * [Graph Example](#graph-example)
 * [Workflow Future Example](#workflow-future-example)
+* [Retry Example](#retry-example)
 * [General Example](#general-example)
 
 There are a variety of example workflows and dataflows you can run. In addition to the sample code provided below you can run these using the following commands.
@@ -1321,6 +1327,19 @@ workflow(proc=True)
 
 # Notify results when available
 future.entangle() # Does not block
+```
+### Retry Example
+
+To specify how many times a function should be retried before throwing an exception with a sleep value in seconds between retries.
+
+```python
+@process(retry=5. sleep=1)
+def five():
+    import time
+    val = int(str(time.time()).split('.')[1]) % 5
+    if val != 0:
+        raise Exception("Not a FIVE!")
+    return 5
 ```
 
 ### General Example

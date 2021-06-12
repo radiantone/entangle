@@ -34,6 +34,7 @@ for line in output:
     if _cpu[2] == 'Y':
         CPUS += [_cpu]
         # Put CPU cookie on queue
+        logging.debug("Putting CPU on queue: %s",_cpu)
         queue.put(_cpu)
 
 logging.debug('CPUS: %s',CPUS)
@@ -162,44 +163,73 @@ class DefaultScheduler:
             :param kwargs:
             :return:
             """
+            import time
+            import datetime
+
             logging.debug("DefaultScheduler: args %s",str(args))
             logging.debug("DefaultScheduler: before:")
 
             logging.debug("DefaultScheduler: thread %s",
                 threading.current_thread().name)
 
-            logging.debug("Waiting on CPU")
+            logging.debug("DefaultScheduler: Waiting on CPU")
             cpu_pending = True
 
             while cpu_pending:
+                logging.debug("DefaultScheduler: Getting cpu from queue")
                 cpu = queue.get()
+                logging.debug("DefaultScheduler: Got cpu %s from queue", cpu)
                 if int(cpu[1]) >= int(cpus):
                     logging.debug(
-                        "     CPU not within allocation: %s %s",cpu, cpus)
+                        "DefaultScheduler: CPU not within allocation: %s %s", cpu, cpus)
                     queue.put(cpu)
                 else:
-                    logging.debug("GRABBED CPU: %s %s",cpu, cpus)
+                    logging.debug(
+                        "DefaultScheduler: GRABBED CPU: %s %s", cpu, cpus)
                     break
 
-            logging.debug("GOT CPU: %s",cpu)
+            logging.debug("DefaultScheduler: GOT CPU: %s", cpu)
             logging.debug(_func)
 
             if not isinstance(_func, types.FunctionType):
                 kwargs['cpu'] = cpu[1]
+                #kwargs['_cpu'] = cpu
                 kwargs['scheduler'] = queue
 
             if cpu:
                 pid = os.getpid()
                 cpu_mask = [int(cpu[1])]
-                logging.debug("Setting cpu_mask %s",cpu_mask)
+                logging.debug(
+                    "DefaultScheduler: Setting cpu_mask %s", cpu_mask)
                 os.sched_setaffinity(pid, cpu_mask)
 
+            start = time.time()
+            logging.debug("DefaultScheduler: calling function %s", _func)
             result = _func(*args, **kwargs)
-            logging.debug("Putting cpu %s back on scheduler queue",cpu)
+            '''
+            def callback(result):
+                print("CALLBACK:", result.result())
+                queue.put(cpu)
+
+            # set up future callbacks
+            future = result.future(callback=callback)
+            print('Future:', future)
+            # Trigger workflow. Does not block
+            result(proc=True)
+
+            # Notify all the futures
+            #future.entangle()  # Does
+            '''
+            end = time.time()
+            duration = str(datetime.timedelta(seconds=end-start))
+            logging.debug(
+                "DefaultScheduler: [%s] DURATION: %s", _func.__name__, duration)
+            logging.debug(
+                "DefaultScheduler: Putting cpu %s back on scheduler queue", cpu)
 
             queue.put(cpu)
             logging.debug("DefaultScheduler: after")
-            logging.debug("DefaultScheduler: return %s",result)
+            logging.debug("DefaultScheduler: return %s", result)
             return result
 
         return partial(schedule, f_func)
@@ -257,11 +287,12 @@ def scheduler(function=None,
 
         logging.debug("scheduler: decorator %s cpus",cpus)
         logging.debug("scheduler: Registering function: %s",str(func))
+        #func.userfunc = True
         sfunc = _scheduler.register(func, cpus=cpus)
         logging.debug("scheduler: Returning function: %s",str(sfunc))
         _pfunc = partial(wrapper, sfunc)
         _pfunc.source = source
-
+        _pfunc.userfunc = func
         if isinstance(func, (ProcessMonitor, ThreadMonitor)):
             _pfunc.__name__ = func.func.__name__
         else:

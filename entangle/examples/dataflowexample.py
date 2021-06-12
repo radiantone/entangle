@@ -5,7 +5,7 @@ dataflowexamply.py
 import threading
 import time
 
-from entangle.logging.info import logging
+from entangle.logging.debug import logging
 from entangle.dataflow import thread
 from entangle.dataflow import dataflow
 
