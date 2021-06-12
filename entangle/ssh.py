@@ -287,23 +287,25 @@ def ssh(function=None, **kwargs):
                             hostname, sshkey, appuuid, sourceuuid)
             ssh_p.__name__ = p_func.__name__
             ssh_p.userfunc = f_func.func
-            result = ssh_p()
-            '''
-            result = ProcessMonitor(ssh_p, timeout=None,
-                                    wait=None,
-                                    cache=False,
-                                    shared_memory=False,
-                                    sleep=0)
-            '''
+            frame = sys._getframe(1)
+            if 'dataflow' in frame.f_locals:
+                result = ssh_p()
+            else:
+                result = ProcessMonitor(ssh_p, timeout=None,
+                                        wait=None,
+                                        cache=False,
+                                        shared_memory=False,
+                                        sleep=0)
+            
             if callable(result):
                 _result = result()
             else:
                 _result = result
 
+            if isinstance(_result, ProcessMonitor):
+                _result = _result()
             logging.debug("SSH RESULT2: %s", _result)
 
-            # files = [appuuid+".py", sourceuuid+".py"]
-            # [os.remove(file) for file in files]
             return _result
 
         p_func = partial(wrapper, func, **kwargs)
