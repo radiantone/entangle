@@ -55,7 +55,7 @@ def two():
 
 @ssh(user='darren', host='phoenix', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/miniconda3/bin/python')
 @scheduler(**scheduler_config)
-@thread
+@process
 def three():
     logging.info("Returning 3")
     _result = MyResult()
@@ -83,6 +83,7 @@ if __name__ == '__main__':
     import json
 
     workflow = workflow2()
+    print("WORKFLOW: ", workflow)
     result = workflow()
     print("WORKFLOW OBJ:", result)
     print("WORKFLOW RESULT:", result.get_result())
