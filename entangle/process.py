@@ -720,6 +720,7 @@ class ProcessMonitor:
                             future_queue.put(result)
                         logging.debug("func_wrapper: done putting queue")
                     except Exception:
+                        import traceback
                         with open('error2.out', 'a') as errfile:
                             errfile.write(traceback.format_exc())
 
