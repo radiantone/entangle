@@ -1456,4 +1456,4 @@ You can of course provide your own logging configuration, but be sure to include
 A prototype visual design tool for Entangle is shown below.
 
 
-![ui](./images/ui1.png)
+![ui](./images/ui2.png)
