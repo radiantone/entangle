@@ -141,13 +141,28 @@ def ssh(function=None, **kwargs):
                 for funcdef in funcdefs:
                     __funcname__ = funcdef.name
                     if __funcname__ == func.__name__:
+                        decorators = funcdef.decorator_list
+                        ssh_decorator = None
+
+                        for decorator in decorators:
+                            if hasattr(decorator, 'func') and decorator.func.id == 'ssh':
+                                logging.debug("REMOVE SSH DECORATOR:")
+                                ssh_decorator = decorator
+
+                        if ssh_decorator:
+                            decorators.remove(ssh_decorator)
+                '''
+                for funcdef in funcdefs:
+                    __funcname__ = funcdef.name
+                    if __funcname__ == func.__name__:
                         try:
+
                             funcdef.decorator_list.clear()
                             pass
                         except:
                             import traceback
                             logging.error(traceback.format_exc())
-
+                '''
                 logging.debug("UNparsing SOURCE")
                 _source = astunparse.unparse(_ast)
                 logging.debug("Attempting to write SOURCE")
