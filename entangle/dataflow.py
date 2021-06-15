@@ -144,7 +144,9 @@ class DataflowNode:
                         if callable(_arg):
                             _rr = _arg(result, **kwargs)
                             logging.debug("_rr is %s", _rr)
-                    except:
+                    except Exception as ex:
+                        import traceback
+                        logging.error(traceback.format_exc())
                         pass
                 #PROCESSPOOL.submit(_arg, result)
 

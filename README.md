@@ -1,8 +1,8 @@
-*This version: 0.2.0*
+*This version: 0.2.1*
 
 ![logo](./images/logo.png)
 
-*Current development version is here: [0.2.1](https://github.com/radiantone/entangle/tree/0.2.1)*
+*Current development version is here: [0.2.2](https://github.com/radiantone/entangle/tree/0.2.2)*
 
 A lightweight (serverless) native python parallel processing framework based on simple decorators and call graphs, supporting both *control flow* and *dataflow* execution paradigms as well as de-centralized CPU & GPU scheduling. 
 
@@ -10,6 +10,8 @@ A lightweight (serverless) native python parallel processing framework based on 
 
 ## New In This Release
 
+- Bug fixes to process.py, ssh.py
+- Distributed dataflow example
 - Dataflow decorator re-write. Now works with ssh for distributed dataflow. Fixes prior issues with local dataflows.
 - Retry usage example 
 - Dockerfile provided for quick and easy experimentation.
@@ -82,6 +84,7 @@ root@13428af4a37b:/# python -m entangle.examples.example3
     * [AI Example](#ai-example)
     * [Dataflow Examples](#dataflow-examples)
       * [Data-Driven Branching](#data-driven-branching)
+      * [Distributed Dataflow](#distributed-dataflow)
     * [Docker Example](#docker-example)
     * [Scheduler Example](#scheduler-example)
     * [Graph Example](#graph-example)
@@ -192,7 +195,7 @@ If you are planning to run or use GPU enabled code it is recommended to set up a
 * Serverless & Threadless
 * True Dataflow Support
 * CPU/GPU Scheduling
-* Distributed dataflow
+* Distributed Dataflow
 
 ## Architecture
 
@@ -211,7 +214,7 @@ This makes the workflow a truly emergent, dynamic computing construct vs a monol
 ### Tradeoffs
 
 Every design approach is a balance of tradeoffs. Entangle favors CPU utilization and *true* parallelism over resource managers, centralized (which is to say network centric) schedulers or other shared services.
-It favors simplicity over behavior, attempting to be minimal and un-opinionated. It tries to be *invisible* to the end user as much as possible. It strives for the basic principle that, *"if it looks like it should work, it should work."*
+It favors simplicity over behavior - leaving specific extensions to you, attempting to be minimal and un-opinionated. It tries to be *invisible* to the end user as much as possible. It strives for the basic principle that, *"if it looks like it should work, it should work."*
 
 Entangle leans on the OS scheduler to prioritize processes based on the behavior of those processes and underlying resource utilizations. It therefore does not provide its own redundant (which is to say *centralized*) scheduler or task manager. Because of this, top-down visibility or control of workflow processes is not as easy as with centralized task managers.
 
@@ -685,7 +688,7 @@ If you use `@scheduler` then it will utilize the *scheduler queue* to request CP
 *diagram here*
 
 Each time a workflow decorated with `@scheduler` is sent to a remote machine, that scheduler then manages its portion of the workflow and any dependent functions that it might resolve.
-This pattern forms a sort of *distributed hierarchy* of schedulers that work in parallel across multiple machines, yet fully resolve to complete the root workflow.
+This pattern forms a sort of *distributed tree* of schedulers that work in parallel across multiple machines, yet fully resolve to complete the root workflow.
 
 Let's take a closer look at this example, which uses 3 different machines to solve its workflow.
 
@@ -742,6 +745,7 @@ Since the `add()` function has two dependencies that can run in parallel the `@s
 * [Docker Example](#docker-example)
 * [Dataflow Examples](#dataflow-examples)  
   * [Data-Driven Branching](#data-driven-branching)
+  * [Distributed Dataflow](#distributed-dataflow)
 * [Scheduler Example](#scheduler-example)  
 * [Graph Example](#graph-example)
 * [Workflow Future Example](#workflow-future-example)
@@ -769,6 +773,7 @@ $ python -m entangle.examples.aiexample
 $ python -m entangle.examples.retry_example
 $ python -m entangle.examples.schedulerexample
 $ python -m entangle.examples.schedulerexample2
+$ python -m entangle.examples.sshdatafloweexample
 $ python -m entangle.examples.sshschedulerexample
 $ python -m entangle.examples.timeoutexample
 ```
@@ -1160,6 +1165,78 @@ triggered: inner Z: X: emit
 printy: MainThread
 triggered: inner Y: HELLO
 ```
+### Distributed Dataflow
+
+In the example below, we combine `@dataflow` with `@ssh` to get instant distributed dataflow!
+
+```python
+import threading
+import time
+
+from entangle.logging.debug import logging
+from entangle.ssh import ssh
+from entangle.process import process
+from entangle.dataflow import dataflow
+
+def triggered(func, result):
+    print("triggered: {} {}".format(func.__name__, result))
+
+@dataflow(callback=triggered)
+@ssh(user='darren', host='miko', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
+@process
+def printz(z):
+    print('printz: {}'.format(threading.current_thread().name))
+    with open('/tmp/printz.out', 'w') as pr:
+        pr.write("Z: {}".format(z))
+    return "Z: {}".format(z)
+
+@dataflow(callback=triggered)
+@ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
+@process
+def printx(x):
+    print('printx: {}'.format(threading.current_thread().name))
+    with open('/tmp/printx.out', 'w') as pr:
+        pr.write("X: {}".format(x))
+    return "X: {}".format(x)
+
+@dataflow(callback=triggered)
+@process
+def printy(y):
+    print('printy: {}'.format(threading.current_thread().name))
+    return "Y: {}".format(y)
+
+@dataflow(callback=triggered)
+@ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
+@process
+def echo(e):
+    print('echo: {}'.format(threading.current_thread().name))
+    with open('/tmp/echo.out', 'w') as pr:
+        pr.write("Echo! {}".format(e))
+    return "Echo! {}".format(e)
+
+@dataflow(callback=triggered, maxworkers=3)
+def emit(value):
+    print('emit: {}'.format(threading.current_thread().name))
+    return value+"!"
+
+if __name__ == '__main__':
+    results = []
+
+    # Create the dataflow graph
+    flow = emit(
+        printx(
+            printz(
+                echo()
+            )
+        ),
+        printy(
+            printz()
+        ),
+        printy()
+    )
+
+    result = flow('emit')
+```
 ### Scheduler Example
 
 ```python
@@ -1454,7 +1531,7 @@ logging.basicConfig(filename='entangle.log',
 You can of course provide your own logging configuration, but be sure to include it at the top of your file so the various entangle modules pick it up.
 ## Design Tool
 
-A prototype visual design tool for Entangle is shown below.
+A prototype visual design tool for Entangle is shown below. More details will be posted on thye wiki [here](https://github.com/radiantone/entangle/wiki/Design-Tool). 
 
 
-![ui](./images/ui1.png)
+![ui](./images/ui2.png)

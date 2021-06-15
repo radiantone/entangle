@@ -82,48 +82,14 @@ def ssh(function=None, **kwargs):
                     return find_func(pfunc.func)
                 return pfunc
 
-            def remove_ssh_decorator(fsource, username, hostname):
-                """
-                Description
-                :param fsource:
-                :param username:
-                :param hostname:
-                :return:
-                """
-                _ast = ast.parse(fsource)
-
-                ssh_decorators = []
-
-                for segment in _ast.body:
-                    if isinstance(segment, FunctionDef):
-                        decorators = segment.decorator_list
-                        for decorator in decorators:
-                            if hasattr(decorator, 'func') and decorator.func.id == 'ssh':
-                                user_keyword = None
-                                host_keyword = None
-                                for keyword in decorator.keywords:
-                                    if keyword.arg == 'user' and keyword.value.value == username:
-                                        user_keyword = keyword
-                                    if keyword.arg == 'host' and keyword.value.value == hostname:
-                                        host_keyword = keyword
-                                logging.debug("REMOVE SSH DECORATOR:")
-
-                                if user_keyword and host_keyword:
-                                    ssh_decorators += [decorator]
-
-                for ssh_decorator in ssh_decorators:
-                    logging.debug("SSH: Removing decorator: %s", ssh_decorator)
-                    decorators.remove(ssh_decorator)
-
-                return astunparse.unparse(_ast)
-
             if 'SOURCE' in os.environ:
                 sourcefile = os.environ['SOURCE']
             else:
                 sourcefile = sys.argv[0]
 
+            logging.debug("ssh: SOURCE:%s", sourcefile)
             with open(sourcefile) as source:
-                logging.debug("SOURCE:%s", source.read())
+                logging.debug("ssh: SOURCE:%s", source.read())
 
             logging.debug("SSH: user:%s host:%s key: %s",
                           kwargs['user'], kwargs['host'], kwargs['key'])
@@ -165,15 +131,44 @@ def ssh(function=None, **kwargs):
 
             with open(sourcefile) as source:
                 _source = source.read()
-                _source = re.sub(r"@ssh\(user='{}', host='{}'".format(username,
-                                 hostname), "#@ssh(user='{}', host='{}'".format(username,
-                                 hostname), _source).strip()
+                logging.debug("Parsing SOURCE")
+                _ast = ast.parse(_source)
 
+                funcdefs = [funcdef for funcdef in _ast.body if isinstance(
+                    funcdef, ast.FunctionDef)]
 
-                _source = re.sub(r"@dataflow","#@dataflow", _source).strip()
+                logging.debug("Removing decorators from SOURCE")
+                for funcdef in funcdefs:
+                    __funcname__ = funcdef.name
+                    if __funcname__ == func.__name__:
+                        decorators = funcdef.decorator_list
+                        ssh_decorator = None
 
+                        for decorator in decorators:
+                            if hasattr(decorator, 'func') and decorator.func.id == 'ssh':
+                                logging.debug("REMOVE SSH DECORATOR:")
+                                ssh_decorator = decorator
+
+                        if ssh_decorator:
+                            decorators.remove(ssh_decorator)
+                '''
+                for funcdef in funcdefs:
+                    __funcname__ = funcdef.name
+                    if __funcname__ == func.__name__:
+                        try:
+
+                            funcdef.decorator_list.clear()
+                            pass
+                        except:
+                            import traceback
+                            logging.error(traceback.format_exc())
+                '''
+                logging.debug("UNparsing SOURCE")
+                _source = astunparse.unparse(_ast)
+                logging.debug("Attempting to write SOURCE")
                 with open('{}.py'.format(sourceuuid), 'w') as appsource:
                     appsource.write(_source)
+                    logging.debug("Wrote SOURCE")
 
             appuuid = "sshapp"+hashlib.md5(uuid4().bytes).hexdigest()
 
@@ -289,14 +284,16 @@ def ssh(function=None, **kwargs):
             ssh_p.userfunc = f_func.func
             frame = sys._getframe(1)
             if 'dataflow' in frame.f_locals:
+                logging.debug("DATAFLOW detected!")
                 result = ssh_p()
             else:
+                logging.debug("DATAFLOW NOT detected!")
                 result = ProcessMonitor(ssh_p, timeout=None,
                                         wait=None,
                                         cache=False,
                                         shared_memory=False,
                                         sleep=0)
-            
+
             if callable(result):
                 _result = result()
             else:
