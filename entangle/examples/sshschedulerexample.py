@@ -53,7 +53,6 @@ def two():
     return 2
 
 
-@ssh(user='darren', host='phoenix', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/miniconda3/bin/python')
 @scheduler(**scheduler_config)
 @process
 def three():
