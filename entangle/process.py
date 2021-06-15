@@ -459,10 +459,11 @@ class ProcessMonitor:
                     return
 
                 try:
-                    args = [_arg['result'] for _arg in _args]
-                    arg_graph = [_arg['graph'] for _arg in _args]
+                    exceptions = [_arg['result'] for _arg in _args if not isinstance(_arg,Exception)]
+                    args = [_arg['result'] for _arg in _args if _arg]
+                    arg_graph = [_arg['graph'] for _arg in _args if _arg]
                     json_graphs = [_arg['json']
-                                   for _arg in _args if 'json' in _arg]
+                                   for _arg in _args if _arg and 'json' in _arg]
                 except:
                     import traceback
                     logging.debug("_ARGS: %s", _args)
