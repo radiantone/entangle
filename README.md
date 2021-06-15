@@ -10,6 +10,8 @@ A lightweight (serverless) native python parallel processing framework based on 
 
 ## New In This Release
 
+- Bug fixes to process.py, ssh.py
+- Distributed dataflow example
 - Dataflow decorator re-write. Now works with ssh for distributed dataflow. Fixes prior issues with local dataflows.
 - Retry usage example 
 - Dockerfile provided for quick and easy experimentation.
