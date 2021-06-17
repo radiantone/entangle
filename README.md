@@ -788,7 +788,6 @@ from entangle.process import process
 from timeit import default_timer as timer
 from numba import vectorize
 
-
 @process
 def dovectors1():
 
@@ -805,7 +804,6 @@ def dovectors1():
     pow(a, b)
     duration = timer() - start
     return duration
-
 
 @process
 def dovectors2():
@@ -824,14 +822,12 @@ def dovectors2():
     duration = timer() - start
     return duration
 
-
 @process
 def durations(*args):
 
     times = [arg for arg in args]
 
     return times
-
 
 dp = durations(
     dovectors1(),
