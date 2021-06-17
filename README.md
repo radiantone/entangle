@@ -1,8 +1,8 @@
-*This version: 0.2.1*
+*This version: 0.2.2*
 
 ![logo](./images/logo.png)
 
-*Current development version is here: [0.2.2](https://github.com/radiantone/entangle/tree/0.2.2)*
+*Current development version is here: [0.2.3](https://github.com/radiantone/entangle/tree/0.2.3)*
 
 A lightweight (serverless) native python parallel processing framework based on simple decorators and call graphs, supporting both *control flow* and *dataflow* execution paradigms as well as de-centralized CPU & GPU scheduling. 
 
@@ -789,7 +789,6 @@ from entangle.process import process
 from timeit import default_timer as timer
 from numba import vectorize
 
-
 @process
 def dovectors1():
 
@@ -806,7 +805,6 @@ def dovectors1():
     pow(a, b)
     duration = timer() - start
     return duration
-
 
 @process
 def dovectors2():
@@ -825,14 +823,12 @@ def dovectors2():
     duration = timer() - start
     return duration
 
-
 @process
 def durations(*args):
 
     times = [arg for arg in args]
 
     return times
-
 
 dp = durations(
     dovectors1(),

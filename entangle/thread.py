@@ -1,5 +1,5 @@
 """
-thread.py - Module that provides native OS thread implementation of function tasks with support for shared memory
+thread.py - Module that provides python thread implementation of function tasks with support for shared memory
 """
 import asyncio
 import logging

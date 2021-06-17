@@ -1,5 +1,6 @@
 """
-workflow.py - Module that provides workflow decorator
+workflow.py - Module that provides workflow decorator. Right now this is simple a no-op decorator
+but will provide some additional behavior for workflows eventually (e.g. metedata, metrics, QoS, etc)
 """
 import logging
 
