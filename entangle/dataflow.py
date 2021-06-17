@@ -1,5 +1,5 @@
 """
-workflow.py - Module that provides workflow decorator
+dataflow.py - Module that dataflow execution semantics
 """
 import logging
 import inspect

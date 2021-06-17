@@ -177,7 +177,6 @@ class ProcessMonitor:
         :param kwargs:
         :return:
         """
-
         logging.info("Process:invoke: %s", self.func.__name__)
         _func = self.func
 
@@ -224,7 +223,7 @@ class ProcessMonitor:
                     datetime.timedelta(seconds=end-start))
                 logging.debug(
                     "assign_cpu: DURATION: %s", duration)
-                
+
                 if 'scheduler' in kwargs:
                     logging.debug(
                         "assign_cpu: Putting CPU %s on queue", cpu_mask)
@@ -459,11 +458,14 @@ class ProcessMonitor:
                     return
 
                 try:
-                    exceptions = [_arg['result'] for _arg in _args if not isinstance(_arg,Exception)]
-                    args = [_arg['result'] for _arg in _args if _arg]
-                    arg_graph = [_arg['graph'] for _arg in _args if _arg]
+                    exceptions = [
+                        _arg['result'] for _arg in _args if _arg and not isinstance(_arg, Exception)]
+                    args = [_arg['result']
+                            for _arg in _args if _arg and not isinstance(_arg, Exception)]
+                    arg_graph = [
+                        _arg['graph'] for _arg in _args if _arg and not isinstance(_arg, Exception)]
                     json_graphs = [_arg['json']
-                                   for _arg in _args if _arg and 'json' in _arg]
+                                   for _arg in _args if _arg and not isinstance(_arg, Exception) and 'json' in _arg]
                 except:
                     import traceback
                     logging.debug("_ARGS: %s", _args)
@@ -513,13 +515,13 @@ class ProcessMonitor:
 
                 # This no longer needed because processes put their own cpu's back on the queue
                 # when they have complete, individually
-                
+
                 if scheduler:
                     for _process in processes:
                         logging.debug(
                             "Putting CPU1: %s  back on scheduler queue.", _process.cookie)
                         scheduler.put(('0', _process.cookie, 'Y'))
-                
+
             if cpu:
                 pid = os.getpid()
                 cpu_mask = [int(cpu)]
@@ -534,6 +536,8 @@ class ProcessMonitor:
             if 'event' in kwargs:
                 event = kwargs['event']
                 del kwargs['event']
+
+            retries = 0
 
             if 'queue' in kwargs:
                 queue = kwargs['queue']
@@ -561,7 +565,6 @@ class ProcessMonitor:
                 try:
                     if self.execute:
                         logging.debug("process: execute: %s", self.execute)
-
                         if is_proc:
 
                             logging.debug(
@@ -607,7 +610,6 @@ class ProcessMonitor:
                                 target=func_wrapper, args=(_pfunc, _mq, ))
                             proc.start()
                         else:
-                            ex_msg = None
                             if retry and retry > 0:
                                 for i in range(retry):
                                     logging.debug("RETRY: {}".format(i))
@@ -624,6 +626,9 @@ class ProcessMonitor:
 
                                 if i == retry-1:
                                     event.set()
+                                    retries = i
+                                    logging.debug(
+                                        "max retries reached %s", retries)
                                     error_messages += [
                                         "maximum retries reached {}".format(retry)]
                             else:
@@ -693,11 +698,17 @@ class ProcessMonitor:
 
                 _mq = Queue()
 
-                def func_wrapper(_wf, _wq):
+                def func_wrapper(_wf, _wq, retries):
                     import time
                     import datetime
+                    import traceback
+
+                    logging.debug("TRACE: %s", traceback.format_exc())
                     start = time.time()
                     logging.debug("func_wrapper: %s", _wf)
+                    logging.debug("func_wrapper: retries %s", retries)
+                    if retries > 0:
+                        raise Exception("Maximum retries reached %s", retries)
                     result = _wf()
                     logging.debug("func_wrapper: result: %s", result)
                     end = time.time()
@@ -710,7 +721,7 @@ class ProcessMonitor:
                         if callable(result):
                             logging.debug(
                                 "func_wrapper: return result of %s", result)
-                            return func_wrapper(result, _wq)
+                            return func_wrapper(result, _wq, retries)
 
                         logging.debug("func_wrapper: putting result on queue")
 
@@ -737,7 +748,7 @@ class ProcessMonitor:
                         logging.debug("process: execute2: %s", self.execute)
                         start = time.time()
                         proc = multiprocessing.Process(
-                            target=func_wrapper, args=(pfunc, _mq,))
+                            target=func_wrapper, args=(pfunc, _mq, retries))
                         proc.start()
 
                         logging.debug(

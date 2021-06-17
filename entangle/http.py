@@ -1,5 +1,5 @@
 """
-request.py - Module that provides http request tasks
+http.py - Module that provides http oriented decorators
 """
 from functools import partial
 import requests

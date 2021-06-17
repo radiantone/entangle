@@ -1,5 +1,5 @@
 """
-docker.py - Module that provides docker support decorators for running tasks inside containers
+containers.py - Module that provides support decorators for running tasks inside containers
 """
 import logging
 import inspect
