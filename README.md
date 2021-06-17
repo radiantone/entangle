@@ -1,8 +1,8 @@
-*This version: 0.2.2*
+*This version: 0.2.3*
 
 ![logo](./images/logo.png)
 
-*Current development version is here: [0.2.3](https://github.com/radiantone/entangle/tree/0.2.3)*
+*Current development version is here: [0.2.4](https://github.com/radiantone/entangle/tree/0.2.4)*
 
 A lightweight (serverless) native python parallel processing framework based on simple decorators and call graphs, supporting both *control flow* and *dataflow* execution paradigms as well as de-centralized CPU & GPU scheduling. 
 
@@ -35,7 +35,32 @@ result = add(
 )
 print(result())
 ```
+or train two AI models in parallel using tensorflow container utilizing dedicated CPU and GPU usage.
+```python
+@process
+@docker(image="tensorflow/tensorflow:latest-gpu", packages=['tensorflow_datasets'])
+def train_modelA():
+    # train it
+    return
 
+@process
+@docker(image="tensorflow/tensorflow:latest-gpu", packages=['tensorflow_datasets'])
+def train_modelB():
+    # train it
+    return
+
+@workflow
+def train_models(*args):
+    # I'm training a bunch of models in parallel!
+    return
+
+workflow = train_models(
+    train_modelA(),
+    train_modelB()
+)
+
+result = workflow()
+```
 ### Docker
 To quickly get started with Entangle, build and run a docker container from the included Dockerfile.
 
@@ -98,7 +123,7 @@ Entangle is a *different* kind of parallel compute framework for multi-CPU/GPU e
 It allows for simple workflow design using *plain old python* and special decorators that control the type of parallel compute and infrastructure needed.
 
 One key feature of entangle is fine-grained control over individual functions in a workflow. You could easily describe multiple functions running across multiple compute environments all interacting as if they were simple local python functions.
-No central scheduler or workflow manager is needed allowing you to choosing where and how functions operate with *declarative infrastructure*.
+No central scheduler or workflow manager is needed allowing you to choose where and how functions operate with *declarative infrastructure*.
 
 Another unique quality is the use of composition to build parallel workflows dynamically.
 
