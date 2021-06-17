@@ -16,7 +16,7 @@ def triggered(func, result):
 
 
 @dataflow(callback=triggered)
-@ssh(user='darren', host='miko', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
+#@ssh(user='darren', host='miko', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
 @process
 def printz(z):
     print('printz: {}'.format(threading.current_thread().name))
@@ -26,7 +26,7 @@ def printz(z):
 
 
 @dataflow(callback=triggered)
-@ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
+#@ssh(user='darren', host='radiant', key='/home/darren/.ssh/id_rsa.pub', python='/home/darren/venv/bin/python')
 @process
 def printx(x):
     print('printx: {}'.format(threading.current_thread().name))

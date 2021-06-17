@@ -142,15 +142,17 @@ def ssh(function=None, **kwargs):
                     __funcname__ = funcdef.name
                     if __funcname__ == func.__name__:
                         decorators = funcdef.decorator_list
-                        ssh_decorator = None
+                        #ssh_decorator = None
 
+                        remove_decorators = []
                         for decorator in decorators:
-                            if hasattr(decorator, 'func') and decorator.func.id == 'ssh':
+                            if hasattr(decorator, 'func') and (decorator.func.id == 'ssh' or decorator.func.id == 'dataflow'):
                                 logging.debug("REMOVE SSH DECORATOR:")
-                                ssh_decorator = decorator
+                                remove_decorators += [decorator]
 
-                        if ssh_decorator:
-                            decorators.remove(ssh_decorator)
+                        [decorators.remove(dec) for dec in remove_decorators]
+                        #if ssh_decorator:
+                        #    decorators.remove(ssh_decorator)
                 '''
                 for funcdef in funcdefs:
                     __funcname__ = funcdef.name
