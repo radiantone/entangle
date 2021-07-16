@@ -16,7 +16,7 @@ def two():
     return 2
 
 
-@process(retry=5)
+@process(retry=15)
 def five():
     import time
     val = int(str(time.time()).split('.')[1]) % 5

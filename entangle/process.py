@@ -12,7 +12,6 @@ import json
 import traceback
 import queue as que
 import signal
-import builtins
 from typing import Callable
 from functools import partial
 from multiprocessing import Queue, Process
@@ -24,11 +23,15 @@ SMM.start()
 
 graph_queue = Queue()
 
+_processes = []
 
 def handler():
     """
     Handle any cleanup here
     """
+    # Kill all processes
+    [process.terminate() for process in _processes if process.is_alive()]
+
     SMM.shutdown()
 
 
@@ -393,6 +396,7 @@ class ProcessMonitor:
                                 target=assign_cpu, args=(
                                     arg, arg_cpu[1],), kwargs=kargs
                             )
+                            _processes += [_process]
                             _process.cookie = arg_cpu[1]
                         else:
                             logging.debug('NO CPU SET')
@@ -410,6 +414,7 @@ class ProcessMonitor:
 
                             _process = Process(
                                 target=error_wrapper, args=(arg,), kwargs=kargs)
+                            _processes += [_process]
 
                         if self.shared_memory:
                             _process.shared_memory = True
@@ -418,7 +423,6 @@ class ProcessMonitor:
 
                         _process.start()
                     else:
-                        logging.info("Value: %s", aname)
 
                         _queue.put(
                             {'graph': [(func.__name__, aname)], 'result': arg})

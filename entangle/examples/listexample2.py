@@ -54,5 +54,6 @@ flow = emit(
 
 flow('emit')
 
-
 time.sleep(2)
+
+flow('HELLO')

@@ -350,7 +350,6 @@ class ThreadMonitor:
 
                         _thread.start()
                     else:
-                        logging.info("Value: %s", aname)
 
                         _queue.put(
                             {'graph': [(func.__name__, aname)], 'result': arg})
