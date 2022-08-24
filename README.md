@@ -76,6 +76,8 @@ $ docker run -it --gpus all entangle
 root@13428af4a37b:/# python -m entangle.examples.example3
 (0.2957176749914652, 0.41134210501331836)
 ```
+[Click here](https://www.scaler.com/topics/what-is-docker/) to know more about Docker.
+
 ## Wiki Articles
 - [How Does Entangle Compare to Other Parallel Compute Frameworks?](https://github.com/radiantone/entangle/wiki)
 - [Development Roadmap & Contributions](https://github.com/radiantone/entangle/wiki/Development)
